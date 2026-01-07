@@ -10,7 +10,8 @@
     "lint": "eslint src/ --max-warnings 0",
     "test:watch": "vitest",
     "test": "vitest run",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "dev": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +24,13 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.5.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.28"
+  },
+  "peerDependencies": {
+    "typeorm": "^0.3.28"
   }
 }
