@@ -1,0 +1,32 @@
+{
+  "name": "e-commerce-api",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "lint": "eslint src/ --max-warnings 0",
+    "test:watch": "vitest",
+    "test": "vitest run",
+    "check-types": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@repo/typeorm-service": "workspace:^",
+    "fastify": "^5.6.2",
+    "typeorm": "^0.3.28"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:^",
+    "@repo/typescript-config": "workspace:^",
+    "@types/node": "^22.15.3",
+    "eslint": "^9.39.1",
+    "supertest": "^7.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
+  }
+}
