@@ -1,0 +1,101 @@
+### Home
+
+GET http://localhost:8080
+
+### Get all blog posts
+
+GET http://localhost:8080/posts
+
+### Get all blog posts with search term by title, content, category
+
+GET http://localhost:8080/posts?term=reusabl
+
+
+### Get a single blog post
+
+GET http://localhost:8080/posts/1
+
+
+### Create a new blog post
+
+POST http://localhost:8080/posts
+content-type: application/json
+
+{
+    "title":"Demo Title",
+    "content":"Demo Content",
+    "category":"DevOps",
+    "tags":["vue2"]
+}
+
+# {
+#     "title":"Demo Title 12",
+#     "content":"Demo Content",
+#     "category":"Demo Category",
+#     "tags":[],
+# }
+
+### Update an existing blog post
+
+PUT http://localhost:8080/posts/6
+content-type: application/json
+
+{
+ "title": "Understanding Event Loop",
+  "content": "Deep dive into the Node.js event loop and async model.",
+  "category": "DevOps",
+  "tags": [
+    "javascript",
+    "typescript",
+    "nodejs"
+  ]
+}
+
+### Delete an existing blog post
+
+DELETE http://localhost:8080/posts/1
+
+### Get all an existing category
+
+GET http://localhost:8080/categories
+
+### Login
+
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email1":"w1@w.com",
+  "password":"1234"
+}
+
+### Me
+
+GET http://localhost:8080/users/me
+Authorization: Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzY3NTc3OTUyLCJleHAiOjE3Njc4MzcxNTJ9.lmtrdt7Zt_6yoBBMPXt7CTEiuT1HZIjYnPfj92u7J48kQMuuNkfPEnyWJ-yo7k7SUF9xOQQqqKl5h6yh3mNjEqWAh94vtWLrZaR64XHo3gK72P7RWe9VRbafVcaEU7XWKKXiET0IOaDxDbglj-CrwcWu8N-3YBjVZJMqENZWvkJ0RC6pAJKAIjQ43Xld_Z22D1Wmfqlkqa1YRxqqBT1NALbpV41D8l-_48RPqq_7iqGYnW3JzK8sjjE244E1xCXrarLGLK2JeG6CIVpe5P6p7KV3eh9DZFLmiiXk0jQ4EucO2eMGA3AkNR5-ejc0zGfFHXg7T1KJm3QpxyHBdiSC-yrDpZYPu-6u0FPkSGuDvhKQdytfigTwaJDI5w2g4SM838zk29u7YbtC9x3okLIKN4bxXz6olmC5-OznGZwmlbMGg4OmsL_qIF7DBxjSNzhYFk3fp1OenCO2E_UWTAbvnrUbXvW77Go7yW3KZHAOJgaVAJ9CBNmcxDV3HGonwS6g021f8l8nVz6DZnv5MWm0LYErs2SEKDsxoU1T_pR--r4i4qXuMwvYrq63pUw6WDeN2LBEz-dVXE0Pt-L3TKn_GCB8MAfN2_1_wQ-UO6w4afnFFT49O7pWKbssicxsuo7Edc6ZvoQ3xpIyQIZRlXgAlC3SrTnczrAmVsGwzrmIAZQ
+
+### Register
+
+POST http://localhost:8080/auth/register
+Content-Type: application/json
+
+{
+  "email":"w3@w.com",
+  "password":"1234",
+  "firstName":"wq",
+  "lastName":"lq",
+  "phone":"09317874919"
+}
+
+
+### Logout
+
+DELETE http://localhost:8080/auth/logout
+Authorization: Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzY3MzM5NzU3LCJleHAiOjE3NjczNDI3NTd9.QMF6uk9X7NW2yasOh1YvVjUXSAVoI1JyeQ6ZkEjZMG6gjnN-yPujaVP8u-37fEU1EN4O0ySjIzFgARK6mnG0ot15nqfMsBZd0N3gMg8a-WGrz9Nsd92ZoJ8xC1l1fzWouRYOSj1e9RkDBZeMIHU1FZCu7hM8hPa7r5U-77Qw5LzwVt-KxfD48aqswVKy5JZoN5Xj05xrrm51zKM0Ix2c1dcE5UDca9L2arSjaHIMhYA8Lyv1nJqNlkKMReSeAUsjJZcGLIv4-gBQG4MF3VPOFF4xaW6KcFZZD3yrD9QS8vdN5Xi7oi0T3OeJH1gUUbauA62aB8X3Nqhb4Vt8lSaDF4eT5GFH9DBpJLrtGxp4YqSl1EsYsHB58fvezZNwe2gDGULh9xdRqe5jIyQhjNpoxRv748jXWPkVJUci3sBKXDppHcrdt5yLVOV-5ppc82hPAzcWXAAEj43frkT9PowNgSkfYwU_4xkLizJcas4BSlHyuMJvDw15CwhSLFq6puFfvpPLG8m0h7RGg0lUhzyGyVLgpjjsG2ghzrIyzIkjRK03db1kB4AHfMz_UiEPuRMilK6O8ixxFSf4Du4tX2ZqoY3-xeALr9tzErrbi6XjJThZHJ9nTuH3MnbwZMZqtuFp6_rSGqsoN2Xyf3igO5I5W_eWnWpuL1NJfl6axZ05nVI
+
+
+
+
+
+
+
