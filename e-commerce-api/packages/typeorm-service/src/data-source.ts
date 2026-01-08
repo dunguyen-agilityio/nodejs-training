@@ -1,13 +1,12 @@
-import "reflect-metadata";
-import { DataSource } from "typeorm";
-import { User } from "./entity/User";
+import 'reflect-metadata'
+import { DataSource } from 'typeorm'
 
 export const AppDataSource = new DataSource({
-  type: "better-sqlite3",
-  database: "mydb.sql",
+  type: 'better-sqlite3',
+  database: 'database.sqlite',
   synchronize: true,
   logging: false,
-  entities: [User],
-  migrations: [],
+  entities: [__dirname + '/entity/*.js'],
+  migrations: [__dirname + '/migrations/*.js'],
   subscribers: [],
-});
+})
