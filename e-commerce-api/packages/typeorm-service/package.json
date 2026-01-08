@@ -15,7 +15,9 @@
     "test": "vitest run",
     "check-types": "tsc --noEmit",
     "dev": "ts-node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "format": "pnpm exec prettier . --write",
+    "check": "npx prettier . --check"
   },
   "keywords": [],
   "author": "",
@@ -23,8 +25,10 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@trivago/prettier-plugin-sort-imports": "6.0.2",
     "@types/node": "^22.15.3",
     "eslint": "^9.39.1",
+    "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
