@@ -9,7 +9,9 @@
     "lint": "eslint src/ --max-warnings 0",
     "test:watch": "vitest",
     "test": "vitest run",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/migrations/InitialDatabase -d ./src/configs/data-source.ts",
+    "migration:run": "npx typeorm-ts-node-commonjs migration:run -d ./src/configs/data-source.ts"
   },
   "keywords": [],
   "author": "",

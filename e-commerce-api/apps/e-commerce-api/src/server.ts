@@ -1,6 +1,5 @@
 import Fastify from "fastify";
 import {
-  AppDataSource,
   User,
   Category,
   Product,
@@ -9,6 +8,7 @@ import {
   Order,
   OrderItem,
 } from "@repo/typeorm-service";
+import { AppDataSource } from "./configs/data-source";
 
 AppDataSource.initialize()
   .then(async () => {
