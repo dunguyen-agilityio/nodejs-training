@@ -1,14 +1,20 @@
-import { Column, Entity, OneToMany, OneToOne } from 'typeorm'
-
 import {
-  BaseWithCreatedAndUpdated,
-  BaseWithCreatedAndUpdatedProps,
-} from './Base'
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm'
+
 import { Cart } from './Cart'
 import { Order } from './Order'
 
 @Entity({ name: 'users' })
-export class User extends BaseWithCreatedAndUpdated {
+export class User {
+  @PrimaryColumn()
+  id: string
+
   @Column({ unique: true })
   username: string
 
@@ -19,7 +25,7 @@ export class User extends BaseWithCreatedAndUpdated {
   lastName: string
 
   @Column({ nullable: true })
-  age: number
+  age?: number
 
   @Column({ unique: true })
   email: string
@@ -31,7 +37,7 @@ export class User extends BaseWithCreatedAndUpdated {
   avatar: string
 
   @Column()
-  password: string
+  password?: string
 
   @OneToOne(() => Cart, (cart) => cart.userId)
   cart?: Cart
@@ -39,8 +45,14 @@ export class User extends BaseWithCreatedAndUpdated {
   @OneToMany(() => Order, (order) => order.userId)
   orders?: Order[]
 
-  constructor(user: BaseWithCreatedAndUpdatedProps<User>) {
-    super()
+  @Column({ name: 'created_at', type: 'datetime' })
+  createdAt: Date
+
+  @Column({ name: 'updated_at', type: 'datetime' })
+  @UpdateDateColumn({ name: 'updated_at' })
+  'updatedAt': Date
+
+  constructor(user: User) {
     if (user) {
       Object.assign(this, user)
     }

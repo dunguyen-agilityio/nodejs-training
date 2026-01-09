@@ -1,0 +1,8 @@
+export const ForbiddenSchema = {
+  type: "object",
+  required: ["message"],
+  additionalProperties: false,
+  properties: {
+    message: { type: "string" },
+  },
+} as const;

@@ -1,6 +1,7 @@
 import Image, { type ImageProps } from "next/image";
 import { Button } from "@repo/ui/button";
 import styles from "./page.module.css";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -18,7 +19,42 @@ const ThemeImage = (props: Props) => {
   );
 };
 
-export default function Home() {
+export default async function Home() {
+  const user = await currentUser();
+  const { isAuthenticated, redirectToSignIn, userId, getToken } = await auth();
+  const token = await getToken();
+
+  if (token) {
+    const response = await fetch("http://localhost:8080/auth/login", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      method: "POST",
+      body: JSON.stringify({
+        data: {
+          email_addresses: [],
+
+          first_name: "Dhu",
+          id: "user_380hqx3JdlRM7pED7GvSZPVgWmw",
+          image_url:
+            "https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18zODA4U2NZQUJnajBjekJBTUxRYkZJV1RKR1oiLCJyaWQiOiJ1c2VyXzM4MGhxeDNKZGxSTTdwRUQ3R3ZTWlBWZ1dtdyIsImluaXRpYWxzIjoiRE4ifQ",
+          last_name: "Nguyen",
+          object: "user",
+          phone_numbers: [],
+
+          username: "huuduv2",
+        },
+
+        type: "user.created",
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("data", data);
+    }
+  }
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
