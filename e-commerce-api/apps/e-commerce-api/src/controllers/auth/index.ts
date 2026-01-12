@@ -1,20 +1,25 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { AuthControler } from "./type";
 import { clerkClient, getAuth } from "@clerk/fastify";
+
+import { User } from "@repo/typeorm-service/entity";
+
+import { AuthController } from "./type";
 import { UserCreatedMinimal } from "../../types/user-created";
-import { User } from "@repo/typeorm-service";
+
 import { AuthService } from "../../services/auth/type";
 
-class AuthControllerImpl extends AuthControler {
+class AuthControllerImpl extends AuthController {
   constructor(private service: AuthService) {
     super();
   }
 
-  login = async (request: FastifyRequest, reply: FastifyReply) => {
-    // Use `getAuth()` to access `isAuthenticated` and the user's ID
-    const { isAuthenticated, userId } = getAuth(request);
+  register = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userCreated = (request.body as UserCreatedMinimal).data;
 
-    const userCreated = request.body as UserCreatedMinimal;
+    if (!userCreated) {
+      return reply.code(401).send({ error: "User not authenticated" });
+    }
+
     const {
       email_addresses,
       first_name: firstName,
@@ -25,7 +30,7 @@ class AuthControllerImpl extends AuthControler {
       created_at: createdAt,
       updated_at: updatedAt,
       phone_numbers,
-    } = userCreated.data;
+    } = userCreated;
 
     const newUser = new User({
       avatar: image_url,
@@ -39,19 +44,20 @@ class AuthControllerImpl extends AuthControler {
       phone: phone_numbers[0]?.phone_number || "",
     });
 
-    // Protect the route from unauthenticated users
+    // const user = await request.AuthService.register(newUser);
+    reply.code(201).send({ message: "User registered successfully.", newUser });
+  };
+
+  login = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { isAuthenticated, getToken } = getAuth(request);
+
     if (!isAuthenticated) {
       return reply
         .code(403)
         .send({ message: "Access denied. Authentication required." });
     }
 
-    // Use `clerkClient` to access Clerk's JS Backend SDK methods
-    // const user = await clerkClient.users.getUser(userId);
-    const user = await this.service.login(newUser);
-
-    // Only authenticated users will see the following message
-    reply.send({ message: "This is a protected route.", user });
+    reply.send({ jwt: await getToken() });
   };
 }
 

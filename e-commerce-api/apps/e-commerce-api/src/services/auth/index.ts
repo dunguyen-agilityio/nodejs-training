@@ -1,5 +1,5 @@
 import { User } from "@repo/typeorm-service";
-import { UserRepository } from "../../repositories/type";
+import { UserRepository } from "../../repositories/user/types";
 import { AuthService } from "./type";
 
 class AuthServiceImpl extends AuthService {
@@ -7,8 +7,8 @@ class AuthServiceImpl extends AuthService {
     super();
   }
 
-  async login(body: User) {
-    return await this.repository.login(body);
+  async register(body: User) {
+    return await this.repository.save(body);
   }
 }
 

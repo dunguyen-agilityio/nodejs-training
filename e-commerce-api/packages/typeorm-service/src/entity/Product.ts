@@ -9,10 +9,10 @@ import { OrderItem } from './OrderItem'
 
 @Entity({ name: 'products' })
 export class Product extends BaseWithCreatedAndUpdated {
-  @Column()
+  @Column({ type: 'varchar' })
   name: string
 
-  @Column()
+  @Column({ type: 'varchar' })
   description: string
 
   @Column({ type: 'decimal' })

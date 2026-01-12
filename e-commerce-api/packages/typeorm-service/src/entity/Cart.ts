@@ -13,7 +13,7 @@ export class Cart extends BaseWithCreatedAndUpdated {
   @JoinColumn({ referencedColumnName: 'id', name: 'user_id' })
   userId: number
 
-  @Column()
+  @Column({ type: 'varchar' })
   status: 'active' | 'abandoned' | 'converted'
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.cartId)

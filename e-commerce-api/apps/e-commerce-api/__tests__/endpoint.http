@@ -6,3 +6,10 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlaXMiOjM2MDAsImV4c
 {
     "name":"Huu"
 }
+
+### GET Products
+GET http://localhost:8080/products
+
+
+### GET Product by :id
+GET http://localhost:8080/products/123

@@ -11,7 +11,7 @@ export class OrderItem extends Base {
   orderId: number
 
   @OneToOne(() => Product, (product) => product.orderItem)
-  @Column({ name: 'product_id' })
+  @Column({ name: 'product_id', type: 'int' })
   productId: number
 
   @Column({ type: 'int' })

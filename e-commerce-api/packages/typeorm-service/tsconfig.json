@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
+    "rootDir": ".",
     "types": ["node"],
     "lib": ["ES2024"],
     "target": "es2024",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "es2022",
+    "moduleResolution": "bundler",
     "outDir": "./build",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

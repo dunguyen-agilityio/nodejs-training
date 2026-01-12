@@ -1,6 +1,6 @@
 import Image, { type ImageProps } from "next/image";
 import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import styles from "../page.module.css";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
 type Props = Omit<ImageProps, "src"> & {
@@ -23,8 +23,6 @@ export default async function Home() {
   const user = await currentUser();
   const { isAuthenticated, redirectToSignIn, userId, getToken } = await auth();
   const token = await getToken();
-
-  console.log("token", isAuthenticated);
 
   if (token) {
     const response = await fetch("http://localhost:8080/auth/login", {

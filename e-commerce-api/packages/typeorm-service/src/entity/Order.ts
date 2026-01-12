@@ -13,7 +13,7 @@ export class Order extends BaseWithCreatedAndUpdated {
   @OneToOne(() => User, (user) => user.orders)
   userId: number
 
-  @Column()
+  @Column({ type: 'varchar' })
   status: 'pending' | 'paid' | 'fulfilled' | 'completed'
 
   @Column({ name: 'total_amount', type: 'decimal' })

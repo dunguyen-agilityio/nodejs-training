@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2024",
-    "module": "ESNext",
+    "module": "es2022",
     "moduleResolution": "bundler",
     "lib": ["ES2024"],
     "outDir": "./build",
@@ -11,6 +11,7 @@
     // Decorator support for TypeORM
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
 
     // Type checking
     "strict": true,
@@ -40,7 +41,9 @@
 
     // Other
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "types": ["node"],
+
+    "declaration": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "dist"]

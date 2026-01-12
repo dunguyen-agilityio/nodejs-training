@@ -3,10 +3,23 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
+  "type": "module",
   "exports": {
     ".": {
       "import": "./build/src/index.js",
       "types": "./build/src/index.d.ts"
+    },
+    "./entity": {
+      "import": "./build/src/entity/index.js",
+      "types": "./build/src/entity/index.d.ts"
+    },
+    "./services": {
+      "import": "./build/src/services/index.js",
+      "types": "./build/src/services/types.d.ts"
+    },
+    "./repositories": {
+      "import": "./build/src/repositories/index.js",
+      "types": "./build/src/repositories/types.d.ts"
     }
   },
   "scripts": {
@@ -14,10 +27,13 @@
     "test:watch": "vitest",
     "test": "vitest run",
     "check-types": "tsc --noEmit",
-    "dev": "ts-node src/index.ts",
+    "dev": "tsx --watch src/index.ts",
     "build": "tsc",
     "format": "pnpm exec prettier . --write",
-    "check": "npx prettier . --check"
+    "check": "npx prettier . --check",
+    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/migrations/InitialDatabase -d ./src/data-source.ts",
+    "typeorm": "tsx ../../node_modules/typeorm/cli-ts-node-esm.js",
+    "migration:run": "npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts"
   },
   "keywords": [],
   "author": "",
@@ -40,5 +56,8 @@
   },
   "peerDependencies": {
     "typeorm": "^0.3.28"
+  },
+  "imports": {
+    "#entity": "./src/entity/index.js"
   }
 }

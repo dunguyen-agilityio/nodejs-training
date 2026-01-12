@@ -12,31 +12,31 @@ import { Order } from './Order'
 
 @Entity({ name: 'users' })
 export class User {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'varchar' })
   id: string
 
-  @Column({ unique: true })
+  @Column({ unique: true, type: 'varchar', nullable: true })
   username: string
 
-  @Column({ name: 'first_name' })
+  @Column({ name: 'first_name', type: 'varchar' })
   firstName: string
 
-  @Column({ name: 'last_name', nullable: true })
+  @Column({ name: 'last_name', nullable: true, type: 'varchar' })
   lastName: string
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'int' })
   age?: number
 
-  @Column({ unique: true })
+  @Column({ unique: true, type: 'varchar' })
   email: string
 
-  @Column({ unique: true })
+  @Column({ unique: true, type: 'varchar', nullable: true })
   phone: string
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   avatar: string
 
-  @Column()
+  @Column({ type: 'varchar', nullable: true })
   password?: string
 
   @OneToOne(() => Cart, (cart) => cart.userId)

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@typeorm-service/*": ["packages/typeorm-service/src/*"]
+    }
+  }
+}
