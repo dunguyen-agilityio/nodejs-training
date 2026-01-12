@@ -5,22 +5,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "import": "./build/src/index.js",
-      "types": "./build/src/index.d.ts"
-    },
-    "./entity": {
-      "import": "./build/src/entity/index.js",
-      "types": "./build/src/entity/index.d.ts"
-    },
-    "./services": {
-      "import": "./build/src/services/index.js",
-      "types": "./build/src/services/types.d.ts"
-    },
-    "./repositories": {
-      "import": "./build/src/repositories/index.js",
-      "types": "./build/src/repositories/types.d.ts"
-    }
+    ".": "./src/index.ts",
+    "./entity": "./src/entity/index.ts",
+    "./services": "./src/services/index.ts",
+    "./repositories": "./src/repositories/index.ts"
   },
   "scripts": {
     "lint": "eslint src/ --max-warnings 0",
@@ -58,6 +46,6 @@
     "typeorm": "^0.3.28"
   },
   "imports": {
-    "#entity": "./src/entity/index.js"
+    "#entity": "./src/entity/index.ts"
   }
 }

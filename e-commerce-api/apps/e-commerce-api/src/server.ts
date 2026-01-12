@@ -6,15 +6,20 @@ import { clerkPlugin } from "@clerk/fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import fastifyPlugin from "fastify-plugin";
 
-import { AuthService } from "@repo/typeorm-service/services";
-import { UserRepository } from "@repo/typeorm-service/repositories";
-import { User } from "@repo/typeorm-service/entity";
+import { AuthService, ProductService } from "@repo/typeorm-service/services";
+import {
+  ProductRepository,
+  UserRepository,
+} from "@repo/typeorm-service/repositories";
+import { Product, User } from "@repo/typeorm-service/entity";
 
 import { createAuthroutes } from "./routes";
 
 import { AuthController } from "./controllers/auth";
 
 import { AppDataSource } from "./configs/data-source";
+import { createProductRoutes } from "./routes/product";
+import { ProductController } from "./controllers/product";
 
 const fastify = Fastify({
   logger: true,
@@ -24,6 +29,12 @@ AppDataSource.initialize().then((dataSource) => {
   const userRepository = new UserRepository(dataSource.getRepository(User));
   const authService = new AuthService(userRepository);
   const authController = new AuthController(authService);
+
+  const productRepository = new ProductRepository(
+    dataSource.getRepository(Product)
+  );
+  const productService = new ProductService(productRepository);
+  const productController = new ProductController(productService);
 
   const decorates = () => {
     fastify.decorateRequest("AuthService", {
@@ -39,13 +50,13 @@ AppDataSource.initialize().then((dataSource) => {
   };
 
   const publicRoutes: FastifyPluginCallback = (instance, options, done) => {
-    instance.get("/", async (req, reply) => {
-      reply.send({ message: "This is a public route." });
-    });
+    // instance.get("/", async (req, reply) => {
+    //   reply.send({ message: "This is a public route." });
+    // });
 
-    instance.get("/:id", async (req, reply) => {
-      reply.send({ message: "This is a details route." });
-    });
+    // instance.get("/:id", async (req, reply) => {
+    //   reply.send({ message: "This is a details route." });
+    // });
 
     done();
   };
@@ -53,7 +64,9 @@ AppDataSource.initialize().then((dataSource) => {
   fastify.register(clerkPlugin);
 
   fastify.register(protectedRoutes);
-  fastify.register(publicRoutes, { prefix: "/products" });
+  fastify.register(createProductRoutes(productController), {
+    prefix: "/products",
+  });
 
   // Run the server!
   fastify.listen({ port: 8080 }, function (err, address) {

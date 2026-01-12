@@ -2,9 +2,9 @@ import { Product } from '#entity'
 
 import { Repository } from 'typeorm'
 
-import { ProductRepository } from './type'
+import { AbstractProductRepository } from './type'
 
-class ProductRepositoryImpl extends ProductRepository {
+export class ProductRepository extends AbstractProductRepository {
   constructor(repository: Repository<Product>) {
     super(Product, repository.manager)
   }
@@ -15,14 +15,13 @@ class ProductRepositoryImpl extends ProductRepository {
 
   async getProducts(params: {
     query: string
-    page: number
+    skip: number
     pageSize: number
   }): Promise<Product[]> {
-    const { query, page, pageSize } = params
-    const skip = (page - 1) * pageSize
+    const { query, skip, pageSize } = params
 
     return this.createQueryBuilder('product')
-      .where('product.name ILIKE :query OR product.description ILIKE :query', {
+      .where('product.name LIKE :query OR product.description LIKE :query', {
         query: `%${query}%`,
       })
       .skip(skip)
@@ -31,4 +30,4 @@ class ProductRepositoryImpl extends ProductRepository {
   }
 }
 
-export { ProductRepositoryImpl as ProductRepository }
+export * from './type'

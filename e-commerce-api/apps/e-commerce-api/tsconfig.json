@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2024",
+    "target": "ES2022",
     "module": "es2022",
     "moduleResolution": "bundler",
     "lib": ["ES2024"],
     "outDir": "./build",
-    "rootDir": "./src",
     "sourceMap": true,
 
     // Decorator support for TypeORM
@@ -45,6 +44,6 @@
 
     "declaration": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../packages/typeorm-service/src/**/*"],
   "exclude": ["node_modules", "build", "dist"]
 }

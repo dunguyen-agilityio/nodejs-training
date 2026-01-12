@@ -24,10 +24,10 @@ export class Product extends BaseWithCreatedAndUpdated {
   @Column('simple-array')
   images: string[]
 
-  @ManyToOne(() => CartItem, (cartItem) => cartItem.productId)
+  @ManyToOne(() => CartItem, (cartItem: CartItem) => cartItem.productId)
   cartItem?: CartItem
 
-  @ManyToOne(() => OrderItem, (orderItem) => orderItem.productId)
+  @ManyToOne(() => OrderItem, (orderItem: OrderItem) => orderItem.productId)
   orderItem?: OrderItem
 
   @Column({ type: 'int', name: 'category_id' })
