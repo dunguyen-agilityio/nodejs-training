@@ -44,6 +44,10 @@
 
     "declaration": true
   },
-  "include": ["src/**/*", "../../packages/typeorm-service/src/**/*"],
+  "include": [
+    "src/**/*",
+    "../../packages/typeorm-service/src/**/*",
+    "src/seeds/1768297791711-seed-data.ts"
+  ],
   "exclude": ["node_modules", "build", "dist"]
 }

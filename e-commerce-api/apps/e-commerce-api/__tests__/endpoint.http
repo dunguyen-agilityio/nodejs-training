@@ -8,11 +8,14 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlaXMiOjM2MDAsImV4c
 }
 
 ### GET Products
-GET http://localhost:8080/products
+GET http://localhost:8080/products?query=brews
+
+### GET Products pagination
+GET http://localhost:8080/products?pageSize=2&page=2
 
 
 ### GET Product By ID
-GET http://localhost:8080/products/123
+GET http://localhost:8080/products/1
 
 ### POST Products
 POST http://localhost:8080/products
@@ -22,10 +25,7 @@ Content-Type: application/json
     "name":"Product",
     "description":"description",
     "price":500.9,
-    "stock":200,
-
+    "stock":200
 }
 
 
-### GET Product by :id
-GET http://localhost:8080/products/123

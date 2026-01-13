@@ -1,11 +1,8 @@
 import { FastifyPluginCallback } from "fastify";
-import { AuthController } from "../../controllers";
 
-export const createAuthroutes: (
-  controller: AuthController
-) => FastifyPluginCallback = (controller) => (instance, options, done) => {
+export const authRoutes: FastifyPluginCallback = (instance, options, done) => {
+  const controller = instance.container.getItem("Auth").controller;
   instance.post("/login", controller.login);
   instance.post("/register", controller.register);
-
   done();
 };

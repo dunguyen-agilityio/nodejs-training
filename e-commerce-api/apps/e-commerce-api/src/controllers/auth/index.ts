@@ -1,23 +1,20 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { clerkClient, getAuth } from "@clerk/fastify";
+import { getAuth } from "@clerk/fastify";
 
-import { User } from "@repo/typeorm-service/entity";
-
-import { AuthController } from "./type";
+import { AbstractAuthController } from "./type";
 import { UserCreatedMinimal } from "../../types/user-created";
+import { User } from "#entities";
 
-import { AuthService } from "../../services/auth/type";
-
-class AuthControllerImpl extends AuthController {
-  constructor(private service: AuthService) {
-    super();
-  }
-
-  register = async (request: FastifyRequest, reply: FastifyReply) => {
+export class AuthController extends AbstractAuthController {
+  register = async (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> => {
     const userCreated = (request.body as UserCreatedMinimal).data;
 
     if (!userCreated) {
-      return reply.code(401).send({ error: "User not authenticated" });
+      reply.code(401).send({ error: "User not authenticated" });
+      return;
     }
 
     const {
@@ -52,13 +49,11 @@ class AuthControllerImpl extends AuthController {
     const { isAuthenticated, getToken } = getAuth(request);
 
     if (!isAuthenticated) {
-      return reply
+      reply
         .code(403)
         .send({ message: "Access denied. Authentication required." });
+    } else {
+      reply.send({ jwt: await getToken() });
     }
-
-    reply.send({ jwt: await getToken() });
   };
 }
-
-export { AuthControllerImpl as AuthController };

@@ -1,7 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+
 import { AbstractProductController } from "./type";
-import type { AbstractProductService } from "@repo/typeorm-service/services";
-import { Product } from "@repo/typeorm-service";
+import { AbstractProductService } from "#services/types";
+import { Product } from "#entities";
 
 export class ProductController extends AbstractProductController {
   constructor(private service: AbstractProductService) {

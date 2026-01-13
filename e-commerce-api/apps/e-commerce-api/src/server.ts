@@ -6,48 +6,38 @@ import { clerkPlugin } from "@clerk/fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import fastifyPlugin from "fastify-plugin";
 
-import { AuthService, ProductService } from "@repo/typeorm-service/services";
-import {
-  ProductRepository,
-  UserRepository,
-} from "@repo/typeorm-service/repositories";
-import { Product, User } from "@repo/typeorm-service/entity";
-
-import { createAuthroutes } from "./routes";
-
-import { AuthController } from "./controllers/auth";
+import { authRoutes } from "./routes";
 
 import { AppDataSource } from "./configs/data-source";
-import { createProductRoutes } from "./routes/product";
-import { ProductController } from "./controllers/product";
+
+import { Container } from "./utils/container";
+import { productRoutes } from "./routes/product";
 
 const fastify = Fastify({
   logger: true,
 }).withTypeProvider<JsonSchemaToTsProvider>();
 
 AppDataSource.initialize().then((dataSource) => {
-  const userRepository = new UserRepository(dataSource.getRepository(User));
-  const authService = new AuthService(userRepository);
-  const authController = new AuthController(authService);
-
-  const productRepository = new ProductRepository(
-    dataSource.getRepository(Product)
-  );
-  const productService = new ProductService(productRepository);
-  const productController = new ProductController(productService);
+  const container = new Container(dataSource);
+  container.register("Auth", { entityName: "User" });
+  container.register("Product");
 
   const decorates = () => {
-    fastify.decorateRequest("AuthService", {
-      getter: () => authService,
+    fastify.decorate("container", {
+      getter: () => container,
     });
   };
 
-  fastify.register(fastifyPlugin(decorates, { name: "user" }));
+  fastify.register(fastifyPlugin(decorates, { name: "container" }));
 
   const protectedRoutes: FastifyPluginCallback = (instance, options, done) => {
-    instance.register(createAuthroutes(authController), { prefix: "/auth" });
+    instance.register(authRoutes, { prefix: "/auth" });
     done();
   };
+
+  fastify.register(clerkPlugin);
+
+  fastify.register(protectedRoutes);
 
   const publicRoutes: FastifyPluginCallback = (instance, options, done) => {
     // instance.get("/", async (req, reply) => {
@@ -61,12 +51,7 @@ AppDataSource.initialize().then((dataSource) => {
     done();
   };
 
-  fastify.register(clerkPlugin);
-
-  fastify.register(protectedRoutes);
-  fastify.register(createProductRoutes(productController), {
-    prefix: "/products",
-  });
+  fastify.register(productRoutes, { prefix: "/products" });
 
   // Run the server!
   fastify.listen({ port: 8080 }, function (err, address) {
@@ -77,3 +62,7 @@ AppDataSource.initialize().then((dataSource) => {
     // Server is now listening on ${address}
   });
 });
+
+// Gracefull shutdown
+// close database
+// close third paty

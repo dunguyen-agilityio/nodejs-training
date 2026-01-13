@@ -1,9 +1,11 @@
 import { FastifyPluginCallback } from "fastify";
-import { AbstractProductController } from "../../controllers/product/type";
 
-export const createProductRoutes: (
-  controller: AbstractProductController
-) => FastifyPluginCallback = (controller) => (instance, options, done) => {
+export const productRoutes: FastifyPluginCallback = (
+  instance,
+  options,
+  done
+) => {
+  const controller = instance.container.getItem("Product").controller;
   instance.post(
     "/",
     // {
