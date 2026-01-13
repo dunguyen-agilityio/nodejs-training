@@ -1,5 +1,6 @@
-import { User } from "@repo/typeorm-service";
+import { User } from "#entities";
+import { BaseService } from "../base";
 
-export abstract class AuthService {
+export abstract class AbstractAuthService extends BaseService<User> {
   abstract register(body: User): Promise<User>;
 }

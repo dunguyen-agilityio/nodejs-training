@@ -1,8 +1,8 @@
-import { User } from "@repo/typeorm-service";
 import { Repository } from "typeorm";
-import { UserRepository } from "./types";
+import { AbstractUserRepository } from "./type";
+import { User } from "#entities";
 
-class UserRepositoryImpl extends UserRepository {
+export class UserRepository extends AbstractUserRepository {
   constructor(repo: Repository<User>) {
     super(User, repo.manager);
   }
@@ -15,5 +15,3 @@ class UserRepositoryImpl extends UserRepository {
     return user;
   }
 }
-
-export { UserRepositoryImpl as UserRepository };

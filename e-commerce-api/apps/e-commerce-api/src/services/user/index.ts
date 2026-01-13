@@ -1,13 +1,11 @@
-import { User } from "@repo/typeorm-service";
-import { UserService } from "./type";
-import { UserRepository } from "../../repositories/user/types";
+import { AbstractUserService } from "./type";
+import { AbstractUserRepository } from "../../repositories/user/type";
+import { User } from "#entities";
 
-class UserServiceImpl implements UserService {
-  constructor(private repository: UserRepository) {}
+export class UserService implements AbstractUserService {
+  constructor(private repository: AbstractUserRepository) {}
 
   async getUserById(id: string): Promise<User> {
     return this.repository.getById(id);
   }
 }
-
-export { UserServiceImpl as UserService };

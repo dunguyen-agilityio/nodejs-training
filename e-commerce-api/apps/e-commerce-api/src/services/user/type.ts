@@ -1,5 +1,5 @@
-import { User } from "@repo/typeorm-service";
+import { User } from "#entities";
 
-export abstract class UserService {
+export abstract class AbstractUserService {
   abstract getUserById(id: string): Promise<User>;
 }
