@@ -5,56 +5,61 @@ import {
   OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
-} from 'typeorm'
+} from "typeorm";
 
-import { Cart } from './Cart'
-import { Order } from './Order'
+import { Cart } from "./Cart";
+import { Order } from "./Order";
+import { USER_ROLES } from "../types/user";
 
-@Entity({ name: 'users' })
+@Entity({ name: "users" })
 export class User {
-  @PrimaryColumn({ type: 'varchar' })
-  id: string
+  @PrimaryColumn({ type: "varchar" })
+  id: string;
 
-  @Column({ unique: true, type: 'varchar', nullable: true })
-  username: string
+  @Column({ unique: true, type: "varchar", nullable: true })
+  username: string;
 
-  @Column({ name: 'first_name', type: 'varchar' })
-  firstName: string
+  @Column({ name: "first_name", type: "varchar" })
+  firstName: string;
 
-  @Column({ name: 'last_name', nullable: true, type: 'varchar' })
-  lastName: string
+  @Column({ name: "last_name", nullable: true, type: "varchar" })
+  lastName: string;
 
-  @Column({ nullable: true, type: 'int' })
-  age?: number
+  @Column({ nullable: true, type: "int" })
+  age?: number;
 
-  @Column({ unique: true, type: 'varchar' })
-  email: string
+  @Column({ unique: true, type: "varchar" })
+  email: string;
 
-  @Column({ unique: true, type: 'varchar', nullable: true })
-  phone: string
+  @Column({ unique: true, type: "varchar", nullable: true })
+  phone?: string;
 
-  @Column({ nullable: true, type: 'varchar' })
-  avatar: string
+  @Column({ nullable: true, type: "varchar" })
+  avatar: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  password?: string
+  @Column({ type: "varchar", nullable: true })
+  password?: string;
 
-  @OneToOne(() => Cart, (cart) => cart.userId)
-  cart?: Cart
+  @OneToOne(() => Cart, (cart) => cart.user)
+  cart?: Cart;
 
   @OneToMany(() => Order, (order) => order.userId)
-  orders?: Order[]
+  orders?: Order[];
 
-  @Column({ name: 'created_at', type: 'datetime' })
-  createdAt: Date
+  @Column({ name: "created_at", type: "datetime" })
+  createdAt: Date;
 
-  @Column({ name: 'updated_at', type: 'datetime' })
-  @UpdateDateColumn({ name: 'updated_at' })
-  'updatedAt': Date
+  @Column({ type: "varchar", nullable: true })
+  role: USER_ROLES;
+
+  @Column({ name: "updated_at", type: "datetime" })
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date;
 
   constructor(user: User) {
     if (user) {
-      Object.assign(this, user)
+      Object.assign(this, user);
+      this.role = user.role || USER_ROLES.USER;
     }
   }
 }

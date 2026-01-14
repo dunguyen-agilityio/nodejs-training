@@ -22,32 +22,18 @@ const ThemeImage = (props: Props) => {
 export default async function Home() {
   const user = await currentUser();
   const { isAuthenticated, redirectToSignIn, userId, getToken } = await auth();
-  const token = await getToken();
+  const token = await getToken({ template: "testing" });
 
-  console.log("token", isAuthenticated);
+  console.log("token", token);
 
   if (token) {
-    const response = await fetch("http://localhost:8080/auth/login", {
+    const response = await fetch("http://localhost:8080/products", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       method: "POST",
       body: JSON.stringify({
-        data: {
-          email_addresses: [],
-
-          first_name: "Dhu",
-          id: "user_380hqx3JdlRM7pED7GvSZPVgWmw",
-          image_url:
-            "https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18zODA4U2NZQUJnajBjekJBTUxRYkZJV1RKR1oiLCJyaWQiOiJ1c2VyXzM4MGhxeDNKZGxSTTdwRUQ3R3ZTWlBWZ1dtdyIsImluaXRpYWxzIjoiRE4ifQ",
-          last_name: "Nguyen",
-          object: "user",
-          phone_numbers: [],
-
-          username: "huuduv2",
-        },
-
-        type: "user.created",
+        data: {},
       }),
     });
 

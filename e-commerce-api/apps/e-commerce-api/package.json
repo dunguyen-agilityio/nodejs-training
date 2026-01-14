@@ -50,6 +50,8 @@
     "#services": "./src/services/index.ts",
     "#services/types": "./src/services/types.ts",
     "#repositories": "./src/repositories/index.ts",
-    "#repositories/types": "./src/repositories/types.ts"
+    "#middlewares": "./src/middlewares/index.ts",
+    "#repositories/types": "./src/repositories/types.ts",
+    "#schemas/*": "./src/schemas/*.ts"
   }
 }

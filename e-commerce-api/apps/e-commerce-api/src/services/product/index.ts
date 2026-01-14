@@ -1,12 +1,7 @@
 import { Product } from "#entities";
-import { AbstractProductRepository } from "#repositories/types";
 import { AbstractProductService } from "./type";
 
 export class ProductService extends AbstractProductService {
-  constructor(private repository: AbstractProductRepository) {
-    super();
-  }
-
   async getProducts(params: {
     query: string;
     page: number;
@@ -31,5 +26,9 @@ export class ProductService extends AbstractProductService {
 
   async saveProduct(product: Omit<Product, "id">): Promise<Product> {
     return this.repository.save(product);
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    await this.repository.delete(id);
   }
 }

@@ -1,8 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { BaseController } from "../base";
-import { User } from "@repo/typeorm-service";
+import { User } from "#entities";
+import { AbstractAuthService } from "#services/types";
 
-export abstract class AbstractAuthController extends BaseController<User> {
+export abstract class AbstractAuthController extends BaseController<
+  User,
+  AbstractAuthService
+> {
   abstract login(request: FastifyRequest, reply: FastifyReply): Promise<void>;
   abstract register(
     request: FastifyRequest,

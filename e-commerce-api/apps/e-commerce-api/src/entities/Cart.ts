@@ -11,9 +11,9 @@ import { User } from "./User";
 export class Cart extends BaseWithCreatedAndUpdated {
   @OneToOne(() => User, (user) => user.cart)
   @JoinColumn({ referencedColumnName: "id", name: "user_id" })
-  userId: number;
+  user: User;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "varchar", default: "active" })
   status: "active" | "abandoned" | "converted";
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.cartId)

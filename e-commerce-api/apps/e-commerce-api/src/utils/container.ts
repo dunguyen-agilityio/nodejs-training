@@ -7,13 +7,9 @@ import * as Entities from "../entities";
 import * as Repositories from "../repositories";
 import * as Services from "../services";
 import * as Controllers from "../controllers";
-import { AbstractAuthService, AbstractUserService } from "../services/types";
-import {
-  AbstractAuthController,
-  AbstractProductController,
-  AbstractUserController,
-} from "../controllers/types";
-import { AbstractProductService } from "../services/product/type";
+
+import type * as TService from "../services/types";
+import type * as TController from "../controllers/types";
 
 type Register<
   T extends ObjectLiteral = ObjectLiteral,
@@ -105,16 +101,31 @@ export class Container {
 export type TRegister =
   | {
       name: "Auth";
-      service: InstanceType<typeof AbstractAuthService>;
-      controller: AbstractAuthController;
+      service: InstanceType<typeof TService.AbstractAuthService>;
+      controller: TController.AbstractAuthController;
     }
   | {
       name: "User";
-      service: AbstractUserService;
-      controller: AbstractUserController;
+      service: TService.AbstractUserService;
+      controller: TController.AbstractUserController;
     }
   | {
       name: "Product";
-      service: AbstractProductService;
-      controller: AbstractProductController;
+      service: TService.AbstractProductService;
+      controller: TController.AbstractProductController;
+    }
+  | {
+      name: "Category";
+      service: TService.AbstractCategoryService;
+      controller: TController.AbstractCategoryController;
+    }
+  | {
+      name: "Cart";
+      service: TService.AbstractCartService;
+      controller: TController.AbstractCartController;
+    }
+  | {
+      name: "CartItem";
+      service: TService.AbstractCartItemService;
+      controller: TController.AbstractCartItemController;
     };
