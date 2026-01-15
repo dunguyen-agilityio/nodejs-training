@@ -1,6 +1,7 @@
 import { Product } from "./types";
 
 export const products: Product[] = [
+  // ... existing mock products ...
   {
     id: "1",
     name: "Classic White Tee",
@@ -348,4 +349,13 @@ export async function getProducts({
 export async function getCategories() {
   const categories = Array.from(new Set(products.map((p) => p.category)));
   return ["All", ...categories];
+}
+
+export async function deleteProduct(productId: string) {
+  // Mock deletion
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const index = products.findIndex((p) => p.id === productId);
+  if (index !== -1) {
+    products.splice(index, 1);
+  }
 }

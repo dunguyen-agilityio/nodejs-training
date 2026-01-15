@@ -1,10 +1,11 @@
 import { getCategories, getProducts } from "@/lib/data";
 import Link from "next/link";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import { SearchInput } from "@/components/search-input";
 import { CategoryFilter } from "@/components/category-filter";
 import { SortSelect } from "@/components/sort-select";
 import { PaginationControls } from "@/components/pagination-controls";
+import { DeleteProductButton } from "@/components/admin/delete-product-button";
 
 interface AdminProductsPageProps {
   searchParams: Promise<{
@@ -99,9 +100,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                         >
                           <Edit className="h-4 w-4" />
                         </Link>
-                        <button className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-destructive hover:text-destructive-foreground">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <DeleteProductButton productId={product.id} />
                       </div>
                     </td>
                   </tr>

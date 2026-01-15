@@ -5,6 +5,7 @@ import { Product } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 interface ProductFormProps {
   initialData?: Product;
@@ -35,11 +36,17 @@ export function ProductForm({ initialData }: ProductFormProps) {
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    // Simulate API call
-    console.log("Saving product:", data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.push("/admin/products");
-    router.refresh();
+    try {
+        // Simulate API call
+        console.log("Saving product:", data);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        toast.success(isEditing ? "Product updated successfully." : "Product created successfully.");
+        router.push("/admin/products");
+        router.refresh();
+    } catch (error) {
+        console.error(error);
+        toast.error("Failed to save product.");
+    }
   };
 
   return (

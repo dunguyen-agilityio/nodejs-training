@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Product } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +12,11 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    addToCart(product);
+    toast.success(`${product.name} added to cart`);
+  };
 
   return (
     <div className="border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card text-card-foreground">
@@ -37,7 +43,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mt-4 flex items-center justify-between">
           <span className="font-bold text-xl">${product.price}</span>
           <button
-            onClick={() => addToCart(product)}
+            onClick={handleAddToCart}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
           >
             Add to Cart

@@ -3,6 +3,7 @@
 import { updateOrderStatusAction } from "@/app/actions";
 import { OrderStatus } from "@/lib/types";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 interface OrderStatusSelectProps {
   orderId: string;
@@ -19,7 +20,13 @@ export function OrderStatusSelect({
   const handleChange = (newStatus: OrderStatus) => {
     setStatus(newStatus);
     startTransition(async () => {
-      await updateOrderStatusAction(orderId, newStatus);
+      try {
+        await updateOrderStatusAction(orderId, newStatus);
+        toast.success(`Order ${orderId} updated to ${newStatus}`);
+      } catch (error) {
+        toast.error("Failed to update order status");
+        setStatus(status); // Revert on error
+      }
     });
   };
 

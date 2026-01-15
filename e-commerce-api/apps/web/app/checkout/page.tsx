@@ -9,6 +9,7 @@ import Link from "next/link";
 import { createOrderAction } from "@/app/actions";
 import { useAuth } from "@clerk/nextjs";
 import { Order } from "@/lib/types";
+import { toast } from "sonner";
 
 export default function CheckoutPage() {
   const { cart, cartTotal, clearCart } = useCart();
@@ -25,36 +26,41 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!userId) {
-       // Ideally handle guest checkout or force login
-       console.error("User not logged in");
+       toast.error("You must be logged in to place an order.");
        return;
     }
 
-    const newOrder: Order = {
-        id: `ORD-${Date.now()}`,
-        userId: userId,
-        date: new Date().toISOString(),
-        status: "Pending",
-        total: cartTotal,
-        items: cart.map(item => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image
-        })),
-        shippingAddress: {
-            name: `${data.firstName} ${data.lastName}`,
-            address: data.address,
-            city: data.city,
-            zipCode: data.zipCode,
-            country: data.country
-        }
-    };
+    try {
+        const newOrder: Order = {
+            id: `ORD-${Date.now()}`,
+            userId: userId,
+            date: new Date().toISOString(),
+            status: "Pending",
+            total: cartTotal,
+            items: cart.map(item => ({
+                productId: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                image: item.image
+            })),
+            shippingAddress: {
+                name: `${data.firstName} ${data.lastName}`,
+                address: data.address,
+                city: data.city,
+                zipCode: data.zipCode,
+                country: data.country
+            }
+        };
 
-    await createOrderAction(newOrder);
-    clearCart();
-    router.push("/checkout/success");
+        await createOrderAction(newOrder);
+        clearCart();
+        toast.success("Order placed successfully!");
+        router.push("/checkout/success");
+    } catch (error) {
+        console.error(error);
+        toast.error("Failed to place order. Please try again.");
+    }
   };
 
   if (cart.length === 0) {

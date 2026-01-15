@@ -13,6 +13,7 @@ import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -78,6 +79,7 @@ export default function RootLayout({
                 </div>
               </header>
               {children}
+              <Toaster />
             </CartProvider>
           </ThemeProvider>
         </body>
