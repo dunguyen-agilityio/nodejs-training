@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { AbstractCartController } from "./type";
 import { getAuth } from "@clerk/fastify";
 import { UnexpectedError } from "#types/error";
+import { HttpStatus } from "#types/http-status";
 
 export class CartController extends AbstractCartController {
   getCart = async (
@@ -39,6 +40,6 @@ export class CartController extends AbstractCartController {
     const id = parseInt(request.params.id);
     const success = await this.service.deleteCart(id);
     if (!success) throw new UnexpectedError(`Cannot delete Cart by ID: ${id}`);
-    reply.status(204).send();
+    reply.status(HttpStatus.NO_CONTENT).send();
   };
 }

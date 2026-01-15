@@ -15,8 +15,5 @@ export abstract class AbstractCartItemService extends BaseService {
     cartId: number
   ): Promise<CartItem | null>;
 
-  abstract deleteCartItem(
-    cartItemId: number,
-    userId: string
-  ): Promise<{ success: boolean; message?: string }>;
+  abstract deleteCartItem(cartItemId: number, userId: string): Promise<void>;
 }

@@ -1,3 +1,4 @@
+import { HttpStatus } from "#types/http-status";
 import { getAuth } from "@clerk/fastify";
 import { FastifyReply, FastifyRequest } from "fastify";
 
@@ -10,7 +11,7 @@ export const authenticate = async (
 
   if (!auth.isAuthenticated) {
     return reply
-      .status(401)
+      .status(HttpStatus.UNAUTHORIZED)
       .send({ message: "Unauthenticated: Please log in." });
   }
 };
@@ -24,7 +25,7 @@ export const authorizeAdmin = async (
 
   if (!isAdmin) {
     return reply
-      .status(403)
+      .status(HttpStatus.FORBIDDEN)
       .send({ message: "Access denied: Admin role required." });
   }
 };

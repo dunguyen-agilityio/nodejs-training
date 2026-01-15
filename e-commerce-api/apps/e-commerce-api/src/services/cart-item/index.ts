@@ -1,4 +1,5 @@
 import { CartItem } from "#entities";
+import { NotFoundError } from "#types/error";
 import { AbstractCartItemService } from "./type";
 
 export class CartItemService extends AbstractCartItemService {
@@ -18,10 +19,7 @@ export class CartItemService extends AbstractCartItemService {
     });
   }
 
-  async deleteCartItem(
-    cartItemId: number,
-    userId: string
-  ): Promise<{ success: boolean; message?: string }> {
+  async deleteCartItem(cartItemId: number, userId: string): Promise<void> {
     const result = await this.cartitemRepository
       .createQueryBuilder("cartItem")
       .delete()
@@ -33,12 +31,7 @@ export class CartItemService extends AbstractCartItemService {
       .execute();
 
     if (result.affected === 0) {
-      return {
-        success: false,
-        message: "Item not found or user lacks permission",
-      };
+      throw new NotFoundError("Item not found or user lacks permission");
     }
-
-    return { success: true };
   }
 }
