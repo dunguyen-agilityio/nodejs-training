@@ -55,6 +55,9 @@ export default function RootLayout({
                   <Link href="/cart" className="relative p-2 hover:bg-accent rounded-md">
                     🛒
                   </Link>
+                  <Link href="/admin" className="text-sm font-medium hover:underline">
+                    Admin
+                  </Link>
                   <ModeToggle />
                   <SignedOut>
                     <SignInButton mode="modal" />

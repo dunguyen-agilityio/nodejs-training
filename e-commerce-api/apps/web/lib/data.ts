@@ -8,6 +8,7 @@ export const products: Product[] = [
     price: 25,
     image: "/file-text.svg",
     category: "Apparel",
+    stock: 50,
   },
   {
     id: "2",
@@ -16,6 +17,7 @@ export const products: Product[] = [
     price: 85,
     image: "/file-text.svg",
     category: "Apparel",
+    stock: 20,
   },
   {
     id: "3",
@@ -24,6 +26,7 @@ export const products: Product[] = [
     price: 120,
     image: "/file-text.svg",
     category: "Accessories",
+    stock: 15,
   },
   {
     id: "4",
@@ -32,6 +35,7 @@ export const products: Product[] = [
     price: 199,
     image: "/file-text.svg",
     category: "Electronics",
+    stock: 30,
   },
   {
     id: "5",
@@ -40,6 +44,7 @@ export const products: Product[] = [
     price: 110,
     image: "/file-text.svg",
     category: "Footwear",
+    stock: 45,
   },
   {
     id: "6",
@@ -48,6 +53,7 @@ export const products: Product[] = [
     price: 250,
     image: "/file-text.svg",
     category: "Electronics",
+    stock: 10,
   },
   {
     id: "7",
@@ -56,6 +62,7 @@ export const products: Product[] = [
     price: 45,
     image: "/file-text.svg",
     category: "Accessories",
+    stock: 60,
   },
   {
     id: "8",
@@ -64,6 +71,7 @@ export const products: Product[] = [
     price: 55,
     image: "/file-text.svg",
     category: "Apparel",
+    stock: 40,
   },
   {
     id: "9",
@@ -72,6 +80,7 @@ export const products: Product[] = [
     price: 70,
     image: "/file-text.svg",
     category: "Accessories",
+    stock: 25,
   },
   {
     id: "10",
@@ -80,6 +89,7 @@ export const products: Product[] = [
     price: 60,
     image: "/file-text.svg",
     category: "Electronics",
+    stock: 35,
   },
 ];
 

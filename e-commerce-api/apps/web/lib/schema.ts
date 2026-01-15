@@ -14,3 +14,14 @@ export const checkoutSchema = z.object({
 });
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
+
+export const productSchema = z.object({
+  name: z.string().min(2, { message: 'Name is required' }),
+  description: z.string().min(10, { message: 'Description must be at least 10 characters' }),
+  price: z.coerce.number().min(0, 'Price must be positive'),
+  stock: z.coerce.number().int().min(0, 'Stock must be non-negative'),
+  category: z.string().min(1, 'Category is required'),
+  image: z.string().optional().default('/file-text.svg'),
+});
+
+export type ProductFormData = z.infer<typeof productSchema>;
