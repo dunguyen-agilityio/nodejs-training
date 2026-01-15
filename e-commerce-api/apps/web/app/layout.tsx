@@ -10,6 +10,8 @@ import {
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 
 const geistSans = Geist({
@@ -34,36 +36,44 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <CartProvider>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <ThemeProvider
+            attribute="data-theme"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
           >
-            <header className="flex justify-between items-center p-4 h-16 border-b">
-              <Link href="/" className="font-bold text-xl">
-                MyStore
-              </Link>
-              <div className="flex items-center gap-4">
-                <Link href="/cart" className="relative p-2">
-                  🛒
+            <CartProvider>
+              <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
+                <Link href="/" className="font-bold text-xl">
+                  MyStore
                 </Link>
-                <SignedOut>
-                  <SignInButton mode="modal" />
-                  <SignUpButton mode="modal">
-                    <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm h-10 px-4 cursor-pointer">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </SignedOut>
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
-              </div>
-            </header>
-            {children}
-          </body>
-        </html>
-      </CartProvider>
+                <div className="flex items-center gap-4">
+                  <Link href="/cart" className="relative p-2 hover:bg-accent rounded-md">
+                    🛒
+                  </Link>
+                  <ModeToggle />
+                  <SignedOut>
+                    <SignInButton mode="modal" />
+                    <SignUpButton mode="modal">
+                      <button className="bg-primary text-primary-foreground rounded-full font-medium text-sm h-10 px-4 cursor-pointer hover:bg-primary/90">
+                        Sign Up
+                      </button>
+                    </SignUpButton>
+                  </SignedOut>
+                  <SignedIn>
+                    <UserButton />
+                  </SignedIn>
+                </div>
+              </header>
+              {children}
+            </CartProvider>
+          </ThemeProvider>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
