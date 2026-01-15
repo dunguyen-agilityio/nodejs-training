@@ -89,9 +89,12 @@ export default function CartPage() {
             <span>Total</span>
             <span>${cartTotal}</span>
           </div>
-          <button className="w-full bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors">
+          <Link
+            href="/checkout"
+            className="w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors"
+          >
             Proceed to Checkout
-          </button>
+          </Link>
         </div>
       </div>
     </main>
