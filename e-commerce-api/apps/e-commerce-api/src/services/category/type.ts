@@ -1,10 +1,9 @@
 import { Category } from "#entities";
-import { AbstractCategoryRepository } from "../../repositories/category/type";
+import { CategoryRepository } from "#repositories/types";
 import { BaseService } from "../base";
 
-export abstract class AbstractCategoryService extends BaseService<
-  Category,
-  AbstractCategoryRepository
-> {
+export abstract class AbstractCategoryService extends BaseService {
+  protected categoryRepository: CategoryRepository;
+
   abstract getAll(): Promise<Category[]>;
 }

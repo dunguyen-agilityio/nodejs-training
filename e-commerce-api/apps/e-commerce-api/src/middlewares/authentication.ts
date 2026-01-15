@@ -6,6 +6,7 @@ export const authenticate = async (
   reply: FastifyReply
 ) => {
   const auth = getAuth(request);
+  request.userId = auth.userId ?? "";
 
   if (!auth.isAuthenticated) {
     return reply

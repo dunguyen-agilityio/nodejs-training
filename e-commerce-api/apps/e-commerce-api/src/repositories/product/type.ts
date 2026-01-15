@@ -7,5 +7,5 @@ export abstract class AbstractProductRepository extends BaseRepository<Product> 
     query: string;
     skip: number;
     pageSize: number;
-  }): Promise<Product[]>;
+  }): Promise<[Product[], number]>;
 }

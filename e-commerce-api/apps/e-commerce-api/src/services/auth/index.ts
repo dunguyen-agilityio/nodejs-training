@@ -3,6 +3,8 @@ import { AbstractAuthService } from "./type";
 
 export class AuthService extends AbstractAuthService {
   async register(body: User) {
-    return await this.repository.save(body);
+    const user = await this.userRepository.save(body);
+    await this.cartRepository.save({ user });
+    return user;
   }
 }

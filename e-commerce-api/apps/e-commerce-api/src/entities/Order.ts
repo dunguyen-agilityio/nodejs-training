@@ -19,7 +19,7 @@ export class Order extends BaseWithCreatedAndUpdated {
   @Column({ name: "total_amount", type: "decimal" })
   totalAmount: number;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.orderId)
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   items?: OrderItem[];
 
   constructor(order: BaseWithCreatedAndUpdatedProps<Order>) {

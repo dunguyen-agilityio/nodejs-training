@@ -1,131 +1,92 @@
-import { DataSource, EntityTarget, ObjectLiteral } from "typeorm";
-import { BaseRepository } from "../repositories/base";
-import { BaseService } from "../services/base";
-import { BaseController } from "../controllers/base";
+import { DataSource, QueryRunner } from "typeorm";
 
-import * as Entities from "../entities";
-import * as Repositories from "../repositories";
-import * as Services from "../services";
-import * as Controllers from "../controllers";
+import * as Entities from "#entities";
+import * as Repositories from "#repositories";
+import * as Services from "#services";
+import * as Controllers from "#controllers";
 
-import type * as TService from "../services/types";
-import type * as TController from "../controllers/types";
+import { TController, TRepository, TService } from "#types/container";
+import { BaseService } from "#services/base";
 
-type Register<
-  T extends ObjectLiteral = ObjectLiteral,
-  R extends BaseRepository<T> = BaseRepository<T>,
-  S extends BaseService<T> = BaseService<T>,
-  C extends BaseController<T> = BaseController<T>,
-> = {
-  Repository: R;
-  Service: S;
-  Controller: C;
-  name: string;
-  entity: EntityTarget<T>;
-};
+type Item = TRepository & TService & TController;
 
 export class Container {
-  constructor(private datasource: DataSource) {}
-  private dependencies: Register[] = [];
-  private repositories: Record<string, BaseRepository> = {};
+  static #instance: Container;
+  #dataSource: DataSource;
+  #queryRunner: QueryRunner;
+  items: Map<string, any> = new Map();
+  #registers: Map<string, keyof typeof Entities> = new Map();
 
-  register = (
-    name: string,
-    dependencies?: {
-      entityName: keyof typeof Entities;
-    }
-  ) => {
-    const entityName = (dependencies?.entityName ||
-      name) as keyof typeof Entities;
-
-    const repositoryName =
-      `${entityName}Repository` as keyof typeof Repositories;
-    const serviceName = `${name}Service` as keyof typeof Services;
-    const controllerName = `${name}Controller` as keyof typeof Controllers;
-
-    if (!(entityName in Entities))
-      throw new Error(`Entity: ${entityName} not found`);
-
-    if (!(repositoryName in Repositories))
-      throw new Error(`Repository: ${repositoryName} not found`);
-
-    if (!(serviceName in Services))
-      throw new Error(`Service: ${serviceName} not found`);
-
-    if (!(controllerName in Controllers))
-      throw new Error(`Controller: ${controllerName} not found`);
-
-    const entity = Entities[entityName];
-
-    let repository = this.repositories[repositoryName];
-
-    if (!repository) {
-      const entityRepository = this.datasource.getRepository(entity);
-
-      repository = new (Repositories[repositoryName] as typeof BaseRepository)(
-        entityRepository
-      );
+  static get instance() {
+    if (!this.#instance) {
+      this.#instance = new Container();
     }
 
-    const service = new (Services[serviceName] as typeof BaseService)(
-      repository
-    );
+    return this.#instance;
+  }
 
-    const controller = new (Controllers[
-      controllerName
-    ] as typeof BaseController)(service);
+  getItem<T extends keyof Item>(name: T): Item[T] {
+    return this.items.get(name);
+  }
 
-    this.dependencies.push({
-      Controller: controller,
-      entity,
-      name,
-      Repository: repository,
-      Service: service,
+  setItem(name: string, value: any) {
+    return this.items.set(name, value);
+  }
+
+  setDataSource(dataSource: DataSource) {
+    this.#dataSource = dataSource;
+    this.#queryRunner = this.#dataSource.createQueryRunner();
+    return this;
+  }
+
+  register<T extends keyof typeof Entities>(entity: T, name: string = entity) {
+    this.#registers.set(name, entity);
+    return this;
+  }
+
+  build() {
+    const repositories: Record<string, any> = {};
+    this.#registers.forEach((entity) => {
+      if (!this.items.has(`${entity.toLowerCase()}Repository`)) {
+        const repository = new Repositories[`${entity}Repository`](
+          this.#dataSource.getRepository(Entities[entity]) as any
+        );
+
+        repositories[`${entity.toLowerCase()}Repository`] = repository;
+
+        this.setItem(`${entity.toLowerCase()}Repository` as any, repository);
+      }
     });
-  };
 
-  getItem = <T extends TRegister["name"]>(
-    name: T
-  ): Extract<TRegister, { name: T }> => {
-    const item = this.dependencies.find((item) => item.name === name);
-    if (!item) throw new Error("Item not register");
+    for (const [value] of this.#registers) {
+      let service: BaseService = this.getItem(
+        `${value.toLowerCase()}Service` as any
+      );
 
-    return {
-      controller: item.Controller,
-      service: item.Service,
-      name,
-    } as Extract<TRegister, { name: T }>;
-  };
+      const serviceName = `${value}Service` as keyof typeof Services;
+
+      if (!(serviceName in Services)) continue;
+
+      if (!service) {
+        service = new Services[serviceName](repositories as TRepository);
+
+        this.setItem(`${value.toLowerCase()}Service`, service);
+      }
+
+      const controllerName = `${value}Controller` as keyof typeof Controllers;
+
+      if (!(controllerName in Controllers)) continue;
+
+      if (!this.items.has(`${value.toLowerCase()}Controller`)) {
+        const controller = new Controllers[controllerName](service as any);
+        this.setItem(`${value.toLowerCase()}Controller`, controller);
+      }
+    }
+
+    return this;
+  }
+
+  get queryRunner() {
+    return this.#queryRunner;
+  }
 }
-
-export type TRegister =
-  | {
-      name: "Auth";
-      service: InstanceType<typeof TService.AbstractAuthService>;
-      controller: TController.AbstractAuthController;
-    }
-  | {
-      name: "User";
-      service: TService.AbstractUserService;
-      controller: TController.AbstractUserController;
-    }
-  | {
-      name: "Product";
-      service: TService.AbstractProductService;
-      controller: TController.AbstractProductController;
-    }
-  | {
-      name: "Category";
-      service: TService.AbstractCategoryService;
-      controller: TController.AbstractCategoryController;
-    }
-  | {
-      name: "Cart";
-      service: TService.AbstractCartService;
-      controller: TController.AbstractCartController;
-    }
-  | {
-      name: "CartItem";
-      service: TService.AbstractCartItemService;
-      controller: TController.AbstractCartItemController;
-    };

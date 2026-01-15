@@ -1,60 +1,75 @@
-import { Cart } from "#entities";
-import { CartDependencies, CartPayLoad } from "../../types/cart";
+import { Cart, CartItem } from "#entities";
+import { CartPayLoad } from "#types/cart";
+import { QueryRunner } from "typeorm";
 import { AbstractCartService } from "./type";
+import { BadRequestError, NotFoundError } from "#types/error";
 
 export class CartService extends AbstractCartService {
-  async getCart(cartId: number): Promise<Cart | null> {
-    return await this.repository.findOneBy({ id: cartId });
-  }
-
-  async createCart(cart: Pick<Cart, "userId">): Promise<Cart> {
-    return await this.repository.save(cart);
+  async createCart(userId: string): Promise<Cart> {
+    return await this.cartRepository.save({ user: { id: userId }, items: [] });
   }
 
   async addProductToCart(
     { productId, userId, quantity }: CartPayLoad,
-    dependencies: CartDependencies
+    { queryRunner }: { queryRunner: QueryRunner }
   ): Promise<Cart> {
-    const { cartItemService, productService } = dependencies;
-    let cart = await this.getCartByUserId(userId);
-    if (!cart) {
-      cart = await this.createCart({ userId });
-    }
+    const cart = await this.getCartByUserId(userId);
+    const product = await this.productRepository.getById(productId);
 
-    const product = await productService.getProductById(productId);
+    if (!product) throw new NotFoundError(`Product ${productId} not found`);
+    if (product.stock < quantity)
+      throw new BadRequestError(`Insufficient stock for Product ${productId}`);
 
-    if (!product) {
-      throw new Error(`Not found Product by ID: ${productId}`);
-    }
+    await queryRunner.startTransaction();
 
-    if (product.stock < quantity) {
-      throw new Error(
-        `Currectly Product: ${productId} have ${product.stock} < ${quantity}`
-      );
-    }
+    try {
+      const manager = queryRunner.manager;
 
-    let cartItem = await cartItemService.getCartItemByProduct(
-      productId,
-      cart.id
-    );
-
-    if (cartItem?.quantity !== quantity) {
-      cartItem = await cartItemService.save({
-        cartId: cart.id,
-        productId,
-        quantity,
+      const existingItem = await manager.findOne(CartItem, {
+        where: { cartId: cart.id, productId },
       });
+
+      if (quantity === 0) {
+        if (existingItem) {
+          await manager.remove(existingItem);
+        }
+      } else {
+        await manager.save(CartItem, {
+          ...existingItem,
+          productId,
+          quantity,
+          cartId: cart.id,
+        });
+      }
+
+      await queryRunner.commitTransaction();
+      return await this.getCartByUserId(userId);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getCartByUserId(userId: string): Promise<Cart> {
+    let cart = await this.cartRepository
+      .createQueryBuilder("cart")
+      .leftJoinAndSelect("cart.items", "item")
+      .leftJoinAndSelect("item.productId", "product")
+      .where("cart.user_id = :userId", { userId })
+      .getOne();
+
+    if (!cart) {
+      cart = await this.createCart(userId);
     }
 
     return cart;
   }
 
-  async getCartByUserId(userId: string): Promise<Cart | null> {
-    try {
-      return await this.repository.findOne({ where: { status: "active" } });
-    } catch (error) {
-      console.log("error", error);
-      throw new Error("Oke");
-    }
+  async deleteCart(cartId: number): Promise<boolean> {
+    const success = await this.cartRepository.delete(cartId);
+
+    return !!success.affected;
   }
 }

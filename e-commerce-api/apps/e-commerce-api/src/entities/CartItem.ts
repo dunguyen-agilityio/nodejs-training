@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
 
 import { Base, type BaseProps } from "./Base";
 import { Cart } from "./Cart";
@@ -6,12 +6,12 @@ import { Product } from "./Product";
 
 @Entity({ name: "cart_items" })
 export class CartItem extends Base {
-  @OneToOne(() => Cart, (cart) => cart.items)
+  @ManyToOne(() => Cart, (cart) => cart.items)
   @JoinColumn({ referencedColumnName: "id", name: "cart_id" })
   cartId: number;
 
   @OneToOne(() => Product, (product) => product.cartItem)
-  @Column({ name: "product_id", type: "int" })
+  @JoinColumn({ name: "product_id" })
   productId: number;
 
   @Column({ type: "int" })

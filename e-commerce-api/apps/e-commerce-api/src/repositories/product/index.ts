@@ -10,7 +10,7 @@ export class ProductRepository extends AbstractProductRepository {
     query: string;
     skip: number;
     pageSize: number;
-  }): Promise<Product[]> {
+  }): Promise<[Product[], number]> {
     const { query, skip, pageSize } = params;
 
     return this.createQueryBuilder("product")
@@ -19,6 +19,6 @@ export class ProductRepository extends AbstractProductRepository {
       })
       .skip(skip)
       .take(pageSize)
-      .getMany();
+      .getManyAndCount();
   }
 }

@@ -7,11 +7,8 @@ export class UserRepository extends AbstractUserRepository {
     super(User, repo.manager);
   }
 
-  async getById(id: string): Promise<User> {
+  async getById(id: string): Promise<User | null> {
     const user = await this.findOne({ where: { id } });
-    if (!user) {
-      throw new Error(`User with id ${id} not found`);
-    }
     return user;
   }
 }

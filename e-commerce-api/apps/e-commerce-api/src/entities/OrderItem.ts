@@ -8,10 +8,10 @@ import { Product } from "./Product";
 export class OrderItem extends Base {
   @OneToOne(() => Order, (order) => order.items)
   @JoinColumn({ name: "order_id", referencedColumnName: "id" })
-  orderId: number;
+  order: Order;
 
   @OneToOne(() => Product, (product) => product.orderItem)
-  @Column({ name: "product_id", type: "int" })
+  @JoinColumn({ name: "product_id" })
   productId: number;
 
   @Column({ type: "int" })

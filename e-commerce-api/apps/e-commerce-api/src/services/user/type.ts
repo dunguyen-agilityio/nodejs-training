@@ -1,11 +1,8 @@
-import { User } from "#entities";
-import { AbstractUserRepository } from "#repositories/types";
+import { UserRepository } from "#repositories/types";
 import { BaseService } from "../base";
 
-export abstract class AbstractUserService extends BaseService<
-  User,
-  AbstractUserRepository
-> {
-  abstract getUserById(id: string): Promise<User>;
+export abstract class AbstractUserService extends BaseService {
+  protected userRepository: UserRepository;
+
   abstract addRoleForUser(userId: string, role: string): Promise<boolean>;
 }

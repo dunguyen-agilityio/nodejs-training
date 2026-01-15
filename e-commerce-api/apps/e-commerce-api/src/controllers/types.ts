@@ -1,6 +1,6 @@
-export * from "./auth/type";
-export * from "./product/type";
-export * from "./user/type";
-export * from "./cart/type";
-export * from "./category/type";
-export * from "./cart-item/type";
+export { type AbstractAuthController as AuthController } from "./auth/type";
+export { type AbstractProductController as ProductController } from "./product/type";
+export { type AbstractUserController as UserController } from "./user/type";
+export { type AbstractCartController as CartController } from "./cart/type";
+export { type AbstractCategoryController as CategoryController } from "./category/type";
+export { type AbstractCartItemController as CartItemController } from "./cart-item/type";

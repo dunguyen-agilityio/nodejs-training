@@ -1,6 +1,6 @@
-export * from "./auth/type";
-export * from "./user/type";
-export * from "./product/type";
-export * from "./category/type";
-export * from "./cart/type";
-export * from "./cart-item/type";
+export { type AbstractAuthService as AuthService } from "./auth/type";
+export { type AbstractUserService as UserService } from "./user/type";
+export { type AbstractProductService as ProductService } from "./product/type";
+export { type AbstractCategoryService as CategoryService } from "./category/type";
+export { type AbstractCartService as CartService } from "./cart/type";
+export { type AbstractCartItemService as CartItemService } from "./cart-item/type";

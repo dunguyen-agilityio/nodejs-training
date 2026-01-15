@@ -1,9 +1,5 @@
-import { ObjectLiteral } from "typeorm";
-import { BaseService } from "../services/base";
+import { BaseService } from "#services/base";
 
-export class BaseController<
-  T extends ObjectLiteral = ObjectLiteral,
-  S extends BaseService<T> = BaseService<T>,
-> {
+export class BaseController<S extends BaseService = BaseService> {
   constructor(protected service: S) {}
 }

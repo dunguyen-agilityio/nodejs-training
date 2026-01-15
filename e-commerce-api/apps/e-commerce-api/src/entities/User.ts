@@ -9,7 +9,8 @@ import {
 
 import { Cart } from "./Cart";
 import { Order } from "./Order";
-import { USER_ROLES } from "../types/user";
+
+import { USER_ROLES } from "#types/user";
 
 @Entity({ name: "users" })
 export class User {
@@ -46,13 +47,13 @@ export class User {
   @OneToMany(() => Order, (order) => order.userId)
   orders?: Order[];
 
-  @Column({ name: "created_at", type: "datetime" })
+  @Column({ name: "created_at", type: "datetime", nullable: true })
   createdAt: Date;
 
   @Column({ type: "varchar", nullable: true })
   role: USER_ROLES;
 
-  @Column({ name: "updated_at", type: "datetime" })
+  @Column({ name: "updated_at", type: "datetime", nullable: true })
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 

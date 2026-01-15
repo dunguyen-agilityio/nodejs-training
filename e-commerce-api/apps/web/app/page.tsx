@@ -26,22 +26,22 @@ export default async function Home() {
 
   console.log("token", token);
 
-  if (token) {
-    const response = await fetch("http://localhost:8080/products", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      method: "POST",
-      body: JSON.stringify({
-        data: {},
-      }),
-    });
+  // if (token) {
+  //   const response = await fetch("http://localhost:8080/products", {
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //     method: "POST",
+  //     body: JSON.stringify({
+  //       data: {},
+  //     }),
+  //   });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log("data", data);
-    }
-  }
+  //   if (response.ok) {
+  //     const data = await response.json();
+  //     console.log("data", data);
+  //   }
+  // }
 
   return (
     <div className={styles.page}>

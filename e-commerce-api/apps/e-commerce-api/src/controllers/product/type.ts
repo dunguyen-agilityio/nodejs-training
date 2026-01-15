@@ -1,12 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { BaseController } from "../base";
-import { Product } from "#entities";
-import { AbstractProductService } from "#services/types";
+import { ProductService } from "#services/types";
 
-export abstract class AbstractProductController extends BaseController<
-  Product,
-  AbstractProductService
-> {
+export abstract class AbstractProductController extends BaseController<ProductService> {
   abstract getProducts(
     request: FastifyRequest,
     reply: FastifyReply

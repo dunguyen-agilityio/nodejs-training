@@ -1,17 +1,25 @@
 import { Cart } from "#entities";
-import { AbstractCartRepository } from "#repositories/types";
-import { CartDependencies, CartPayLoad } from "../../types/cart";
+import {
+  CartItemRepository,
+  CartRepository,
+  ProductRepository,
+  UserRepository,
+} from "#repositories/types";
+import { CartPayLoad } from "#types/cart";
+import { QueryRunner } from "typeorm";
 import { BaseService } from "../base";
 
-export abstract class AbstractCartService extends BaseService<
-  Cart,
-  AbstractCartRepository
-> {
+export abstract class AbstractCartService extends BaseService {
+  protected cartRepository: CartRepository;
+  protected cartitemRepository: CartItemRepository;
+  protected userRepository: UserRepository;
+  protected productRepository: ProductRepository;
+
   abstract addProductToCart(
     payload: CartPayLoad,
-    dependencies: CartDependencies
+    dependencies: { queryRunner: QueryRunner }
   ): Promise<Cart>;
-  abstract getCart(cartId: number): Promise<Cart | null>;
-  abstract getCartByUserId(userId: string): Promise<Cart | null>;
-  abstract createCart(cart: Cart): Promise<Cart>;
+  abstract deleteCart(cartId: number): Promise<boolean>;
+  abstract getCartByUserId(userId: string): Promise<Cart>;
+  abstract createCart(userId: string): Promise<Cart>;
 }

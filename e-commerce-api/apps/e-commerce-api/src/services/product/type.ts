@@ -1,18 +1,14 @@
 import { Product } from "#entities";
-import { AbstractProductRepository } from "#repositories/types";
+import { ProductRepository } from "#repositories/types";
+import { Pagination, Params } from "#types/query";
 import { BaseService } from "../base";
 
-type Params = {
-  query: string;
-  page: number;
-  pageSize: number;
-};
+export abstract class AbstractProductService extends BaseService {
+  protected productRepository: ProductRepository;
 
-export abstract class AbstractProductService extends BaseService<
-  Product,
-  AbstractProductRepository
-> {
-  abstract getProducts(params: Params): Promise<Product[]>;
+  abstract getProducts(
+    params: Params
+  ): Promise<{ data: Product[]; meta: { pagination: Pagination } }>;
   abstract getProductById(id: number): Promise<Product | null>;
   abstract saveProduct(product: Omit<Product, "id">): Promise<Product>;
   abstract deleteProduct(id: number): Promise<void>;

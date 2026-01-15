@@ -1,9 +1,7 @@
-import { ObjectLiteral } from "typeorm";
-import { BaseRepository } from "../repositories/base";
+import { TRepository } from "#types/container";
 
-export class BaseService<
-  T extends ObjectLiteral,
-  R extends BaseRepository<T> = BaseRepository<T>,
-> {
-  constructor(protected repository: R) {}
+export abstract class BaseService {
+  constructor(repositories: Partial<TRepository>) {
+    Object.assign(this, repositories);
+  }
 }

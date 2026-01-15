@@ -1,7 +1,29 @@
+import "dotenv/config";
+import { clerkClient } from "@clerk/fastify";
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { USER_ROLES } from "#types/user";
 
 export class SeedData1768297791711 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    const { data } =
+      await clerkClient.organizations.getOrganizationMembershipList({
+        organizationId: process.env.CLERK_ORGANIZATION_ID!,
+      });
+
+    const migrateUserquery = data.reduce(
+      (prev, { role, publicUserData }, idx) => {
+        if (!publicUserData) return prev;
+        const { firstName, lastName, identifier, imageUrl, userId } =
+          publicUserData;
+        return `
+        ${prev}${idx === 0 ? "" : ","}
+        ('${userId}', '${firstName}', '${lastName}', '${identifier}', '${imageUrl}', '${role.split(":")[1] || USER_ROLES.USER}')`;
+      },
+      "INSERT INTO users (id, first_name, last_name, email, avatar, role ) VALUES"
+    );
+
+    await queryRunner.query(migrateUserquery);
+
     await queryRunner.query(`
             INSERT INTO categories (id, name, description) VALUES 
             (1, 'Electronics', 'Gadgets, devices, and more'),
@@ -29,5 +51,6 @@ export class SeedData1768297791711 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DELETE FROM products`);
     await queryRunner.query(`DELETE FROM categories`);
+    await queryRunner.query(`DELETE FROM users`);
   }
 }

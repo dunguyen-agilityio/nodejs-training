@@ -50,12 +50,15 @@ export class ProductController extends AbstractProductController {
   ): Promise<void> => {
     try {
       const { page = "1", pageSize = "10", query = "" } = request.query;
-      const products = await this.service.getProducts({
+      const response = await this.service.getProducts({
         page: parseInt(page),
         pageSize: parseInt(pageSize),
         query,
       });
-      reply.send({ success: true, data: products });
+      reply.send({
+        success: true,
+        ...response,
+      });
     } catch (error) {
       reply.status(500).send({
         success: false,

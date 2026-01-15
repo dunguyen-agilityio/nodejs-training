@@ -48,10 +48,13 @@
   "imports": {
     "#entities": "./src/entities/index.ts",
     "#services": "./src/services/index.ts",
-    "#services/types": "./src/services/types.ts",
+    "#services/*": "./src/services/*.ts",
+    "#controllers/*": "./src/controllers/*.ts",
+    "#controllers": "./src/controllers/index.ts",
     "#repositories": "./src/repositories/index.ts",
     "#middlewares": "./src/middlewares/index.ts",
-    "#repositories/types": "./src/repositories/types.ts",
-    "#schemas/*": "./src/schemas/*.ts"
+    "#repositories/*": "./src/repositories/*.ts",
+    "#schemas/*": "./src/schemas/*.ts",
+    "#types/*": "./src/types/*.ts"
   }
 }
