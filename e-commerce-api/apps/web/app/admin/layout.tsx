@@ -25,9 +25,15 @@ export default async function AdminLayout({
           </Link>
           <Link
             href="/admin/products"
-            className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
           >
             Products
+          </Link>
+          <Link
+            href="/admin/orders"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
+          >
+            Orders
           </Link>
           <Link
             href="/"

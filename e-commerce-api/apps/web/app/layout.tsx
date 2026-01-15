@@ -55,6 +55,11 @@ export default function RootLayout({
                   <Link href="/cart" className="relative p-2 hover:bg-accent rounded-md">
                     🛒
                   </Link>
+                  <SignedIn>
+                    <Link href="/orders" className="text-sm font-medium hover:underline">
+                      Orders
+                    </Link>
+                  </SignedIn>
                   <Link href="/admin" className="text-sm font-medium hover:underline">
                     Admin
                   </Link>

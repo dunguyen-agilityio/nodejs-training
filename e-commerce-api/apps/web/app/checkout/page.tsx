@@ -6,10 +6,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
+import { createOrderAction } from "@/app/actions";
+import { useAuth } from "@clerk/nextjs";
+import { Order } from "@/lib/types";
 
 export default function CheckoutPage() {
   const { cart, cartTotal, clearCart } = useCart();
   const router = useRouter();
+  const { userId } = useAuth();
 
   const {
     register,
@@ -20,9 +24,35 @@ export default function CheckoutPage() {
   });
 
   const onSubmit = async (data: CheckoutFormData) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Order placed:", { data, cart, total: cartTotal });
+    if (!userId) {
+       // Ideally handle guest checkout or force login
+       console.error("User not logged in");
+       return;
+    }
+
+    const newOrder: Order = {
+        id: `ORD-${Date.now()}`,
+        userId: userId,
+        date: new Date().toISOString(),
+        status: "Pending",
+        total: cartTotal,
+        items: cart.map(item => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+        })),
+        shippingAddress: {
+            name: `${data.firstName} ${data.lastName}`,
+            address: data.address,
+            city: data.city,
+            zipCode: data.zipCode,
+            country: data.country
+        }
+    };
+
+    await createOrderAction(newOrder);
     clearCart();
     router.push("/checkout/success");
   };
