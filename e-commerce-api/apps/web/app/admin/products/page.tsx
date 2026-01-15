@@ -1,8 +1,35 @@
-import { products } from "@/lib/data";
+import { getCategories, getProducts } from "@/lib/data";
 import Link from "next/link";
 import { Edit, Plus, Trash2 } from "lucide-react";
+import { SearchInput } from "@/components/search-input";
+import { CategoryFilter } from "@/components/category-filter";
+import { SortSelect } from "@/components/sort-select";
+import { PaginationControls } from "@/components/pagination-controls";
 
-export default function AdminProductsPage() {
+interface AdminProductsPageProps {
+  searchParams: Promise<{
+    search?: string;
+    category?: string;
+    sort?: string;
+    page?: string;
+  }>;
+}
+
+export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
+  const { search, category, sort, page } = await searchParams;
+  const currentPage = Number(page) || 1;
+  const limit = 10;
+
+  const { products, pagination } = await getProducts({
+    search,
+    category,
+    sort,
+    page: currentPage,
+    limit,
+  });
+
+  const categories = await getCategories();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -13,6 +40,16 @@ export default function AdminProductsPage() {
         >
           <Plus className="h-4 w-4" /> Add Product
         </Link>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card p-4 rounded-lg border">
+        <SearchInput />
+        <div className="flex gap-4 w-full md:w-auto">
+           <CategoryFilter categories={categories} />
+           <div className="w-[200px]">
+             <SortSelect />
+           </div>
+        </div>
       </div>
 
       <div className="rounded-md border bg-card">
@@ -38,34 +75,49 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
-              {products.map((product) => (
-                <tr
-                  key={product.id}
-                  className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                >
-                  <td className="p-4 align-middle font-medium">{product.name}</td>
-                  <td className="p-4 align-middle">{product.category}</td>
-                  <td className="p-4 align-middle">${product.price}</td>
-                  <td className="p-4 align-middle">{product.stock}</td>
-                  <td className="p-4 align-middle text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                      <button className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-destructive hover:text-destructive-foreground">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                    No products found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                products.map((product) => (
+                  <tr
+                    key={product.id}
+                    className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                  >
+                    <td className="p-4 align-middle font-medium">{product.name}</td>
+                    <td className="p-4 align-middle">{product.category}</td>
+                    <td className="p-4 align-middle">${product.price}</td>
+                    <td className="p-4 align-middle">{product.stock}</td>
+                    <td className="p-4 align-middle text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                        <button className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-destructive hover:text-destructive-foreground">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          totalPages={pagination.totalPages}
+          currentPage={pagination.currentPage}
+        />
+      )}
     </div>
   );
 }
