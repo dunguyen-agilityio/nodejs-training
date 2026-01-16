@@ -15,6 +15,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 import { Toaster } from "sonner";
+import { get } from "@/lib/api";
+import { auth } from "@clerk/nextjs/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +33,29 @@ export const metadata: Metadata = {
   description: "Built with Next.js and Clerk",
 };
 
-export default function RootLayout({
+import { ApiResponse, Cart, CartItem } from "@/lib/types";
+import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { userId, getToken } = await auth();
+  let cart: CartItem[] = [];
+  if (userId) {
+    try {
+      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+      const response = await get<ApiResponse<Cart>>("/cart", {
+        Authorization: `Bearer ${token}`,
+      });
+      cart = response.data.items;
+    } catch (error) {
+      console.error("Failed to fetch cart on server:", error);
+      // Handle error gracefully, maybe show a toast on the client
+    }
+  }
+
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
@@ -49,21 +69,30 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <CartProvider>
+              <CartProvider initialCart={cart}>
                 <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
                   <Link href="/" className="font-bold text-xl">
                     MyStore
                   </Link>
                   <div className="flex items-center gap-4">
-                    <Link href="/cart" className="relative p-2 hover:bg-accent rounded-md">
+                    <Link
+                      href="/cart"
+                      className="relative p-2 hover:bg-accent rounded-md"
+                    >
                       🛒
                     </Link>
                     <SignedIn>
-                      <Link href="/orders" className="text-sm font-medium hover:underline">
+                      <Link
+                        href="/orders"
+                        className="text-sm font-medium hover:underline"
+                      >
                         Orders
                       </Link>
                     </SignedIn>
-                    <Link href="/admin" className="text-sm font-medium hover:underline">
+                    <Link
+                      href="/admin"
+                      className="text-sm font-medium hover:underline"
+                    >
                       Admin
                     </Link>
                     <ModeToggle />

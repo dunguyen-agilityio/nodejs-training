@@ -5,7 +5,7 @@ import { Container } from "./utils/container";
 // if prop type is defined here, the value will be typechecked when you call decorate{,Request,Reply}
 declare module "fastify" {
   interface FastifyRequest {
-    container: Container1;
+    container: Container;
     userId: string;
   }
   interface FastifyReply {}

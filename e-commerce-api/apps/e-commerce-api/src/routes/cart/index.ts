@@ -21,5 +21,10 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
     { preHandler: [authenticate] },
     cartItemController.deleteCartItem
   );
+  instance.put(
+    "/items/:id",
+    { preHandler: [authenticate] },
+    cartItemController.updateCartItemQuantity
+  );
   done();
 };

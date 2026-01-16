@@ -1,5 +1,5 @@
 import { get } from "./api";
-import { Product } from "./types";
+import { Product, CartItem, ApiResponse, ApiPagination } from "./types";
 
 export const products: Product[] = [
   // ... existing mock products ...
@@ -300,18 +300,16 @@ export async function getProducts({
   if (page) params.append("page", page.toString());
   if (limit) params.append("pageSize", limit.toString());
 
-  const response = await get<{
-    data: Product[];
-    meta: {
-      pagination: {
-        currentPage: number;
-        itemCount: number;
-        itemsPerPage: number;
-        totalItems: number;
-        totalPages: number;
-      };
-    };
-  }>(`/products?${params.toString()}`);
+  const response = await get<
+    ApiResponse<
+      Product[],
+      {
+        meta: {
+          pagination: ApiPagination;
+        };
+      }
+    >
+  >(`/products?${params.toString()}`);
 
   const { currentPage, totalItems, totalPages } = response.meta.pagination;
 
@@ -327,7 +325,11 @@ export async function getProducts({
 }
 
 export async function getProductById(id: string) {
-  return get<{ data: Product }>(`/products/${id}`);
+  return get<ApiResponse<Product>>(`/products/${id}`);
+}
+
+export async function getCart(headers: HeadersInit = {}) {
+  return get<ApiResponse<CartItem[]>>(`/cart`, headers);
 }
 
 export async function getCategories() {

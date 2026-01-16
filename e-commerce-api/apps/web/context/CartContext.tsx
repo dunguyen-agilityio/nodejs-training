@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { CartItem, Product } from "@/lib/types";
-import { post } from "@/lib/api"; // Import post function
+import { post, del, put } from "@/lib/api"; // Import post, del, and put functions
 import { useAuth } from "@clerk/nextjs"; // Import useAuth hook
 import { toast } from "sonner";
 import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
@@ -17,25 +17,24 @@ interface CartContextType {
   cartCount: number;
 }
 
+interface CartAddResponse {
+  id: string;
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const { getToken } = useAuth(); // Get getToken function from useAuth
+export function CartProvider({
+  children,
+  initialCart = [],
+}: {
+  children: React.ReactNode;
+  initialCart?: CartItem[];
+}) {
+  const [cart, setCart] = useState<CartItem[]>(initialCart);
+  const { getToken } = useAuth(); // Get getToken and isSignedIn from useAuth
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Failed to parse cart from localStorage", e);
-      }
-    }
-  }, []);
-
-  // Save cart to localStorage on change
+  // Save cart to localStorage on change (Optional, depends on desired behavior)
+  // For now, we rely on the API for persistence
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
@@ -43,7 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = async (product: Product, quantity: number = 1) => {
     try {
       const token = await getToken({ template: CLERK_TOKEN_TEMPLATE }); // Get authentication token
-      await post(
+      const response = await post<CartAddResponse>(
         "/cart/add",
         { productId: product.id, quantity },
         {
@@ -51,15 +50,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       );
       setCart((prevCart) => {
-        const existingItem = prevCart.find((item) => item.id === product.id);
+        const existingItem = prevCart.find(
+          (item) => item.product.id === product.id
+        );
         if (existingItem) {
           return prevCart.map((item) =>
-            item.id === product.id
+            item.product.id === product.id
               ? { ...item, quantity: item.quantity + quantity }
               : item
           );
         }
-        return [...prevCart, { ...product, quantity }];
+        return [...prevCart, { id: response.id, product, quantity }];
       });
       toast.success(`${product.name} added to cart`);
     } catch (error) {
@@ -68,26 +69,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  const removeFromCart = async (cartItemId: string) => {
+    try {
+      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+      await del(`/cart/items/${cartItemId}`, {
+        Authorization: `Bearer ${token}`,
+      });
+      setCart((prevCart) => prevCart.filter((item) => item.id !== cartItemId));
+      toast.success("Item removed from cart");
+    } catch (error) {
+      console.error("Failed to remove from cart", error);
+      toast.error("Failed to remove item from cart");
+    }
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = async (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      await removeFromCart(cartItemId);
       return;
     }
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
-      )
-    );
+    try {
+      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+      await put(
+        `/cart/items/${cartItemId}`,
+        { quantity },
+        {
+          Authorization: `Bearer ${token}`,
+        }
+      );
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === cartItemId ? { ...item, quantity } : item
+        )
+      );
+      toast.success("Cart updated");
+    } catch (error) {
+      console.error("Failed to update quantity", error);
+      toast.error("Failed to update cart");
+    }
   };
 
   const clearCart = () => setCart([]);
 
   const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) => total + item.product.price * item.quantity,
     0
   );
 

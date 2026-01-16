@@ -34,4 +34,21 @@ export class CartItemService extends AbstractCartItemService {
       throw new NotFoundError("Item not found or user lacks permission");
     }
   }
+
+  async updateCartItemQuantity(
+    cartItemId: number,
+    quantity: number
+  ): Promise<boolean> {
+    const result = await this.cartItemRepository
+      .createQueryBuilder("cartItem")
+      .update({ quantity })
+      .where("id = :cartItemId", { cartItemId })
+      .execute();
+
+    if (result.affected === 0) {
+      throw new NotFoundError("Item not found or user lacks permission");
+    }
+
+    return true;
+  }
 }

@@ -8,11 +8,24 @@ export interface Product {
   stock: number;
 }
 
-export interface CartItem extends Product {
+export interface CartItem {
+  id: string;
   quantity: number;
+  product: Product;
 }
 
-export type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+export interface Cart {
+  id: number;
+  items: CartItem[];
+  status: string;
+}
+
+export type OrderStatus =
+  | "Pending"
+  | "Processing"
+  | "Shipped"
+  | "Delivered"
+  | "Cancelled";
 
 export interface OrderItem {
   productId: string;
@@ -37,3 +50,16 @@ export interface Order {
     country: string;
   };
 }
+
+export type ApiResponse<T, E = object> = {
+  success: boolean;
+  data: T;
+} & E;
+
+export type ApiPagination = {
+  currentPage: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalItems: number;
+  totalPages: number;
+};

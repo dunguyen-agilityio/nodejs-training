@@ -38,11 +38,11 @@ export default function CheckoutPage() {
             status: "Pending",
             total: cartTotal,
             items: cart.map(item => ({
-                productId: item.id,
-                name: item.name,
-                price: item.price,
+                productId: item.product.id,
+                name: item.product.name,
+                price: item.product.price,
                 quantity: item.quantity,
-                image: item.image
+                image: item.product.image
             })),
             shippingAddress: {
                 name: `${data.firstName} ${data.lastName}`,
@@ -252,10 +252,10 @@ export default function CheckoutPage() {
             {cart.map((item) => (
               <div key={item.id} className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">
-                  {item.name} x {item.quantity}
+                  {item.product.name} x {item.quantity}
                 </span>
                 <span className="font-medium text-foreground">
-                  ${item.price * item.quantity}
+                  ${item.product.price * item.quantity}
                 </span>
               </div>
             ))}

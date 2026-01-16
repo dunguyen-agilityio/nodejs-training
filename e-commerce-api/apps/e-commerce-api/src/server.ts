@@ -21,7 +21,9 @@ const fastify = Fastify({
 }).withTypeProvider<JsonSchemaToTsProvider>();
 
 fastify.register(cors, {
-  origin: "*",
+  origin: process.env.CLIENT_ORIGINS?.split(","),
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 });
 
 fastify.register(clerkPlugin);

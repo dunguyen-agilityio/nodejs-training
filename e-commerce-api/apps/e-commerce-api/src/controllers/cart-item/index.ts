@@ -16,4 +16,17 @@ export class CartItemController extends AbstractCartItemController {
 
     reply.status(HttpStatus.NO_CONTENT).send();
   };
+
+  updateCartItemQuantity = async (
+    request: FastifyRequest<{
+      Params: { id: string };
+      Body: { quantity: string };
+    }>,
+    reply: FastifyReply
+  ): Promise<void> => {
+    const id = parseInt(request.params.id);
+    const quantity = parseInt(request.body.quantity);
+    await this.service.updateCartItemQuantity(id, quantity);
+    reply.status(HttpStatus.NO_CONTENT).send();
+  };
 }

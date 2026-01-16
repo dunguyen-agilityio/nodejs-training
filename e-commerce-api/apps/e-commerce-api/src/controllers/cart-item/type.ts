@@ -9,4 +9,8 @@ export abstract class AbstractCartItemController extends BaseController<CartItem
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void>;
+  abstract updateCartItemQuantity(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void>;
 }

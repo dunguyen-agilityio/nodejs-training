@@ -87,4 +87,11 @@ export class CartService extends AbstractCartService {
 
     return !!success.affected;
   }
+
+  async removeProductFromCart(
+    itemId: number,
+    userId: string
+  ): Promise<boolean> {
+    return this.cartItemRepository.deleteCartItem(itemId, userId);
+  }
 }

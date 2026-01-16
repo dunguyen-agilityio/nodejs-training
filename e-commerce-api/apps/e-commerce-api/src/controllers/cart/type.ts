@@ -7,6 +7,10 @@ export abstract class AbstractCartController extends BaseController<CartService>
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void>;
+  abstract removeProductFromCart(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void>;
   abstract getCart(request: FastifyRequest, reply: FastifyReply): Promise<void>;
   abstract deleteCart(
     request: FastifyRequest,

@@ -38,15 +38,15 @@ export default function CartPage() {
             >
               <div className="relative h-24 w-24 bg-secondary rounded-md overflow-hidden flex-shrink-0">
                 <Image
-                  src={item.image || "/file-text.svg"}
-                  alt={item.name}
+                  src={item.product.image || "/file-text.svg"}
+                  alt={item.product.name}
                   fill
                   className="object-contain p-2"
                 />
               </div>
               <div className="flex-grow">
-                <h3 className="font-semibold text-foreground">{item.name}</h3>
-                <p className="text-muted-foreground text-sm">${item.price}</p>
+                <h3 className="font-semibold text-foreground">{item.product.name}</h3>
+                <p className="text-muted-foreground text-sm">${item.product.price}</p>
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center border border-input rounded-md">
                     <button
@@ -74,7 +74,7 @@ export default function CartPage() {
                 </div>
               </div>
               <div className="text-right font-semibold text-foreground">
-                ${item.price * item.quantity}
+                ${item.product.price * item.quantity}
               </div>
             </div>
           ))}
