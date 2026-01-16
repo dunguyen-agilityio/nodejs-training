@@ -6,7 +6,18 @@ import { BadRequestError, NotFoundError } from "#types/error";
 
 export class CartService extends AbstractCartService {
   async createCart(userId: string): Promise<Cart> {
-    return await this.cartRepository.save({ user: { id: userId }, items: [] });
+    try {
+      const newCart = this.cartRepository.create({
+        userId,
+        items: [],
+        status: "active",
+      });
+      await this.cartRepository.insert(newCart);
+      return newCart;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 
   async addProductToCart(
@@ -14,6 +25,9 @@ export class CartService extends AbstractCartService {
     { queryRunner }: { queryRunner: QueryRunner }
   ): Promise<Cart> {
     const cart = await this.getCartByUserId(userId);
+
+    const { id: cartId } = cart;
+
     const product = await this.productRepository.getById(productId);
 
     if (!product) throw new NotFoundError(`Product ${productId} not found`);
@@ -26,7 +40,7 @@ export class CartService extends AbstractCartService {
       const manager = queryRunner.manager;
 
       const existingItem = await manager.findOne(CartItem, {
-        where: { cartId: cart.id, product: { id: productId } },
+        where: { cartId, product: { id: productId } },
         relations: { product: true },
       });
 
@@ -35,18 +49,17 @@ export class CartService extends AbstractCartService {
           await manager.remove(existingItem);
         }
       } else {
-        if (!existingItem || existingItem.quantity !== quantity) {
-          await manager.save(CartItem, {
-            ...existingItem,
-            product,
-            quantity,
-            cartId: cart.id,
-          });
-        }
+        await manager.save(CartItem, {
+          ...existingItem,
+          product,
+          quantity,
+          cartId,
+        });
       }
 
       await queryRunner.commitTransaction();
-      return await this.getCartByUserId(userId);
+      const cart = await this.getCartByUserId(userId);
+      return cart!;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -66,7 +79,6 @@ export class CartService extends AbstractCartService {
     if (!cart) {
       cart = await this.createCart(userId);
     }
-
     return cart;
   }
 

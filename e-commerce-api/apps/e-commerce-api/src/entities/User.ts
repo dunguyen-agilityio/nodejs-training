@@ -41,7 +41,7 @@ export class User {
   @Column({ type: "varchar", nullable: true })
   password?: string;
 
-  @OneToOne(() => Cart, (cart) => cart.user)
+  @OneToOne(() => Cart, (cart) => cart.userId)
   cart?: Cart;
 
   @OneToMany(() => Order, (order) => order.userId)

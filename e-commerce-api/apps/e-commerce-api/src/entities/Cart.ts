@@ -10,8 +10,8 @@ import { User } from "./User";
 @Entity({ name: "carts" })
 export class Cart extends BaseWithCreatedAndUpdated {
   @OneToOne(() => User, (user) => user.cart)
-  @JoinColumn({ referencedColumnName: "id", name: "user_id" })
-  user: User;
+  @JoinColumn({ name: "user_id" })
+  userId: string;
 
   @Column({ type: "varchar", default: "active" })
   status: "active" | "abandoned" | "converted";
