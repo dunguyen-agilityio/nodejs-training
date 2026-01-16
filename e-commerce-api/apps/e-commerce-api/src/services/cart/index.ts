@@ -2,7 +2,7 @@ import { Cart, CartItem } from "#entities";
 import { CartPayLoad } from "#types/cart";
 import { QueryRunner } from "typeorm";
 import { AbstractCartService } from "./type";
-import { BadRequestError, NotFoundError } from "#types/error";
+import { BadRequestError, NotFoundError, UnexpectedError } from "#types/error";
 
 export class CartService extends AbstractCartService {
   async createCart(userId: string): Promise<Cart> {
@@ -23,7 +23,7 @@ export class CartService extends AbstractCartService {
   async addProductToCart(
     { productId, userId, quantity }: CartPayLoad,
     { queryRunner }: { queryRunner: QueryRunner }
-  ): Promise<Cart> {
+  ): Promise<CartItem> {
     const cart = await this.getCartByUserId(userId);
 
     const { id: cartId } = cart;
@@ -39,27 +39,28 @@ export class CartService extends AbstractCartService {
     try {
       const manager = queryRunner.manager;
 
-      const existingItem = await manager.findOne(CartItem, {
+      let cartItem = await manager.findOne(CartItem, {
         where: { cartId, product: { id: productId } },
         relations: { product: true },
       });
 
       if (quantity === 0) {
-        if (existingItem) {
-          await manager.remove(existingItem);
+        if (cartItem) {
+          await manager.remove(cartItem);
         }
       } else {
-        await manager.save(CartItem, {
-          ...existingItem,
+        cartItem = await manager.save(CartItem, {
+          ...cartItem,
           product,
           quantity,
           cartId,
         });
       }
 
+      if (!cartItem) throw new UnexpectedError();
+
       await queryRunner.commitTransaction();
-      const cart = await this.getCartByUserId(userId);
-      return cart!;
+      return cartItem;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

@@ -1,4 +1,4 @@
-import { Cart } from "#entities";
+import { Cart, CartItem } from "#entities";
 import {
   CartItemRepository,
   CartRepository,
@@ -18,7 +18,7 @@ export abstract class AbstractCartService extends BaseService {
   abstract addProductToCart(
     payload: CartPayLoad,
     dependencies: { queryRunner: QueryRunner }
-  ): Promise<Cart>;
+  ): Promise<CartItem>;
   abstract removeProductFromCart(
     itemId: number,
     userId: string

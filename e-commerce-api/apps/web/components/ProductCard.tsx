@@ -4,7 +4,6 @@ import Image from "next/image";
 import { Product } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
-import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -15,7 +14,6 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = () => {
     addToCart(product, 1);
-    toast.success(`${product.name} added to cart`);
   };
 
   return (

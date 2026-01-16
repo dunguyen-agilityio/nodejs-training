@@ -1,13 +1,42 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import Image from "next/image";
 import Link from "next/link";
+import { debounce } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { CartItem } from "@/components/cart-item"; // Import CartItemComponent
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const [localCart, setLocalCart] = useState(cart);
 
-  if (cart.length === 0) {
+  useEffect(() => {
+    setLocalCart(cart);
+  }, [cart]);
+
+  const handleUpdateQuantity = debounce(
+    (itemId: string, newQuantity: number) => {
+      if (newQuantity <= 0) {
+        handleRemoveFromCart(itemId);
+        return;
+      }
+
+      setLocalCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === itemId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+      updateQuantity(itemId, newQuantity);
+    },
+    500
+  );
+
+  const handleRemoveFromCart = (itemId: string) => {
+    setLocalCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
+    removeFromCart(itemId);
+  };
+
+  if (localCart.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -31,52 +60,13 @@ export default function CartPage() {
       <h1 className="text-3xl font-bold mb-8 text-foreground">Shopping Cart</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 space-y-4">
-          {cart.map((item) => (
-            <div
+          {localCart.map((item) => (
+            <CartItem
               key={item.id}
-              className="flex items-center gap-4 border-b border-border pb-4"
-            >
-              <div className="relative h-24 w-24 bg-secondary rounded-md overflow-hidden flex-shrink-0">
-                <Image
-                  src={item.product.image || "/file-text.svg"}
-                  alt={item.product.name}
-                  fill
-                  className="object-contain p-2"
-                />
-              </div>
-              <div className="flex-grow">
-                <h3 className="font-semibold text-foreground">{item.product.name}</h3>
-                <p className="text-muted-foreground text-sm">${item.product.price}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center border border-input rounded-md">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="px-3 py-1 hover:bg-accent hover:text-accent-foreground"
-                    >
-                      -
-                    </button>
-                    <span className="px-3 py-1 border-x border-input">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="px-3 py-1 hover:bg-accent hover:text-accent-foreground"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-destructive text-sm hover:underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-              <div className="text-right font-semibold text-foreground">
-                ${item.product.price * item.quantity}
-              </div>
-            </div>
+              item={item}
+              updateQuantity={handleUpdateQuantity}
+              removeFromCart={handleRemoveFromCart}
+            />
           ))}
         </div>
         <div className="bg-card p-6 rounded-lg h-fit border border-border">

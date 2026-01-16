@@ -21,7 +21,7 @@ export class CartController extends AbstractCartController {
     const { productId, quantity } = request.body;
     const { userId } = getAuth(request);
 
-    const cart = await this.service.addProductToCart(
+    const cartItem = await this.service.addProductToCart(
       {
         userId: userId ?? "",
         productId,
@@ -30,7 +30,7 @@ export class CartController extends AbstractCartController {
       { queryRunner: request.container.queryRunner }
     );
 
-    reply.send({ data: cart, success: true });
+    reply.send({ data: cartItem, success: true });
   };
 
   deleteCart = async (

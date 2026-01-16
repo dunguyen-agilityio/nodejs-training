@@ -9,16 +9,16 @@ import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, quantity: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, quantity: number) => Promise<void>;
+  removeFromCart: (itemId: string) => Promise<void>;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
 }
 
 interface CartAddResponse {
-  id: string;
+  data: { id: string };
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -60,7 +60,9 @@ export function CartProvider({
               : item
           );
         }
-        return [...prevCart, { id: response.id, product, quantity }];
+
+        console.log("response", response);
+        return [...prevCart, { id: response.data.id, product, quantity }];
       });
       toast.success(`${product.name} added to cart`);
     } catch (error) {
