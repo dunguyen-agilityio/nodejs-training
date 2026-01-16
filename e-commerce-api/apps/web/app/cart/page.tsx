@@ -10,8 +10,12 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4 text-foreground">Your cart is empty</h1>
-        <p className="text-muted-foreground mb-8">Add some items to get started!</p>
+        <h1 className="text-3xl font-bold mb-4 text-foreground">
+          Your cart is empty
+        </h1>
+        <p className="text-muted-foreground mb-8">
+          Add some items to get started!
+        </p>
         <Link
           href="/"
           className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90"
@@ -34,7 +38,7 @@ export default function CartPage() {
             >
               <div className="relative h-24 w-24 bg-secondary rounded-md overflow-hidden flex-shrink-0">
                 <Image
-                  src={item.image}
+                  src={item.image || "/file-text.svg"}
                   alt={item.name}
                   fill
                   className="object-contain p-2"
@@ -51,7 +55,9 @@ export default function CartPage() {
                     >
                       -
                     </button>
-                    <span className="px-3 py-1 border-x border-input">{item.quantity}</span>
+                    <span className="px-3 py-1 border-x border-input">
+                      {item.quantity}
+                    </span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="px-3 py-1 hover:bg-accent hover:text-accent-foreground"
@@ -74,7 +80,9 @@ export default function CartPage() {
           ))}
         </div>
         <div className="bg-card p-6 rounded-lg h-fit border border-border">
-          <h2 className="text-xl font-bold mb-4 text-foreground">Order Summary</h2>
+          <h2 className="text-xl font-bold mb-4 text-foreground">
+            Order Summary
+          </h2>
           <div className="space-y-2 mb-4 text-sm text-muted-foreground">
             <div className="flex justify-between">
               <span>Subtotal</span>

@@ -14,7 +14,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    addToCart(product);
+    addToCart(product, 1);
     toast.success(`${product.name} added to cart`);
   };
 
