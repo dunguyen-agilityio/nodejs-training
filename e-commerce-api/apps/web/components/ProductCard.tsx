@@ -23,7 +23,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product.id}`}>
         <div className="relative h-48 w-full bg-secondary flex items-center justify-center">
           <Image
-            src={product.image}
+            src={product.image || "/file-text.svg"}
             alt={product.name}
             width={100}
             height={100}

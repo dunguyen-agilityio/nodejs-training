@@ -1,6 +1,7 @@
 import { Order, OrderStatus } from "./types";
 
 // Mock database
+// eslint-disable-next-line prefer-const
 let orders: Order[] = [
   {
     id: "ORD-001",

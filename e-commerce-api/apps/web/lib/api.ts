@@ -19,7 +19,7 @@ export async function get<T>(path: string, headers: HeadersInit = {}): Promise<T
   return handleResponse<T>(response);
 }
 
-export async function post<T>(path: string, data: any, headers: HeadersInit = {}): Promise<T> {
+export async function post<T>(path: string, data: unknown, headers: HeadersInit = {}): Promise<T> {
   const response = await fetch(`${API_ENPOINT}${path}`, {
     method: 'POST',
     headers: { ...defaultHeaders, ...headers },
@@ -28,7 +28,7 @@ export async function post<T>(path: string, data: any, headers: HeadersInit = {}
   return handleResponse<T>(response);
 }
 
-export async function put<T>(path: string, data: any, headers: HeadersInit = {}): Promise<T> {
+export async function put<T>(path: string, data: unknown, headers: HeadersInit = {}): Promise<T> {
   const response = await fetch(`${API_ENPOINT}${path}`, {
     method: 'PUT',
     headers: { ...defaultHeaders, ...headers },

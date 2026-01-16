@@ -23,7 +23,7 @@ export function OrderStatusSelect({
       try {
         await updateOrderStatusAction(orderId, newStatus);
         toast.success(`Order ${orderId} updated to ${newStatus}`);
-      } catch (error) {
+      } catch {
         toast.error("Failed to update order status");
         setStatus(status); // Revert on error
       }

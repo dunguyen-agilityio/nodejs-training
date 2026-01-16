@@ -28,7 +28,7 @@ export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
       try {
         await deleteProductAction(productId);
         toast.success("Product deleted successfully");
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete product");
       }
     });

@@ -1,3 +1,4 @@
+import { get } from "./api";
 import { Product } from "./types";
 
 export const products: Product[] = [
@@ -5,7 +6,8 @@ export const products: Product[] = [
   {
     id: "1",
     name: "Classic White Tee",
-    description: "A comfortable, everyday essential made from 100% organic cotton.",
+    description:
+      "A comfortable, everyday essential made from 100% organic cotton.",
     price: 25,
     image: "/file-text.svg",
     category: "Apparel",
@@ -41,7 +43,8 @@ export const products: Product[] = [
   {
     id: "5",
     name: "Running Shoes",
-    description: "Lightweight and breathable running shoes for optimal performance.",
+    description:
+      "Lightweight and breathable running shoes for optimal performance.",
     price: 110,
     image: "/file-text.svg",
     category: "Footwear",
@@ -50,7 +53,8 @@ export const products: Product[] = [
   {
     id: "6",
     name: "Smart Watch",
-    description: "Track your fitness and stay connected with this stylish smart watch.",
+    description:
+      "Track your fitness and stay connected with this stylish smart watch.",
     price: 250,
     image: "/file-text.svg",
     category: "Electronics",
@@ -287,61 +291,37 @@ export async function getProducts({
   category,
   sort,
   page = 1,
-  limit = 4,
+  limit = 10,
 }: GetProductsParams) {
-  let filteredProducts = [...products];
+  const params = new URLSearchParams();
+  if (search) params.append("query", search);
+  if (category && category !== "All") params.append("category", category);
+  if (sort) params.append("sort", sort);
+  if (page) params.append("page", page.toString());
+  if (limit) params.append("pageSize", limit.toString());
 
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filteredProducts = filteredProducts.filter((product) =>
-      product.name.toLowerCase().includes(searchLower)
-    );
-  }
+  const response = await get<{
+    data: Product[];
+    meta: {
+      pagination: {
+        currentPage: number;
+        itemCount: number;
+        itemsPerPage: number;
+        totalItems: number;
+        totalPages: number;
+      };
+    };
+  }>(`/products?${params.toString()}`);
 
-  if (category && category !== "All") {
-    filteredProducts = filteredProducts.filter(
-      (product) => product.category === category
-    );
-  }
-
-  if (sort) {
-    switch (sort) {
-      case "price-asc":
-        filteredProducts.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        filteredProducts.sort((a, b) => b.price - a.price);
-        break;
-      case "name-asc":
-        filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "name-desc":
-        filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case "stock-asc":
-        filteredProducts.sort((a, b) => a.stock - b.stock);
-        break;
-      case "stock-desc":
-        filteredProducts.sort((a, b) => b.stock - a.stock);
-        break;
-    }
-  }
-
-  const total = filteredProducts.length;
-  const totalPages = Math.ceil(total / limit);
-  const offset = (page - 1) * limit;
-  const paginatedProducts = filteredProducts.slice(offset, offset + limit);
-
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  const { currentPage, totalItems, totalPages } = response.meta.pagination;
 
   return {
-    products: paginatedProducts,
+    products: response.data,
     pagination: {
       currentPage: page,
       totalPages,
-      total,
-      hasMore: page < totalPages,
+      total: totalItems,
+      hasMore: currentPage < totalPages,
     },
   };
 }

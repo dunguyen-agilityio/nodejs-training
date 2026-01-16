@@ -18,7 +18,7 @@ export default async function OrdersPage() {
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">No orders found</h1>
         <p className="text-muted-foreground mb-8">
-          You haven't placed any orders yet.
+          You haven&apos;t placed any orders yet.
         </p>
         <Link
           href="/"
