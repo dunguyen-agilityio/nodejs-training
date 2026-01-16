@@ -24,6 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@clerk/fastify": "^2.6.14",
+    "@fastify/cors": "^11.2.0",
     "@fastify/type-provider-json-schema-to-ts": "^5.0.0",
     "@repo/typeorm-service": "workspace:^",
     "better-sqlite3": "^12.5.0",

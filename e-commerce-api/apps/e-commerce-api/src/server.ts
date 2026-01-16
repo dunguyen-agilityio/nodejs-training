@@ -5,6 +5,7 @@ import Fastify from "fastify";
 import { clerkPlugin } from "@clerk/fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import fastifyPlugin from "fastify-plugin";
+import cors from "@fastify/cors";
 
 import { authRoutes, cartRoutes, categoryRoutes, userRoutes } from "./routes";
 
@@ -18,6 +19,10 @@ import { HttpStatus } from "#types/http-status";
 const fastify = Fastify({
   logger: true,
 }).withTypeProvider<JsonSchemaToTsProvider>();
+
+fastify.register(cors, {
+  origin: "*",
+});
 
 fastify.register(clerkPlugin);
 
