@@ -326,6 +326,10 @@ export async function getProducts({
   };
 }
 
+export async function getProductById(id: string) {
+  return get<{ data: Product }>(`/products/${id}`);
+}
+
 export async function getCategories() {
   const categories = Array.from(new Set(products.map((p) => p.category)));
   return ["All", ...categories];

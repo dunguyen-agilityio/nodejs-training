@@ -1,4 +1,4 @@
-import { products } from "@/lib/data";
+import { getProductById } from "@/lib/data";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./AddToCartButton";
@@ -9,7 +9,7 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
-  const product = products.find((p) => p.id === id);
+  const { data: product } = await getProductById(id);
 
   if (!product) {
     notFound();
@@ -20,7 +20,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="bg-secondary rounded-lg overflow-hidden flex items-center justify-center h-[500px]">
           <Image
-            src={product.image}
+            src={product.image || "/file-text.svg"}
             alt={product.name}
             width={300}
             height={300}
