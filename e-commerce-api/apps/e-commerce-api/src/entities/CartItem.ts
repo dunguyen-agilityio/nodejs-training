@@ -12,7 +12,7 @@ export class CartItem extends Base {
 
   @OneToOne(() => Product, (product) => product.cartItem)
   @JoinColumn({ name: "product_id" })
-  productId: number;
+  product: Product;
 
   @Column({ type: "int" })
   quantity: number;

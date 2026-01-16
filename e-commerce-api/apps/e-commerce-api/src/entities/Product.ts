@@ -25,7 +25,7 @@ export class Product extends BaseWithCreatedAndUpdated {
   @Column({ type: "simple-array", nullable: true })
   images: string[];
 
-  @OneToMany(() => CartItem, (cartItem: CartItem) => cartItem.productId)
+  @OneToMany(() => CartItem, (cartItem: CartItem) => cartItem.product)
   cartItem?: CartItem;
 
   @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.productId)

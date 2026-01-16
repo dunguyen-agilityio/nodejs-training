@@ -3,7 +3,8 @@ import { FastifyPluginCallback } from "fastify";
 
 export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.getItem("cartController");
-  const cartItemController = instance.container.getItem("cartitemController");
+  const cartItemController = instance.container.getItem("cartItemController");
+
   instance.post(
     "/add",
     { preHandler: [authenticate] },

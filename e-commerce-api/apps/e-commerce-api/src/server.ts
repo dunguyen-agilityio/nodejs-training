@@ -43,11 +43,18 @@ AppDataSource.initialize().then((dataSource) => {
 
   fastify.register(fastifyPlugin(decorates, { name: "container" }));
 
-  fastify.register(authRoutes, { prefix: "/auth" });
-  fastify.register(userRoutes, { prefix: "/users" });
-  fastify.register(productRoutes, { prefix: "/products" });
-  fastify.register(categoryRoutes, { prefix: "/categories" });
-  fastify.register(cartRoutes, { prefix: "/cart" });
+  fastify.register(
+    (instance, opts, done) => {
+      instance.register(authRoutes, { prefix: "/auth" });
+      instance.register(userRoutes, { prefix: "/users" });
+      instance.register(productRoutes, { prefix: "/products" });
+      instance.register(categoryRoutes, { prefix: "/categories" });
+      instance.register(cartRoutes, { prefix: "/cart" });
+
+      done();
+    },
+    { prefix: "/api/v1" }
+  );
 
   // Run the server!
   fastify.listen({ port: 8080 }, function (err, address) {

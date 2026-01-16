@@ -26,7 +26,8 @@ export class CartService extends AbstractCartService {
       const manager = queryRunner.manager;
 
       const existingItem = await manager.findOne(CartItem, {
-        where: { cartId: cart.id, productId },
+        where: { cartId: cart.id, product: { id: productId } },
+        relations: { product: true },
       });
 
       if (quantity === 0) {
@@ -34,12 +35,14 @@ export class CartService extends AbstractCartService {
           await manager.remove(existingItem);
         }
       } else {
-        await manager.save(CartItem, {
-          ...existingItem,
-          productId,
-          quantity,
-          cartId: cart.id,
-        });
+        if (!existingItem || existingItem.quantity !== quantity) {
+          await manager.save(CartItem, {
+            ...existingItem,
+            product,
+            quantity,
+            cartId: cart.id,
+          });
+        }
       }
 
       await queryRunner.commitTransaction();
@@ -56,7 +59,7 @@ export class CartService extends AbstractCartService {
     let cart = await this.cartRepository
       .createQueryBuilder("cart")
       .leftJoinAndSelect("cart.items", "item")
-      .leftJoinAndSelect("item.productId", "product")
+      .leftJoinAndSelect("item.product", "product")
       .where("cart.user_id = :userId", { userId })
       .getOne();
 

@@ -4,7 +4,7 @@ import type * as Controllers from "#controllers/types";
 
 export type TRepository = {
   userRepository: Repositories.UserRepository;
-  cartitemRepository: Repositories.CartItemRepository;
+  cartItemRepository: Repositories.CartItemRepository;
   cartRepository: Repositories.CartRepository;
   categoryRepository: Repositories.CategoryRepository;
   productRepository: Repositories.ProductRepository;
@@ -12,7 +12,7 @@ export type TRepository = {
 
 export type TService = {
   authService: Services.AuthService;
-  cartitemService: Services.CartItemService;
+  cartItemService: Services.CartItemService;
   cartService: Services.CartService;
   categoryService: Services.CategoryService;
   productService: Services.ProductService;
@@ -21,7 +21,7 @@ export type TService = {
 
 export type TController = {
   cartController: Controllers.CartController;
-  cartitemController: Controllers.CartItemController;
+  cartItemController: Controllers.CartItemController;
   categoryController: Controllers.CategoryController;
   productController: Controllers.ProductController;
   userController: Controllers.UserController;

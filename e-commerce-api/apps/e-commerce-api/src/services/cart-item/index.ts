@@ -13,14 +13,14 @@ export class CartItemService extends AbstractCartItemService {
     productId: number,
     cartId: number
   ): Promise<CartItem | null> {
-    return await this.cartitemRepository.findOneBy({
-      productId,
+    return await this.cartItemRepository.findOneBy({
+      product: { id: productId },
       cartId,
     });
   }
 
   async deleteCartItem(cartItemId: number, userId: string): Promise<void> {
-    const result = await this.cartitemRepository
+    const result = await this.cartItemRepository
       .createQueryBuilder("cartItem")
       .delete()
       .from("cart_items")

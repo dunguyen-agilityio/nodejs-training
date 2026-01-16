@@ -6,7 +6,7 @@ import * as Services from "#services";
 import * as Controllers from "#controllers";
 
 import { TController, TRepository, TService } from "#types/container";
-import { BaseService } from "#services/base";
+import { uncapitalize } from "./string";
 
 type Item = TRepository & TService & TController;
 
@@ -25,7 +25,7 @@ export class Container {
     return this.#instance;
   }
 
-  getItem<T extends keyof Item>(name: T): Item[T] {
+  getItem<T extends keyof Item>(name: T | string): Item[T] {
     return this.items.get(name);
   }
 
@@ -46,41 +46,37 @@ export class Container {
 
   build() {
     const repositories: Record<string, any> = {};
+
     this.#registers.forEach((entity) => {
-      if (!this.items.has(`${entity.toLowerCase()}Repository`)) {
-        const repository = new Repositories[`${entity}Repository`](
-          this.#dataSource.getRepository(Entities[entity]) as any
-        );
+      const repositoryName = uncapitalize(entity) + "Repository";
 
-        repositories[`${entity.toLowerCase()}Repository`] = repository;
-
-        this.setItem(`${entity.toLowerCase()}Repository` as any, repository);
+      if (!this.items.has(repositoryName)) {
+        const repo = this.#dataSource.getRepository(Entities[entity]);
+        const repository = new Repositories[`${entity}Repository`](repo as any);
+        repositories[repositoryName] = repository;
+        this.setItem(repositoryName, repository);
       }
     });
 
     for (const [value] of this.#registers) {
-      let service: BaseService = this.getItem(
-        `${value.toLowerCase()}Service` as any
+      const serviceName = `${uncapitalize(value)}Service`;
+
+      if (this.items.has(serviceName)) {
+        continue;
+      }
+
+      const service = new Services[`${value}Service` as keyof typeof Services](
+        repositories as TRepository
       );
 
-      const serviceName = `${value}Service` as keyof typeof Services;
+      const controllerName = `${uncapitalize(value)}Controller`;
 
-      if (!(serviceName in Services)) continue;
+      const controller = new Controllers[
+        `${value}Controller` as keyof typeof Controllers
+      ](service as any);
 
-      if (!service) {
-        service = new Services[serviceName](repositories as TRepository);
-
-        this.setItem(`${value.toLowerCase()}Service`, service);
-      }
-
-      const controllerName = `${value}Controller` as keyof typeof Controllers;
-
-      if (!(controllerName in Controllers)) continue;
-
-      if (!this.items.has(`${value.toLowerCase()}Controller`)) {
-        const controller = new Controllers[controllerName](service as any);
-        this.setItem(`${value.toLowerCase()}Controller`, controller);
-      }
+      this.setItem(serviceName, service);
+      this.setItem(controllerName, controller);
     }
 
     return this;
