@@ -11,7 +11,7 @@ export class AuthController extends AbstractAuthController {
     reply: FastifyReply
   ): Promise<void> => {
     const newUser = transformatFromClerk(request.body.data);
-    const user = await this.service.register(newUser);
+    const user = await this.service.register(newUser, request.payment);
     reply
       .code(HttpStatus.CREATED)
       .send({ message: "User registered successfully.", user });

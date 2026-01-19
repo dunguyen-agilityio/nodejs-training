@@ -11,5 +11,14 @@ export abstract class AbstractProductService extends BaseService {
   ): Promise<{ data: Product[]; meta: { pagination: Pagination } }>;
   abstract getProductById(id: number): Promise<Product | null>;
   abstract saveProduct(product: Omit<Product, "id">): Promise<Product>;
+  abstract updateProduct(
+    id: number,
+    product: Partial<
+      Pick<
+        Product,
+        "category" | "description" | "images" | "name" | "price" | "stock"
+      >
+    >
+  ): Promise<Product>;
   abstract deleteProduct(id: number): Promise<void>;
 }

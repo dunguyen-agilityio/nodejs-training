@@ -6,15 +6,23 @@ import { HttpStatus } from "#types/http-status";
 
 export class ProductController extends AbstractProductController {
   updateProduct = async (
-    request: FastifyRequest<{ Params: { id: string } }>,
+    request: FastifyRequest<{
+      Params: { id: string };
+      Body: Partial<
+        Pick<
+          Product,
+          "category" | "description" | "images" | "name" | "price" | "stock"
+        >
+      >;
+    }>,
     reply: FastifyReply
   ): Promise<void> => {
     const id = parseInt(request.params.id);
+    const body = request.body;
 
-    const product = await this.service.getProductById(id);
+    const product = await this.service.updateProduct(id, body);
 
-    // this.service.updateProduct();
-    reply.code(204).send();
+    reply.code(HttpStatus.OK).send(product);
   };
 
   addNewProduct = async (

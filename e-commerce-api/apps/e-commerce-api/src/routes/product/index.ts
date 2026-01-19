@@ -48,6 +48,23 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
     controller.addNewProduct
   );
 
+  instance.put(
+    "/:id",
+    {
+      preHandler: [authenticate, authorizeAdmin],
+      schema: {
+        body: {
+          type: "object",
+          required: ["name"],
+          properties: {
+            name: { type: "string" },
+          },
+        },
+      },
+    },
+    controller.updateProduct
+  );
+
   instance.delete(
     "/:id",
     { preHandler: [requiredId] },

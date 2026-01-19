@@ -16,7 +16,9 @@ interface AdminProductsPageProps {
   }>;
 }
 
-export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
+export default async function AdminProductsPage({
+  searchParams,
+}: AdminProductsPageProps) {
   const { search, category, sort, page } = await searchParams;
   const currentPage = Number(page) || 1;
   const limit = 10;
@@ -46,10 +48,10 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card p-4 rounded-lg border">
         <SearchInput />
         <div className="flex gap-4 w-full md:w-auto">
-           <CategoryFilter categories={categories} />
-           <div className="w-[200px]">
-             <SortSelect />
-           </div>
+          <CategoryFilter categories={categories} />
+          <div className="w-[200px]">
+            <SortSelect />
+          </div>
         </div>
       </div>
 
@@ -78,7 +80,10 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
             <tbody className="[&_tr:last-child]:border-0">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                  <td
+                    colSpan={5}
+                    className="p-4 text-center text-muted-foreground"
+                  >
                     No products found.
                   </td>
                 </tr>
@@ -88,7 +93,9 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                     key={product.id}
                     className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                   >
-                    <td className="p-4 align-middle font-medium">{product.name}</td>
+                    <td className="p-4 align-middle font-medium">
+                      {product.name}
+                    </td>
                     <td className="p-4 align-middle">{product.category}</td>
                     <td className="p-4 align-middle">${product.price}</td>
                     <td className="p-4 align-middle">{product.stock}</td>

@@ -11,10 +11,11 @@ import { authRoutes, cartRoutes, categoryRoutes, userRoutes } from "./routes";
 
 import { AppDataSource } from "./configs/data-source";
 
-import { Container } from "./utils/container";
+import { Container, Payment } from "./utils/container";
 import { productRoutes } from "./routes/product";
 import { ApiError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
+import { checkoutRoutes } from "./routes/checkout";
 
 const fastify = Fastify({
   logger: true,
@@ -37,6 +38,7 @@ AppDataSource.initialize().then((dataSource) => {
     .register("CartItem")
     .register("Category")
     .register("User", "Auth")
+    .addPayment(Payment.Stripe)
     .build();
 
   const decorates = () => {
@@ -45,6 +47,9 @@ AppDataSource.initialize().then((dataSource) => {
     });
     fastify.decorateRequest("container", {
       getter: () => container,
+    });
+    fastify.decorateRequest("payment", {
+      getter: () => container.getPayment(Payment.Stripe),
     });
   };
 
@@ -57,6 +62,7 @@ AppDataSource.initialize().then((dataSource) => {
       instance.register(productRoutes, { prefix: "/products" });
       instance.register(categoryRoutes, { prefix: "/categories" });
       instance.register(cartRoutes, { prefix: "/cart" });
+      instance.register(checkoutRoutes);
 
       done();
     },

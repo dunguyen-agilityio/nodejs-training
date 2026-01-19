@@ -1,7 +1,9 @@
 "use client";
 
+import { post, put } from "@/lib/api";
 import { productSchema, type ProductFormData } from "@/lib/schema";
 import { Product } from "@/lib/types";
+import { useAuth } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -14,6 +16,9 @@ interface ProductFormProps {
 export function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!initialData;
+  const { getToken } = useAuth();
+
+  const { id } = initialData || {};
 
   const {
     register,
@@ -37,15 +42,25 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-        // Simulate API call
-        console.log("Saving product:", data);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        toast.success(isEditing ? "Product updated successfully." : "Product created successfully.");
-        router.push("/admin/products");
-        router.refresh();
-    } catch (error) {
-        console.error(error);
-        toast.error("Failed to save product.");
+      const token = await getToken();
+
+      if (!id) {
+        await post("/products", data, { Authorization: `Bearer ${token}` });
+      } else {
+        await put(`/products/${id}`, data, {
+          Authorization: `Bearer ${token}`,
+        });
+      }
+
+      toast.success(
+        isEditing
+          ? "Product updated successfully."
+          : "Product created successfully."
+      );
+      router.push("/admin/products");
+      router.refresh();
+    } catch {
+      toast.error("Failed to save product.");
     }
   };
 
@@ -130,7 +145,9 @@ export function ProductForm({ initialData }: ProductFormProps) {
             <option value="Footwear">Footwear</option>
           </select>
           {errors.category && (
-            <p className="text-sm text-destructive">{errors.category.message}</p>
+            <p className="text-sm text-destructive">
+              {errors.category.message}
+            </p>
           )}
         </div>
       </div>
@@ -143,8 +160,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
         {isSubmitting
           ? "Saving..."
           : isEditing
-          ? "Update Product"
-          : "Create Product"}
+            ? "Update Product"
+            : "Create Product"}
       </button>
     </form>
   );

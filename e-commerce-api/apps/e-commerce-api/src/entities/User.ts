@@ -41,6 +41,9 @@ export class User {
   @Column({ type: "varchar", nullable: true })
   password?: string;
 
+  @Column({ type: "varchar", unique: true, nullable: true })
+  stripeId?: string;
+
   @OneToOne(() => Cart, (cart) => cart.userId)
   cart?: Cart;
 

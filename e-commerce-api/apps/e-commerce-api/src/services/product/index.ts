@@ -1,4 +1,5 @@
 import { Product } from "#entities";
+import { NotFoundError } from "#types/error";
 import { Pagination } from "#types/query";
 import { AbstractProductService } from "./type";
 
@@ -38,6 +39,22 @@ export class ProductService extends AbstractProductService {
 
   async saveProduct(product: Omit<Product, "id">): Promise<Product> {
     return this.productRepository.save(product);
+  }
+
+  async updateProduct(
+    id: number,
+    body: Partial<
+      Pick<
+        Product,
+        "category" | "description" | "images" | "name" | "price" | "stock"
+      >
+    >
+  ): Promise<Product> {
+    const product = await this.getProductById(id);
+
+    if (!product) throw new NotFoundError(`Not found Product by ID: ${id}`);
+
+    return await this.productRepository.save({ ...product, ...body });
   }
 
   async deleteProduct(id: number): Promise<void> {

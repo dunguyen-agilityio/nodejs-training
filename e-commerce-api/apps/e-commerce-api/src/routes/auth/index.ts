@@ -5,5 +5,6 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.post("/login", controller.login);
   instance.post("/register", controller.register);
   instance.post("/webhooks", controller.register);
+
   done();
 };

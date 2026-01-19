@@ -7,14 +7,22 @@ import * as Controllers from "#controllers";
 
 import { TController, TRepository, TService } from "#types/container";
 import { uncapitalize } from "./string";
+import { PaymentService } from "#services/stripe/type";
+import { StripePaymentService } from "#services/stripe/index";
+import { PaymentController } from "#controllers/checkout/index";
 
 type Item = TRepository & TService & TController;
+
+export enum Payment {
+  "Stripe" = "stripe",
+}
 
 export class Container {
   static #instance: Container;
   #dataSource: DataSource;
   #queryRunner: QueryRunner;
   items: Map<string, any> = new Map();
+  #payments: Map<Payment, PaymentService> = new Map();
   #registers: Map<string, keyof typeof Entities> = new Map();
 
   static get instance() {
@@ -25,7 +33,7 @@ export class Container {
     return this.#instance;
   }
 
-  getItem<T extends keyof Item>(name: T | string): Item[T] {
+  getItem<T extends keyof Item>(name: T): Item[T] {
     return this.items.get(name);
   }
 
@@ -80,6 +88,27 @@ export class Container {
     }
 
     return this;
+  }
+
+  addPayment(name: Payment) {
+    if (name === Payment.Stripe) {
+      const paymentService = new StripePaymentService();
+      const paymentController = new PaymentController(paymentService);
+      this.#payments.set(name, new StripePaymentService());
+      this.setItem("paymentController", paymentController);
+      this.setItem("paymentService", paymentService);
+    }
+
+    return this;
+  }
+
+  getPayment(name: Payment): PaymentService {
+    if (!this.#payments.has(name)) {
+      throw new Error(`Payment not register`);
+    }
+
+    const payment = this.#payments.get(name) as PaymentService;
+    return payment;
   }
 
   get queryRunner() {
