@@ -11,4 +11,9 @@ export class UserRepository extends AbstractUserRepository {
     const user = await this.findOne({ where: { id } });
     return user;
   }
+
+  async getByStripeId(stripeId: string): Promise<User | null> {
+    const user = await this.findOne({ where: { stripeId } });
+    return user;
+  }
 }

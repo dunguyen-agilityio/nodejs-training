@@ -21,4 +21,17 @@ export class ProductRepository extends AbstractProductRepository {
       .take(pageSize)
       .getManyAndCount();
   }
+
+  async decreaseStock(productId: number, quantity: number): Promise<void> {
+    const product = await this.createQueryBuilder("product")
+      .where("product.id = :id", { id: productId })
+      .setLock("pessimistic_write")
+      .getOne();
+    if (!product) throw new Error("Product not found");
+    if (product.stock < quantity) {
+      throw new Error("Insufficient stock");
+    }
+    product.stock -= quantity;
+    await this.save(product);
+  }
 }

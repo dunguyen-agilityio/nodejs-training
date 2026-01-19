@@ -26,4 +26,5 @@ export abstract class AbstractCartService extends BaseService {
   abstract deleteCart(cartId: number): Promise<boolean>;
   abstract getCartByUserId(userId: string): Promise<Cart>;
   abstract createCart(userId: string): Promise<Cart>;
+  abstract clearCart(userId: string): Promise<boolean>;
 }

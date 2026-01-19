@@ -47,7 +47,7 @@ export class User {
   @OneToOne(() => Cart, (cart) => cart.userId)
   cart?: Cart;
 
-  @OneToMany(() => Order, (order) => order.userId)
+  @OneToMany(() => Order, (order) => order.user)
   orders?: Order[];
 
   @Column({ name: "created_at", type: "datetime", nullable: true })

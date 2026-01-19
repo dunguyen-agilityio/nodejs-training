@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 
 import {
   BaseWithCreatedAndUpdated,
@@ -9,9 +9,9 @@ import { User } from "./User";
 
 @Entity({ name: "orders" })
 export class Order extends BaseWithCreatedAndUpdated {
+  @ManyToOne(() => User, (user) => user.orders)
   @JoinColumn({ name: "user_id", referencedColumnName: "id" })
-  @OneToOne(() => User, (user) => user.orders)
-  userId: number;
+  user: User;
 
   @Column({ type: "varchar" })
   status: "pending" | "paid" | "fulfilled" | "completed";
@@ -19,7 +19,9 @@ export class Order extends BaseWithCreatedAndUpdated {
   @Column({ name: "total_amount", type: "decimal" })
   totalAmount: number;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
+    cascade: ["insert", "update"],
+  })
   items?: OrderItem[];
 
   constructor(order: BaseWithCreatedAndUpdatedProps<Order>) {

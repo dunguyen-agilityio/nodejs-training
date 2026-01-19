@@ -12,14 +12,22 @@ export class CartItemRepository extends AbstractCartItemRepository {
     });
   }
 
-  async deleteCartItem(itemId: number, userId: string): Promise<boolean> {
+  async deleteCartItem(cartItemId: number, userId: string): Promise<boolean> {
     const result = await this.createQueryBuilder("cartItem")
       .delete()
       .from("cart_items")
-      .where("id = :itemId", { itemId })
-      .andWhere("cartId IN (SELECT id FROM carts WHERE user_id = :userId)", {
-        userId,
-      })
+      .where("cartItemId = :cartItemId", { cartItemId })
+      .andWhere("userId = :userId", { userId })
+      .execute();
+
+    return !!result.affected;
+  }
+
+  async deleteByCartId(cartId: number): Promise<boolean> {
+    const result = await this.createQueryBuilder("cartItem")
+      .delete()
+      .from("cart_items")
+      .where("cartId = :cartId", { cartId })
       .execute();
 
     return !!result.affected;

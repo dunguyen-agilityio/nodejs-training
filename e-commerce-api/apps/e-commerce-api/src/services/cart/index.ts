@@ -95,4 +95,11 @@ export class CartService extends AbstractCartService {
   ): Promise<boolean> {
     return this.cartItemRepository.deleteCartItem(itemId, userId);
   }
+
+  async clearCart(userId: string): Promise<boolean> {
+    const cart = await this.getCartByUserId(userId);
+    // delete all items in cart
+    await this.cartItemRepository.deleteCartItem(cart.id, userId);
+    return this.deleteCart(cart.id);
+  }
 }

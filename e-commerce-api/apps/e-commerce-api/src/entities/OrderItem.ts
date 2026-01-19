@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
 
 import { Base, type BaseProps } from "./Base";
 import { Order } from "./Order";
@@ -6,7 +6,7 @@ import { Product } from "./Product";
 
 @Entity({ name: "order_items" })
 export class OrderItem extends Base {
-  @OneToOne(() => Order, (order) => order.items)
+  @ManyToOne(() => Order, (order) => order.items)
   @JoinColumn({ name: "order_id", referencedColumnName: "id" })
   order: Order;
 

@@ -24,6 +24,7 @@ export class Container {
   items: Map<string, any> = new Map();
   #payments: Map<Payment, PaymentService> = new Map();
   #registers: Map<string, keyof typeof Entities> = new Map();
+  #repositories: Record<string, any> = {};
 
   static get instance() {
     if (!this.#instance) {
@@ -53,15 +54,13 @@ export class Container {
   }
 
   build() {
-    const repositories: Record<string, any> = {};
-
     this.#registers.forEach((entity) => {
       const repositoryName = uncapitalize(entity) + "Repository";
 
       if (!this.items.has(repositoryName)) {
         const repo = this.#dataSource.getRepository(Entities[entity]);
         const repository = new Repositories[`${entity}Repository`](repo as any);
-        repositories[repositoryName] = repository;
+        this.#repositories[repositoryName] = repository;
         this.setItem(repositoryName, repository);
       }
     });
@@ -74,7 +73,7 @@ export class Container {
       }
 
       const service = new Services[`${value}Service` as keyof typeof Services](
-        repositories as TRepository
+        this.#repositories as TRepository
       );
 
       const controllerName = `${uncapitalize(value)}Controller`;
@@ -92,9 +91,9 @@ export class Container {
 
   addPayment(name: Payment) {
     if (name === Payment.Stripe) {
-      const paymentService = new StripePaymentService();
+      const paymentService = new StripePaymentService(this.#repositories);
       const paymentController = new PaymentController(paymentService);
-      this.#payments.set(name, new StripePaymentService());
+      this.#payments.set(name, paymentService);
       this.setItem("paymentController", paymentController);
       this.setItem("paymentService", paymentService);
     }

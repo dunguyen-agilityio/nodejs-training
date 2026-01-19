@@ -20,6 +20,7 @@ export async function get<T>(
   const response = await fetch(`${API_ENPOINT}${path}`, {
     headers: { ...defaultHeaders, ...headers },
   });
+
   return handleResponse<T>(response);
 }
 

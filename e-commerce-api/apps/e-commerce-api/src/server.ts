@@ -38,8 +38,8 @@ AppDataSource.initialize().then((dataSource) => {
     .register("CartItem")
     .register("Category")
     .register("User", "Auth")
-    .addPayment(Payment.Stripe)
-    .build();
+    .build()
+    .addPayment(Payment.Stripe);
 
   const decorates = () => {
     fastify.decorate("container", {

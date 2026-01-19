@@ -1,3 +1,12 @@
+import { User } from "#entities";
+import { OrderItemRepository } from "#repositories/order-item/index";
+import { OrderRepository } from "#repositories/order/index";
+import {
+  CartItemRepository,
+  CartRepository,
+  ProductRepository,
+  UserRepository,
+} from "#repositories/types";
 import { BaseService } from "#services/base";
 
 export interface PaymentIntentCreateParams {
@@ -187,9 +196,19 @@ type Status =
   | "succeeded";
 
 export abstract class PaymentService extends BaseService {
+  protected userRepository: UserRepository;
+  protected cartRepository: CartRepository;
+  protected cartItemRepository: CartItemRepository;
+  protected productRepository: ProductRepository;
+  protected orderRepository: OrderRepository;
+  protected orderItemRepository: OrderItemRepository;
+
   abstract createPaymentIntent(
     payment: PaymentIntentCreateParams
   ): Promise<PaymentIntent>;
   abstract createCustomer(params: CustomerCreateParams): Promise<Customer>;
-  abstract getCustomer(id: string): Promise<Customer | string | null>;
+  abstract getUserByStripeId(stripeId: string): Promise<User | null>;
+  abstract clearCart(userId: string): Promise<void>;
+  abstract checkout(userId: string, paymentIntentId: string): Promise<void>;
+  abstract checkout1(userId: string, paymentIntentId: string): Promise<void>;
 }

@@ -8,4 +8,6 @@ export abstract class AbstractProductRepository extends BaseRepository<Product> 
     skip: number;
     pageSize: number;
   }): Promise<[Product[], number]>;
+
+  abstract decreaseStock(productId: number, quantity: number): Promise<void>;
 }
