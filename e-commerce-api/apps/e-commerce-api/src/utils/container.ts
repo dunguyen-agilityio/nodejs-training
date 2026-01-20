@@ -7,9 +7,9 @@ import * as Controllers from "#controllers";
 
 import { TController, TRepository, TService } from "#types/container";
 import { uncapitalize } from "./string";
-import { PaymentService } from "#services/stripe/type";
-import { StripePaymentService } from "#services/stripe/index";
-import { PaymentController } from "#controllers/checkout/index";
+import { StripePaymentGateway } from "#services/payment-gateway/index";
+import Stripe from "stripe";
+import { PaymentGateway } from "#services/types";
 
 type Item = TRepository & TService & TController;
 
@@ -17,14 +17,19 @@ export enum Payment {
   "Stripe" = "stripe",
 }
 
+type TRegister = keyof typeof Entities | "Checkout";
+
 export class Container {
   static #instance: Container;
   #dataSource: DataSource;
   #queryRunner: QueryRunner;
   items: Map<string, any> = new Map();
-  #payments: Map<Payment, PaymentService> = new Map();
-  #registers: Map<string, keyof typeof Entities> = new Map();
+  #payments: Map<Payment, PaymentGateway> = new Map();
+  #registers: Map<string, TRegister> = new Map();
   #repositories: Record<string, any> = {};
+  #stripePaymentGateway: PaymentGateway;
+
+  private constructor() {}
 
   static get instance() {
     if (!this.#instance) {
@@ -48,7 +53,7 @@ export class Container {
     return this;
   }
 
-  register<T extends keyof typeof Entities>(entity: T, name: string = entity) {
+  register<T extends TRegister>(entity: T, name: string = entity) {
     this.#registers.set(name, entity);
     return this;
   }
@@ -57,7 +62,7 @@ export class Container {
     this.#registers.forEach((entity) => {
       const repositoryName = uncapitalize(entity) + "Repository";
 
-      if (!this.items.has(repositoryName)) {
+      if (!this.items.has(repositoryName) && entity !== "Checkout") {
         const repo = this.#dataSource.getRepository(Entities[entity]);
         const repository = new Repositories[`${entity}Repository`](repo as any);
         this.#repositories[repositoryName] = repository;
@@ -72,15 +77,24 @@ export class Container {
         continue;
       }
 
-      const service = new Services[`${value}Service` as keyof typeof Services](
-        this.#repositories as TRepository
-      );
+      const serviceKey = `${value}Service` as keyof typeof Services;
+
+      let service;
+
+      if (serviceKey !== "StripePaymentGateway") {
+        service = new Services[serviceKey](
+          this.#repositories as TRepository,
+          this.#stripePaymentGateway,
+        );
+      }
 
       const controllerName = `${uncapitalize(value)}Controller`;
+      const controllerKey = `${value}Controller` as keyof typeof Controllers;
+      if (!(controllerKey in Controllers)) {
+        throw new Error(`Not found ${controllerKey}`);
+      }
 
-      const controller = new Controllers[
-        `${value}Controller` as keyof typeof Controllers
-      ](service as any);
+      const controller = new Controllers[controllerKey](service as any);
 
       this.setItem(serviceName, service);
       this.setItem(controllerName, controller);
@@ -91,22 +105,22 @@ export class Container {
 
   addPayment(name: Payment) {
     if (name === Payment.Stripe) {
-      const paymentService = new StripePaymentService(this.#repositories);
-      const paymentController = new PaymentController(paymentService);
-      this.#payments.set(name, paymentService);
-      this.setItem("paymentController", paymentController);
-      this.setItem("paymentService", paymentService);
+      const apiKey = process.env.STRIPE_API_KEY;
+      if (!apiKey) {
+        throw new Error("STRIPE_API_KEY environment variable is required");
+      }
+      this.#stripePaymentGateway = new StripePaymentGateway(new Stripe(apiKey));
     }
 
     return this;
   }
 
-  getPayment(name: Payment): PaymentService {
+  getPayment(name: Payment): PaymentGateway {
     if (!this.#payments.has(name)) {
       throw new Error(`Payment not register`);
     }
 
-    const payment = this.#payments.get(name) as PaymentService;
+    const payment = this.#payments.get(name) as PaymentGateway;
     return payment;
   }
 

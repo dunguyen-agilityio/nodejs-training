@@ -1,12 +1,17 @@
-import { PaymentService } from "#services/types";
+import { TStripePaymentGateway } from "#services";
+import { CheckoutService, PaymentGateway } from "#services/types";
 import { FastifyReply, FastifyRequest } from "fastify";
+import Stripe from "stripe";
 
-export abstract class AbstractPaymentController {
-  constructor(protected service: PaymentService) { }
+export abstract class AbstractCheckoutController {
+  constructor(
+    protected service: CheckoutService,
+    // protected service: PaymentGateway<Stripe, TStripePaymentGateway>,
+  ) {}
 
   abstract createPaymentIntent(
     request: FastifyRequest<{ Body: { amount: string; currency: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void>;
   abstract checkoutSuccess(
     request: FastifyRequest<{
@@ -17,7 +22,6 @@ export abstract class AbstractPaymentController {
         type: "payment_intent.succeeded";
       };
     }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void>;
-
 }

@@ -41,10 +41,10 @@ export class User {
   @Column({ type: "varchar", nullable: true })
   password?: string;
 
-  @Column({ type: "varchar", unique: true, nullable: true })
+  @Column({ type: "varchar", unique: true, nullable: true, name: "stripe_id" })
   stripeId?: string;
 
-  @OneToOne(() => Cart, (cart) => cart.userId)
+  @OneToOne(() => Cart, (cart) => cart.user)
   cart?: Cart;
 
   @OneToMany(() => Order, (order) => order.user)

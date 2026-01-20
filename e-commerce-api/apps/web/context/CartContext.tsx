@@ -6,6 +6,7 @@ import { post, del, put } from "@/lib/api"; // Import post, del, and put functio
 import { useAuth } from "@clerk/nextjs"; // Import useAuth hook
 import { toast } from "sonner";
 import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
+import { debounce } from "@/lib/utils";
 
 interface CartContextType {
   cart: CartItem[];
@@ -31,37 +32,28 @@ export function CartProvider({
   initialCart?: CartItem[];
 }) {
   const [cart, setCart] = useState<CartItem[]>(initialCart);
-  const { getToken } = useAuth(); // Get getToken and isSignedIn from useAuth
+  const { getToken } = useAuth();
 
-  // Save cart to localStorage on change (Optional, depends on desired behavior)
-  // For now, we rely on the API for persistence
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  const addToCart = async (product: Product, quantity: number = 1) => {
+  const addToCart = debounce(async (product: Product, quantity: number = 1) => {
     try {
-      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE }); // Get authentication token
+      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
       const response = await post<CartAddResponse>(
         "/cart/add",
         { productId: product.id, quantity },
         {
           Authorization: `Bearer ${token}`,
-        }
+        },
       );
       setCart((prevCart) => {
         const existingItem = prevCart.find(
-          (item) => item.product.id === product.id
+          (item) => item.product.id === product.id,
         );
         if (existingItem) {
           return prevCart.map((item) =>
-            item.product.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
+            item.product.id === product.id ? { ...item, quantity } : item,
           );
         }
 
-        console.log("response", response);
         return [...prevCart, { id: response.data.id, product, quantity }];
       });
       toast.success(`${product.name} added to cart`);
@@ -69,7 +61,7 @@ export function CartProvider({
       console.error("Failed to add to cart", error);
       toast.error("Failed to add product to cart");
     }
-  };
+  }, 3000);
 
   const removeFromCart = async (cartItemId: string) => {
     try {
@@ -97,12 +89,12 @@ export function CartProvider({
         { quantity },
         {
           Authorization: `Bearer ${token}`,
-        }
+        },
       );
       setCart((prevCart) =>
         prevCart.map((item) =>
-          item.id === cartItemId ? { ...item, quantity } : item
-        )
+          item.id === cartItemId ? { ...item, quantity } : item,
+        ),
       );
       toast.success("Cart updated");
     } catch (error) {
@@ -115,7 +107,7 @@ export function CartProvider({
 
   const cartTotal = cart.reduce(
     (total, item) => total + item.product.price * item.quantity,
-    0
+    0,
   );
 
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);

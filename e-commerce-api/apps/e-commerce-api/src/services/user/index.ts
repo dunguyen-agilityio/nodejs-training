@@ -20,4 +20,8 @@ export class UserService extends AbstractUserService {
   async getById(id: string): Promise<User | null> {
     return this.userRepository.findOneBy({ id });
   }
+
+  save(user: User): Promise<User> {
+    return this.userRepository.save(user);
+  }
 }

@@ -8,7 +8,7 @@ export class CartService extends AbstractCartService {
   async createCart(userId: string): Promise<Cart> {
     try {
       const newCart = this.cartRepository.create({
-        userId,
+        user: { id: userId },
         items: [],
         status: "active",
       });
@@ -22,7 +22,7 @@ export class CartService extends AbstractCartService {
 
   async addProductToCart(
     { productId, userId, quantity }: CartPayLoad,
-    { queryRunner }: { queryRunner: QueryRunner }
+    { queryRunner }: { queryRunner: QueryRunner },
   ): Promise<CartItem> {
     const cart = await this.getCartByUserId(userId);
 
@@ -91,7 +91,7 @@ export class CartService extends AbstractCartService {
 
   async removeProductFromCart(
     itemId: number,
-    userId: string
+    userId: string,
   ): Promise<boolean> {
     return this.cartItemRepository.deleteCartItem(itemId, userId);
   }

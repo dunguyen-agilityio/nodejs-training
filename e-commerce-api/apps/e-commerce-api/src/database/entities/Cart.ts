@@ -11,7 +11,7 @@ import { User } from "./User";
 export class Cart extends BaseWithCreatedAndUpdated {
   @OneToOne(() => User, (user) => user.cart)
   @JoinColumn({ name: "user_id" })
-  userId: string;
+  user: User;
 
   @Column({ type: "varchar", default: "active" })
   status: "active" | "abandoned" | "converted";

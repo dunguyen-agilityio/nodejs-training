@@ -2,18 +2,19 @@
 
 import Image from "next/image";
 import { Product } from "@/lib/types";
-import { useCart } from "@/context/CartContext";
 import Link from "next/link";
+import { TWithCart, withCart } from "@/context/withCart";
 
-interface ProductCardProps {
+export interface ProductCardProps {
   product: Product;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
-
+export default function ProductCard({
+  product,
+  addToCart,
+}: TWithCart<ProductCardProps>) {
   const handleAddToCart = () => {
-    addToCart(product, 1);
+    addToCart(product);
   };
 
   return (
@@ -21,7 +22,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product.id}`}>
         <div className="relative h-48 w-full bg-secondary flex items-center justify-center">
           <Image
-            src={product.image || "/file-text.svg"}
+            src={product.images[0] || "/file-text.svg"}
             alt={product.name}
             width={100}
             height={100}
@@ -51,3 +52,5 @@ export default function ProductCard({ product }: ProductCardProps) {
     </div>
   );
 }
+
+export const ProductCardWithCart = withCart<ProductCardProps>(ProductCard);

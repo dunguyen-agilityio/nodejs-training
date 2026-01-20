@@ -6,7 +6,8 @@ export class CartRepository extends AbstractCartRepository {
     const cart = this.createQueryBuilder("cart")
       .leftJoinAndSelect("cart.items", "cartItem")
       .leftJoinAndSelect("cartItem.product", "product")
-      .where("cart.userId = :userId", { userId })
+      .leftJoinAndSelect("cart.user", "user")
+      .where("user.id = :userId", { userId })
       .getOne();
 
     return cart;

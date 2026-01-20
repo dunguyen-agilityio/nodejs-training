@@ -8,10 +8,10 @@ import { HttpStatus } from "#types/http-status";
 export class AuthController extends AbstractAuthController {
   register = async (
     request: FastifyRequest<{ Body: { data: UserJSON } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const newUser = transformatFromClerk(request.body.data);
-    const user = await this.service.register(newUser, request.payment);
+    const user = await this.service.register(newUser);
     reply
       .code(HttpStatus.CREATED)
       .send({ message: "User registered successfully.", user });

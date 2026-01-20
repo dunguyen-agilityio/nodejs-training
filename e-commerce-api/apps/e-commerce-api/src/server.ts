@@ -9,13 +9,12 @@ import cors from "@fastify/cors";
 
 import { authRoutes, cartRoutes, categoryRoutes, userRoutes } from "./routes";
 
-import { AppDataSource } from "./configs/data-source";
-
 import { Container, Payment } from "./utils/container";
 import { productRoutes } from "./routes/product";
 import { ApiError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
 import { checkoutRoutes } from "./routes/checkout";
+import { AppDataSource } from "#data-source";
 
 const fastify = Fastify({
   logger: true,
@@ -36,10 +35,11 @@ AppDataSource.initialize().then((dataSource) => {
     .register("Product")
     .register("Cart")
     .register("CartItem")
+    .register("Checkout")
     .register("Category")
     .register("User", "Auth")
-    .build()
-    .addPayment(Payment.Stripe);
+    .addPayment(Payment.Stripe)
+    .build();
 
   const decorates = () => {
     fastify.decorate("container", {
@@ -66,7 +66,7 @@ AppDataSource.initialize().then((dataSource) => {
 
       done();
     },
-    { prefix: "/api/v1" }
+    { prefix: "/api/v1" },
   );
 
   // Run the server!

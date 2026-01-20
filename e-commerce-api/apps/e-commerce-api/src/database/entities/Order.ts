@@ -10,8 +10,8 @@ import { User } from "./User";
 @Entity({ name: "orders" })
 export class Order extends BaseWithCreatedAndUpdated {
   @ManyToOne(() => User, (user) => user.orders)
-  @JoinColumn({ name: "user_id", referencedColumnName: "id" })
-  user: User;
+  @JoinColumn({ name: "user_id" })
+  user?: User;
 
   @Column({ type: "varchar" })
   status: "pending" | "paid" | "fulfilled" | "completed";
@@ -19,9 +19,7 @@ export class Order extends BaseWithCreatedAndUpdated {
   @Column({ name: "total_amount", type: "decimal" })
   totalAmount: number;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
-    cascade: ["insert", "update"],
-  })
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   items?: OrderItem[];
 
   constructor(order: BaseWithCreatedAndUpdatedProps<Order>) {

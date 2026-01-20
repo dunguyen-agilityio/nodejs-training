@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../../lib/data";
-import ProductCard from "../../components/ProductCard";
+import { ProductCardWithCart } from "../../components/ProductCard";
 import { SortSelect } from "../../components/sort-select";
 import { SearchInput } from "../../components/search-input";
 import { PaginationControls } from "../../components/pagination-controls";
@@ -15,11 +15,7 @@ export default function ProductList() {
   const category = searchParams.get("category") ?? undefined;
   const page = parseInt(searchParams.get("page") ?? "1", 10);
 
-  const {
-    data,
-    error,
-    isLoading,
-  } = useQuery({
+  const { data, error, isLoading } = useQuery({
     queryKey: ["products", { search, sort, category, page }],
     queryFn: () => getProducts({ search, sort, category, page }),
   });
@@ -46,7 +42,7 @@ export default function ProductList() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCardWithCart key={product.id} product={product} />
         ))}
       </div>
 

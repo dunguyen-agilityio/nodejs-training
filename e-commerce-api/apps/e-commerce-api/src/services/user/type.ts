@@ -8,4 +8,5 @@ export abstract class AbstractUserService extends BaseService {
   abstract addRoleForUser(userId: string, role: string): Promise<boolean>;
   abstract getUserByStripeId(stripeId: string): Promise<User | null>;
   abstract getById(id: string): Promise<User | null>;
+  abstract save(user: User): Promise<User>;
 }

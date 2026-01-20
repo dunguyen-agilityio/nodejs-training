@@ -1,5 +1,5 @@
 import { getCategories, getProducts } from "@/lib/data";
-import ProductCard from "@/components/ProductCard";
+import { ProductCardWithCart } from "@/components/ProductCard";
 import { SearchInput } from "@/components/search-input";
 import { CategoryFilter } from "@/components/category-filter";
 import { PaginationControls } from "@/components/pagination-controls";
@@ -55,7 +55,7 @@ export default async function Home({ searchParams }: HomeProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCardWithCart key={product.id} product={product} />
             ))}
           </div>
         )}

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 
 import {
   BaseWithCreatedAndUpdated,
@@ -26,13 +26,13 @@ export class Product extends BaseWithCreatedAndUpdated {
   images: string[];
 
   @OneToMany(() => CartItem, (cartItem: CartItem) => cartItem.product)
-  cartItem?: CartItem;
+  cartItems?: CartItem[];
 
-  @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.productId)
-  orderItem?: OrderItem;
+  @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.product)
+  orderItems?: OrderItem[];
 
-  @Column({ type: "varchar", name: "category" })
-  @JoinColumn({ referencedColumnName: "name" })
+  @JoinColumn({ referencedColumnName: "name", name: "category" })
+  @ManyToOne(() => Category, (category) => category.products)
   category: Category;
 
   constructor(product: BaseWithCreatedAndUpdatedProps<Product>) {

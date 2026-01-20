@@ -7,11 +7,11 @@ export class CartItemController extends AbstractCartItemController {
 
   deleteCartItem = async (
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     await this.service.deleteCartItem(
       parseInt(request.params.id),
-      request.userId
+      request.userId,
     );
 
     reply.status(HttpStatus.NO_CONTENT).send();
@@ -22,11 +22,11 @@ export class CartItemController extends AbstractCartItemController {
       Params: { id: string };
       Body: { quantity: string };
     }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const id = parseInt(request.params.id);
     const quantity = parseInt(request.body.quantity);
     await this.service.updateCartItemQuantity(id, quantity);
-    reply.status(HttpStatus.NO_CONTENT).send();
+    reply.status(HttpStatus.OK).send();
   };
 }
