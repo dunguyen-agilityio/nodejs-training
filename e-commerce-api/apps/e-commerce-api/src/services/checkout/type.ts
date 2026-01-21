@@ -6,25 +6,20 @@ import {
   ProductRepository,
   UserRepository,
 } from "#repositories/types";
-import { PaymentGateway } from "#services/types";
-import { TRepository } from "#types/container";
 import Stripe from "stripe";
 import { TStripePaymentGateway } from "../payment-gateway";
+import { BaseService } from "#services/base";
+import { PaymentGatewayProvider } from "../../providers/types";
 
-export abstract class AbstractCheckoutService {
+export abstract class AbstractCheckoutService extends BaseService<
+  PaymentGatewayProvider<Stripe, TStripePaymentGateway>
+> {
   protected userRepository: UserRepository;
   protected cartRepository: CartRepository;
   protected cartItemRepository: CartItemRepository;
   protected productRepository: ProductRepository;
   protected orderRepository: OrderRepository;
   protected orderItemRepository: OrderItemRepository;
-
-  constructor(
-    repositories: TRepository,
-    protected paymentGetway: PaymentGateway<Stripe, TStripePaymentGateway>,
-  ) {
-    Object.assign(this, repositories);
-  }
 
   abstract checkout(
     stripeId: string,

@@ -1,7 +1,7 @@
 import { User } from "#entities";
-import { Repository } from "typeorm";
+import { BaseRepository } from "#repositories/base";
 
-export abstract class AbstractUserRepository extends Repository<User> {
+export abstract class AbstractUserRepository extends BaseRepository<User> {
   abstract getById(id: string): Promise<User | null>;
   abstract getByStripeId(stripeId: string): Promise<User | null>;
 }

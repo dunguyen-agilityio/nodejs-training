@@ -8,13 +8,13 @@ export abstract class AbstractCartItemService extends BaseService {
 
   abstract getCartItemByProduct(
     productId: number,
-    cartId: number
+    cartId: number,
   ): Promise<CartItem | null>;
 
   abstract deleteCartItem(cartItemId: number, userId: string): Promise<void>;
 
   abstract updateCartItemQuantity(
     cartItemId: number,
-    quantity: number
+    quantity: number,
   ): Promise<boolean>;
 }

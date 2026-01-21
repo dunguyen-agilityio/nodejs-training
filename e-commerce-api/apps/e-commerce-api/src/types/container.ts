@@ -17,9 +17,7 @@ export type TService = {
   categoryService: Services.CategoryService;
   productService: Services.ProductService;
   userService: Services.UserService;
-  paymentService: Services.PaymentGateway;
   checkoutService: Services.CheckoutService;
-  stripePaymentGatewateService: Services.PaymentGateway;
 };
 
 export type TController = {

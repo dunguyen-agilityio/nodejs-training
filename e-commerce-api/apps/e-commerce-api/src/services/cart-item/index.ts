@@ -11,7 +11,7 @@ export class CartItemService extends AbstractCartItemService {
 
   async getCartItemByProduct(
     productId: number,
-    cartId: number
+    cartId: number,
   ): Promise<CartItem | null> {
     return await this.cartItemRepository.findOneBy({
       product: { id: productId },
@@ -37,7 +37,7 @@ export class CartItemService extends AbstractCartItemService {
 
   async updateCartItemQuantity(
     cartItemId: number,
-    quantity: number
+    quantity: number,
   ): Promise<boolean> {
     const result = await this.cartItemRepository
       .createQueryBuilder("cartItem")

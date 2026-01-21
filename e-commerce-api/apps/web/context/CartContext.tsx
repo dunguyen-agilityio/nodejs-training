@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { CartItem, Product } from "@/lib/types";
 import { post, del, put } from "@/lib/api"; // Import post, del, and put functions
 import { useAuth } from "@clerk/nextjs"; // Import useAuth hook

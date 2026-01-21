@@ -15,13 +15,12 @@ interface HomeProps {
 export default async function Home({ searchParams }: HomeProps) {
   const { search, category, page } = await searchParams;
   const currentPage = Number(page) || 1;
-  const limit = 4;
 
   const { products, pagination } = await getProducts({
     search,
     category,
     page: currentPage,
-    limit,
+    limit: 10,
   });
 
   const categories = await getCategories();

@@ -4,6 +4,4 @@ export { type AbstractProductService as ProductService } from "./product/type";
 export { type AbstractCategoryService as CategoryService } from "./category/type";
 export { type AbstractCartService as CartService } from "./cart/type";
 export { type AbstractCartItemService as CartItemService } from "./cart-item/type";
-export { type PaymentService } from "./stripe/type";
-export { type AbstractPaymentGateway as PaymentGateway } from "./payment-gateway/type";
 export { type AbstractCheckoutService as CheckoutService } from "./checkout/type";

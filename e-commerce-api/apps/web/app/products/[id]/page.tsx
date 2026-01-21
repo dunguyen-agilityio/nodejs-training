@@ -20,13 +20,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <main className="max-w-7xl mx-auto px-4 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div className="bg-secondary rounded-lg overflow-hidden flex items-center justify-center h-[500px]">
+        <div className="relative bg-secondary rounded-lg overflow-hidden flex items-center justify-center h-[500px]">
           <Image
-            src={product.image || "/file-text.svg"}
+            src={product.images[0] || "/file-text.svg"}
             alt={product.name}
-            width={300}
-            height={300}
-            className="object-contain"
+            fill
+            className="object-cover"
           />
         </div>
         <div className="space-y-6">

@@ -9,7 +9,7 @@ import cors from "@fastify/cors";
 
 import { authRoutes, cartRoutes, categoryRoutes, userRoutes } from "./routes";
 
-import { Container, Payment } from "./utils/container";
+import { Container, Mail, Payment } from "./utils/container";
 import { productRoutes } from "./routes/product";
 import { ApiError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
@@ -28,7 +28,7 @@ fastify.register(cors, {
 
 fastify.register(clerkPlugin);
 
-AppDataSource.initialize().then((dataSource) => {
+AppDataSource.initialize().then(async (dataSource) => {
   const container = Container.instance
     .setDataSource(dataSource)
     .register("User")
@@ -37,8 +37,9 @@ AppDataSource.initialize().then((dataSource) => {
     .register("CartItem")
     .register("Checkout")
     .register("Category")
+    .register(Mail.SendGrid)
+    .register(Payment.Stripe)
     .register("User", "Auth")
-    .addPayment(Payment.Stripe)
     .build();
 
   const decorates = () => {
@@ -47,9 +48,6 @@ AppDataSource.initialize().then((dataSource) => {
     });
     fastify.decorateRequest("container", {
       getter: () => container,
-    });
-    fastify.decorateRequest("payment", {
-      getter: () => container.getPayment(Payment.Stripe),
     });
   };
 

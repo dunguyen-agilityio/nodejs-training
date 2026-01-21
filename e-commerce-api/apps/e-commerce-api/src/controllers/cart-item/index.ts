@@ -27,6 +27,6 @@ export class CartItemController extends AbstractCartItemController {
     const id = parseInt(request.params.id);
     const quantity = parseInt(request.body.quantity);
     await this.service.updateCartItemQuantity(id, quantity);
-    reply.status(HttpStatus.OK).send();
+    reply.status(HttpStatus.OK).send({ success: true });
   };
 }

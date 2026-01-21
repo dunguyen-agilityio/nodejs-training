@@ -26,8 +26,7 @@ export class CheckoutService extends AbstractCheckoutService {
       await this.userRepository.save(user);
     }
 
-    console.log(user);
-    return this.paymentGetway.createPaymentIntents({
+    return await this.paymentGetway.createPaymentIntents({
       ...payload,
       customer: user.stripeId,
     });

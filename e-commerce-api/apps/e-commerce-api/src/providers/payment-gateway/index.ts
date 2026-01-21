@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { AbstractPaymentGateway } from "./type";
+import { AbstractPaymentGatewayProvider } from "./type";
 import { convertToSubcurrency } from "#utils/convertToSubcurrency";
 
 export type TStripePaymentGateway = {
@@ -9,21 +9,21 @@ export type TStripePaymentGateway = {
   CustomerCreateParams: Stripe.CustomerCreateParams;
 };
 
-export class StripePaymentGatewayService extends AbstractPaymentGateway<
+export class StripePaymentGatewayProvider extends AbstractPaymentGatewayProvider<
   Stripe,
   TStripePaymentGateway
 > {
   async createCustomer(
     params: Stripe.CustomerCreateParams,
   ): Promise<Stripe.Customer> {
-    return this.paymentGetway.customers.create(params);
+    return this.payment.customers.create(params);
   }
 
   async createPaymentIntents({
     amount,
     ...payload
   }: Stripe.PaymentIntentCreateParams): Promise<Stripe.PaymentIntent> {
-    const paymentIntent = await this.paymentGetway.paymentIntents.create({
+    const paymentIntent = await this.payment.paymentIntents.create({
       ...payload,
       amount: convertToSubcurrency(amount),
       automatic_payment_methods: { enabled: true },
@@ -32,6 +32,6 @@ export class StripePaymentGatewayService extends AbstractPaymentGateway<
   }
 
   getPaymentIntents(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
-    return this.paymentGetway.paymentIntents.retrieve(paymentIntentId);
+    return this.payment.paymentIntents.retrieve(paymentIntentId);
   }
 }

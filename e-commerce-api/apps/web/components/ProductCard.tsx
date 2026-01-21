@@ -24,9 +24,8 @@ export default function ProductCard({
           <Image
             src={product.images[0] || "/file-text.svg"}
             alt={product.name}
-            width={100}
-            height={100}
-            className="object-contain"
+            fill
+            className="object-cover"
           />
         </div>
       </Link>

@@ -60,7 +60,7 @@ export class SeedData1768297791711 implements MigrationInterface {
       .fill(0)
       .forEach((_, idx) => {
         productQuery = `${productQuery}
-         ('${faker.commerce.productName().replaceAll("'", "`")}', '${faker.commerce.productDescription().replaceAll("'", "`")}', ${faker.commerce.price()}, ${faker.number.int({ min: 500, max: 1000 })}, '${randomCategory()}', '${faker.image.urlPicsumPhotos({ width: 876, height: 678, grayscale: true })}')${idx >= MAX - 1 ? "" : ","}`;
+         ('${faker.commerce.productName().replaceAll("'", "`")}', '${faker.commerce.productDescription().replaceAll("'", "`")}', ${faker.commerce.price()}, ${faker.number.int({ min: 500, max: 1000 })}, '${randomCategory()}', '${faker.image.urlPicsumPhotos({ width: 640, height: 480, grayscale: true, blur: 0 })}')${idx >= MAX - 1 ? "" : ","}`;
       });
 
     // await queryRunner.query(`
