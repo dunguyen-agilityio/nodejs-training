@@ -1,7 +1,7 @@
-export { type AbstractAuthController as AuthController } from "./auth/type";
-export { type AbstractProductController as ProductController } from "./product/type";
-export { type AbstractUserController as UserController } from "./user/type";
-export { type AbstractCartController as CartController } from "./cart/type";
-export { type AbstractCategoryController as CategoryController } from "./category/type";
-export { type AbstractCartItemController as CartItemController } from "./cart-item/type";
-export { type AbstractCheckoutController as CheckoutController } from "./checkout/type";
+export { AbstractAuthController as AuthController } from "./auth/type";
+export { AbstractProductController as ProductController } from "./product/type";
+export { AbstractUserController as UserController } from "./user/type";
+export { AbstractCartController as CartController } from "./cart/type";
+export { AbstractCategoryController as CategoryController } from "./category/type";
+export { AbstractCartItemController as CartItemController } from "./cart-item/type";
+export { AbstractCheckoutController as CheckoutController } from "./checkout/type";

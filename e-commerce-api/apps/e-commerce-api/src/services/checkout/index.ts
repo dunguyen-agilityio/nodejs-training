@@ -2,8 +2,9 @@ import { CartItem, Order, OrderItem, Product } from "#entities";
 import { NotFoundError } from "#types/error";
 import Stripe from "stripe";
 import { AbstractCheckoutService } from "./type";
+import { StripePaymentGatewayProvider } from "#providers";
 
-export class CheckoutService extends AbstractCheckoutService {
+export class CheckoutService extends AbstractCheckoutService<StripePaymentGatewayProvider> {
   async createCheckoutPayment(
     payload: Stripe.PaymentIntentCreateParams,
     userId: string,
@@ -16,7 +17,7 @@ export class CheckoutService extends AbstractCheckoutService {
 
     if (!user.stripeId) {
       const { email, id: userId, firstName, lastName } = user;
-      const stripeUser = await this.paymentGetway.createCustomer({
+      const stripeUser = await this.paymentGatewayProvider.createCustomer({
         email,
         name: `${firstName} ${lastName}`,
         metadata: { userId },
@@ -26,7 +27,7 @@ export class CheckoutService extends AbstractCheckoutService {
       await this.userRepository.save(user);
     }
 
-    return await this.paymentGetway.createPaymentIntents({
+    return await this.paymentGatewayProvider.createPaymentIntents({
       ...payload,
       customer: user.stripeId,
     });
@@ -37,7 +38,7 @@ export class CheckoutService extends AbstractCheckoutService {
     if (!user) throw new NotFoundError("User not found");
 
     const paymentIntent =
-      await this.paymentGetway.getPaymentIntents(paymentIntentId);
+      await this.paymentGatewayProvider.getPaymentIntents(paymentIntentId);
 
     if (!paymentIntent) throw new NotFoundError("Payment intent not found");
 

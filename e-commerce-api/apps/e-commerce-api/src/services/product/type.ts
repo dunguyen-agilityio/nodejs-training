@@ -4,10 +4,15 @@ import { Pagination, Params } from "#types/query";
 import { BaseService } from "../base";
 
 export abstract class AbstractProductService extends BaseService {
-  protected productRepository: ProductRepository;
+  protected productRepository: ProductRepository = null!;
+
+  constructor(base: AbstractProductService, provider: BaseService) {
+    super(provider);
+    Object.assign(this, base);
+  }
 
   abstract getProducts(
-    params: Params
+    params: Params,
   ): Promise<{ data: Product[]; meta: { pagination: Pagination } }>;
   abstract getProductById(id: number): Promise<Product | null>;
   abstract saveProduct(product: Omit<Product, "id">): Promise<Product>;
@@ -18,7 +23,7 @@ export abstract class AbstractProductService extends BaseService {
         Product,
         "category" | "description" | "images" | "name" | "price" | "stock"
       >
-    >
+    >,
   ): Promise<Product>;
   abstract deleteProduct(id: number): Promise<void>;
 }

@@ -1,6 +1,6 @@
-import { BaseProvider } from "../base";
+import { BaseProvider } from "#providers/base";
 
-export abstract class AbstractMailProvider<T> extends BaseProvider<unknown, T> {
+export abstract class AbstractMailProvider<T = any> extends BaseProvider<T> {
   abstract sendWithTemplate(
     from: string,
     to: string,

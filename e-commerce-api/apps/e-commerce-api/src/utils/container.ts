@@ -1,62 +1,45 @@
-import { DataSource, EntityTarget, ObjectLiteral, QueryRunner } from "typeorm";
+import { DataSource, QueryRunner } from "typeorm";
 
 import * as Entities from "#entities";
 import * as Repositories from "#repositories";
 import * as Services from "#services";
 import * as Controllers from "#controllers";
+import * as TControllers from "#controllers/types";
 import * as Providers from "#providers";
 
-import { TController, TRepository, TService } from "#types/container";
-import { uncapitalize } from "./string";
-import Stripe from "stripe";
 import { BaseRepository } from "#repositories/base";
 import { BaseService } from "#services/base";
 import { BaseController } from "#controllers/base";
-
-import sgMail from "@sendgrid/mail";
-import { AbstractPaymentGateway } from "#services/payment-gateway/type";
-import { MailProvider } from "../providers/types";
-import { BaseProvider } from "../providers/base";
-
-export enum Payment {
-  "Stripe" = "StripePaymentGateway",
-}
-
-export enum Mail {
-  "SendGrid" = "SendGridMail",
-}
+import { create, hasProperty } from "./object";
 
 type ModuleKey =
   | keyof typeof Entities
   | "Checkout"
-  | "Mail"
+  | "SendGridMail"
+  | "StripePaymentGateway"
   | "Auth"
-  | Payment.Stripe
-  | Mail.SendGrid;
+  | keyof TProviders;
 
-type TProvider = {
-  stripePaymentGatewayProvider: BaseProvider<sgMail.MailService>;
-  sendGridMailProvider: BaseProvider<unknown, sgMail.MailService>;
+const AllRegister = { ...TControllers, ...Services, ...Providers };
+
+type TRepository = typeof Repositories;
+type TService = typeof Services;
+type TProviders = typeof Providers;
+
+type KeyRegister = keyof typeof AllRegister;
+
+type TAllRegister = {
+  [key in KeyRegister]: InstanceType<(typeof AllRegister)[key]>;
 };
 
-type Item = TRepository & TService & TController & TProvider;
-
-type ProviderName<K extends ModuleKey = ModuleKey> = `${K}Provider`;
-
-type RepositoryName<K extends ModuleKey = ModuleKey> = `${K}Repository`;
-
-type ServiceName<K extends ModuleKey = ModuleKey> = `${K}Service`;
-
-type ControllerName<K extends ModuleKey = ModuleKey> = `${K}Controller`;
+type Register<T extends KeyRegister> = TAllRegister[T];
 
 export class Container {
   static #instance: Container;
   #dataSource: DataSource;
   #queryRunner: QueryRunner;
   items: Map<string, any> = new Map();
-  #registers: Map<string, ModuleKey> = new Map();
-  #repositories: Record<string, any> = {};
-  #stripe: Stripe;
+  #repositories: Record<string, BaseRepository> = {};
 
   private constructor() {}
 
@@ -68,8 +51,14 @@ export class Container {
     return this.#instance;
   }
 
-  getItem<T extends keyof Item>(name: T): Item[T] {
-    return this.items.get(name);
+  getItem<T extends KeyRegister>(name: T): Register<T> {
+    const item = this.items.get(name);
+
+    if (!item) {
+      throw new Error(`Missing register ${name}`);
+    }
+
+    return item as Register<T>;
   }
 
   setItem(name: string, value: any) {
@@ -79,112 +68,57 @@ export class Container {
   setDataSource(dataSource: DataSource) {
     this.#dataSource = dataSource;
     this.#queryRunner = this.#dataSource.createQueryRunner();
-    return this;
-  }
 
-  register<T extends ModuleKey>(entity: T, name: string = entity) {
-    if (name === Mail.SendGrid) {
-      const apiKey = process.env.SENDGRID_API_KEY;
-      if (!apiKey) {
-        throw new Error("SENDGRID_API_KEY environment variable is required");
-      }
-      sgMail.setApiKey(apiKey);
-    }
-
-    if (name === Payment.Stripe) {
-      const apiKey = process.env.STRIPE_API_KEY;
-      if (!apiKey) {
-        throw new Error("STRIPE_API_KEY environment variable is required");
-      }
-      this.#stripe = new Stripe(apiKey);
-    }
-
-    this.#registers.set(name, entity);
-    return this;
-  }
-
-  build() {
-    const hasProperty = <K extends PropertyKey, V = unknown>(
-      key: K,
-      obj: object,
-    ): obj is Record<K, V> => {
-      return key in obj;
-    };
-
-    const providers: Record<string, BaseProvider> = {};
-
-    this.#registers.forEach((entity) => {
-      const providerkey = `${entity}Provider` as keyof typeof Providers;
-      const providerName = (uncapitalize(entity) +
-        "Provider") as keyof TProvider;
-
-      if (
-        hasProperty<ProviderName, BaseProvider<Stripe, sgMail.MailService>>(
-          providerkey,
-          Providers,
-        )
-      ) {
-        const provider = new Providers[providerkey](this.#stripe, sgMail);
-        this.setItem(providerName, provider);
-        providers[providerName] = provider;
-      }
-    });
-
-    this.#registers.forEach((entity) => {
-      const repositoryName = uncapitalize(entity) + "Repository";
-      const repositoryKey =
-        `${entity}Repository` as `${typeof entity}Repository`;
-
-      if (
-        !this.items.has(repositoryName) &&
-        hasProperty<ModuleKey, EntityTarget<ObjectLiteral>>(entity, Entities) &&
-        hasProperty<RepositoryName, typeof BaseRepository>(
-          repositoryKey,
-          Repositories,
-        )
-      ) {
-        const repo = this.#dataSource.getRepository(Entities[entity]);
-        const repository = new Repositories[repositoryKey](repo);
-        this.#repositories[repositoryName] = repository;
-        this.setItem(repositoryName, repository);
-      }
-    });
-
-    const { sendGridMailProvider, stripePaymentGatewayProvider } = providers;
-
-    for (const [key, value] of this.#registers) {
-      const serviceName = `${uncapitalize(key)}Service`;
-
-      const serviceKey = `${value}Service` as keyof typeof Services;
-
-      let service = this.items.get(serviceName);
-
-      if (
-        !service &&
-        hasProperty<ServiceName, typeof BaseService>(serviceKey, Services)
-      ) {
-        service = new Services[serviceKey](
-          this.#repositories as TRepository,
-          stripePaymentGatewayProvider,
-          sendGridMailProvider,
+    this.#repositories = Object.entries(Entities).reduce(
+      (prev, [key, Entity]) => {
+        const [repositoryKey, repositoryName] = create<TRepository>(
+          key,
+          "Repository",
         );
-        this.setItem(serviceName, service);
-      }
 
-      const controllerName = `${uncapitalize(key)}Controller`;
-      const controllerKey = `${key}Controller` as keyof typeof Controllers;
+        return {
+          ...prev,
+          [repositoryName]: new Repositories[repositoryKey](
+            dataSource.manager.getRepository(Entity) as any,
+          ),
+        };
+      },
+      {} as {
+        [key in keyof TRepository as Uncapitalize<key>]: InstanceType<
+          TRepository[key]
+        >;
+      },
+    );
+
+    return this;
+  }
+
+  register<T extends ModuleKey>(key: T, context?: any) {
+    if (context) {
+      const [providerKey] = create<TProviders>(key, "Provider");
+      this.setItem(providerKey, new Providers[providerKey](context));
+    } else {
+      const [serviceKey] = create<TService>(key, "Service");
+      const [controllerKey] = create<typeof Controllers>(key, "Controller");
 
       if (
-        service &&
-        !this.items.has(controllerName) &&
-        hasProperty<ControllerName, typeof BaseController>(
-          controllerKey,
-          Controllers,
-        )
+        hasProperty<keyof TService, typeof BaseService>(serviceKey, Services)
       ) {
-        const controller = new Controllers[controllerKey](service);
+        const service = new Services[serviceKey](this.#repositories, {
+          paymentGatewayProvider: this.getItem("StripePaymentGatewayProvider"),
+          mailProvider: this.getItem("SendGridMailProvider"),
+        });
+        this.setItem(serviceKey, service);
 
-        this.setItem(controllerName, controller);
+        if (
+          hasProperty<keyof typeof Controllers, typeof BaseController>(
+            controllerKey,
+            Controllers,
+          )
+        ) {
+          const controller = new Controllers[controllerKey](service);
+          this.setItem(controllerKey, controller);
+        }
       }
     }
 

@@ -9,12 +9,14 @@ import cors from "@fastify/cors";
 
 import { authRoutes, cartRoutes, categoryRoutes, userRoutes } from "./routes";
 
-import { Container, Mail, Payment } from "./utils/container";
+import { Container } from "./utils/container";
 import { productRoutes } from "./routes/product";
 import { ApiError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
 import { checkoutRoutes } from "./routes/checkout";
 import { AppDataSource } from "#data-source";
+import Stripe from "stripe";
+import sgMail from "@sendgrid/mail";
 
 const fastify = Fastify({
   logger: true,
@@ -31,16 +33,15 @@ fastify.register(clerkPlugin);
 AppDataSource.initialize().then(async (dataSource) => {
   const container = Container.instance
     .setDataSource(dataSource)
+    .register("SendGridMail", sgMail.setApiKey(process.env.SENDGRID_API_KEY!))
+    .register("StripePaymentGateway", new Stripe(process.env.STRIPE_API_KEY!))
     .register("User")
     .register("Product")
     .register("Cart")
     .register("CartItem")
     .register("Checkout")
     .register("Category")
-    .register(Mail.SendGrid)
-    .register(Payment.Stripe)
-    .register("User", "Auth")
-    .build();
+    .register("Auth");
 
   const decorates = () => {
     fastify.decorate("container", {

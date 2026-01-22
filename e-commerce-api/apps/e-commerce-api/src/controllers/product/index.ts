@@ -15,7 +15,7 @@ export class ProductController extends AbstractProductController {
         >
       >;
     }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const id = parseInt(request.params.id);
     const body = request.body;
@@ -27,7 +27,7 @@ export class ProductController extends AbstractProductController {
 
   addNewProduct = async (
     request: FastifyRequest<{ Body: Omit<Product, "id"> }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const productData = request.body;
     const newProduct = await this.service.saveProduct(productData);
@@ -38,7 +38,7 @@ export class ProductController extends AbstractProductController {
     request: FastifyRequest<{
       Querystring: { page: string; pageSize: string; query: string };
     }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const { page = "1", pageSize = "10", query = "" } = request.query;
     const response = await this.service.getProducts({
@@ -54,7 +54,7 @@ export class ProductController extends AbstractProductController {
 
   getProduct = async (
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const { id } = request.params;
 
@@ -70,7 +70,7 @@ export class ProductController extends AbstractProductController {
 
   deleteProduct = async (
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const id = parseInt(request.params.id);
     await this.service.deleteProduct(id);

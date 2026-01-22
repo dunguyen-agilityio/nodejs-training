@@ -1,4 +1,4 @@
-import { ObjectLiteral, Repository } from "typeorm";
+import { Repository, ObjectLiteral } from "typeorm";
 
 export class BaseRepository<
   T extends ObjectLiteral = ObjectLiteral,

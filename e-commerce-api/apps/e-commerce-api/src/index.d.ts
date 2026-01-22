@@ -1,4 +1,3 @@
-import { PaymentGateway } from "#services/types";
 import { USER_ROLES } from "#types/user";
 import { Container } from "./utils/container";
 
@@ -8,7 +7,6 @@ declare module "fastify" {
   interface FastifyRequest {
     container: Container;
     userId: string;
-    payment: PaymentGateway;
   }
   interface FastifyReply {}
 

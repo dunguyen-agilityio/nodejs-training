@@ -3,8 +3,13 @@ import { CartItemRepository, CartRepository } from "#repositories/types";
 import { BaseService } from "../base";
 
 export abstract class AbstractCartItemService extends BaseService {
-  protected cartItemRepository: CartItemRepository;
-  protected cartRepository: CartRepository;
+  protected cartItemRepository: CartItemRepository = null!;
+  protected cartRepository: CartRepository = null!;
+
+  constructor(base: AbstractCartItemService, provider: BaseService) {
+    super(provider);
+    Object.assign(this, base);
+  }
 
   abstract getCartItemByProduct(
     productId: number,

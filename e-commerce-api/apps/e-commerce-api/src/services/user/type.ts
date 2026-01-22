@@ -3,7 +3,12 @@ import { UserRepository } from "#repositories/types";
 import { BaseService } from "../base";
 
 export abstract class AbstractUserService extends BaseService {
-  protected userRepository: UserRepository;
+  protected userRepository: UserRepository = null!;
+
+  constructor(base: AbstractUserService, provider: BaseService) {
+    super(provider);
+    Object.assign(this, base);
+  }
 
   abstract addRoleForUser(userId: string, role: string): Promise<boolean>;
   abstract getUserByStripeId(stripeId: string): Promise<User | null>;

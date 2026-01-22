@@ -1,15 +1,15 @@
-import { BaseProvider } from "../base";
+import { BaseProvider } from "#providers/base";
 
-type Payment = {
-  Customer: any;
-  PaymentIntent: any;
-  PaymentIntentCreateParams: any;
-  CustomerCreateParams: any;
+type Payment<C = any, P = any, R = any, E = any> = {
+  Customer: C;
+  PaymentIntent: P;
+  PaymentIntentCreateParams: R;
+  CustomerCreateParams: E;
 };
 
 export abstract class AbstractPaymentGatewayProvider<
   P = any,
-  T extends Payment = any,
+  T extends Payment = Payment,
 > extends BaseProvider<P> {
   abstract getPaymentIntents(id: string): Promise<T["PaymentIntent"]>;
   abstract createPaymentIntents(

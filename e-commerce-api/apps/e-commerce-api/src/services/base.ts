@@ -1,11 +1,16 @@
-import { TRepository } from "#types/container";
+import { MailProvider, PaymentGatewayProvider } from "../providers/types";
 
-export class BaseService<P = object, M = object> {
+export class BaseService<
+  P extends PaymentGatewayProvider = any,
+  M extends MailProvider = any,
+> {
+  public paymentGatewayProvider: P = null!;
+  public mailProvider: M = null!;
+
   constructor(
-    repositories: Partial<TRepository>,
-    protected paymentGetway: P,
-    protected mail: M,
+    private repositories: any,
+    base: BaseService,
   ) {
-    Object.assign(this, repositories);
+    Object.assign(this, base);
   }
 }

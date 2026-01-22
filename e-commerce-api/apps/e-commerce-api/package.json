@@ -52,6 +52,7 @@
   "imports": {
     "#entities": "./src/database/entities/index.ts",
     "#providers": "./src/providers/index.ts",
+    "#providers/*": "./src/providers/*.ts",
     "#services": "./src/services/index.ts",
     "#services/*": "./src/services/*.ts",
     "#controllers/*": "./src/controllers/*.ts",

@@ -16,14 +16,14 @@ export class StripePaymentGatewayProvider extends AbstractPaymentGatewayProvider
   async createCustomer(
     params: Stripe.CustomerCreateParams,
   ): Promise<Stripe.Customer> {
-    return this.payment.customers.create(params);
+    return this.context.customers.create(params);
   }
 
   async createPaymentIntents({
     amount,
     ...payload
   }: Stripe.PaymentIntentCreateParams): Promise<Stripe.PaymentIntent> {
-    const paymentIntent = await this.payment.paymentIntents.create({
+    const paymentIntent = await this.context.paymentIntents.create({
       ...payload,
       amount: convertToSubcurrency(amount),
       automatic_payment_methods: { enabled: true },
@@ -32,6 +32,6 @@ export class StripePaymentGatewayProvider extends AbstractPaymentGatewayProvider
   }
 
   getPaymentIntents(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
-    return this.payment.paymentIntents.retrieve(paymentIntentId);
+    return this.context.paymentIntents.retrieve(paymentIntentId);
   }
 }

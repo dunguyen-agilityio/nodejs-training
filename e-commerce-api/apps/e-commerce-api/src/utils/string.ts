@@ -1,4 +1,7 @@
-export const uncapitalize = (str: string) =>
-  typeof str === "string" && str.length
-    ? str.charAt(0).toLowerCase() + str.slice(1)
-    : str;
+export const uncapitalize = <T extends string = string>(
+  str: T,
+): Uncapitalize<T> => {
+  return (
+    str.length ? str.charAt(0).toLowerCase() + str.slice(1) : str
+  ) as Uncapitalize<T>;
+};

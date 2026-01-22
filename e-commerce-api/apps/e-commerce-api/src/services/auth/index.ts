@@ -1,10 +1,11 @@
 import { User } from "#entities";
+import { StripePaymentGatewayProvider } from "#providers";
 import { AbstractAuthService } from "./type";
 
-export class AuthService extends AbstractAuthService {
+export class AuthService extends AbstractAuthService<StripePaymentGatewayProvider> {
   async register(body: User) {
     const { email, firstName, lastName } = body;
-    const customer = await this.payment.createCustomer({
+    const customer = await this.paymentGatewayProvider.createCustomer({
       email,
       name: `${firstName} ${lastName}`,
     });

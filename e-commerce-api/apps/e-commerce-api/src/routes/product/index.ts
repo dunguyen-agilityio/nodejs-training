@@ -3,7 +3,7 @@ import { authenticate, authorizeAdmin, requiredId } from "#middlewares";
 import { PaginationSchema } from "#schemas/pagination";
 
 export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const controller = instance.container.getItem("productController");
+  const controller = instance.container.getItem("ProductController");
   instance.get(
     "/",
     {
@@ -17,7 +17,7 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    controller.getProducts
+    controller.getProducts,
   );
   instance.get("/:id", { preHandler: [requiredId] }, controller.getProduct);
 
@@ -30,7 +30,7 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.addHook("preHandler", authenticate);
   instance.addHook("preHandler", authorizeAdmin);
 
-  const controller = instance.container.getItem("productController");
+  const controller = instance.container.getItem("ProductController");
   instance.post(
     "/",
     {
@@ -45,7 +45,7 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    controller.addNewProduct
+    controller.addNewProduct,
   );
 
   instance.put(
@@ -62,13 +62,13 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    controller.updateProduct
+    controller.updateProduct,
   );
 
   instance.delete(
     "/:id",
     { preHandler: [requiredId] },
-    controller.deleteProduct
+    controller.deleteProduct,
   );
 
   done();

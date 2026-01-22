@@ -13,7 +13,7 @@ export class SendGridMailProvider extends AbstractMailProvider<sgMail.MailServic
       to, // Change to your verified sender
     };
 
-    await this.mail.send({
+    await this.context.send({
       ...msg,
       dynamicTemplateData: data,
       templateId, ///process.env.SENDGRID_TEMPLATE_ID!,
