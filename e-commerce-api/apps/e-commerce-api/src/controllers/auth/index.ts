@@ -1,31 +1,45 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { getAuth, UserJSON } from "@clerk/fastify";
 
 import { AbstractAuthController } from "./type";
 import { transformatFromClerk } from "../../dtos/user";
 import { HttpStatus } from "#types/http-status";
+import { isClerkAPIResponseError } from "#utils/clerk";
+import { BadRequestError } from "#types/error";
+import { loginBodySchema, registerBodySchema } from "#schemas/auth.schema";
+import { FromSchema } from "json-schema-to-ts";
 
 export class AuthController extends AbstractAuthController {
   register = async (
-    request: FastifyRequest<{ Body: { data: UserJSON } }>,
+    request: FastifyRequest<{ Body: FromSchema<typeof registerBodySchema> }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const newUser = transformatFromClerk(request.body.data);
+    const newUser = transformatFromClerk(request.body);
     const user = await this.service.register(newUser);
     reply
       .code(HttpStatus.CREATED)
       .send({ message: "User registered successfully.", user });
   };
 
-  login = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { isAuthenticated, getToken } = getAuth(request);
+  login = async (
+    request: FastifyRequest<{ Body: FromSchema<typeof loginBodySchema> }>,
+    reply: FastifyReply,
+  ) => {
+    if (request.validationError) {
+      reply.code(HttpStatus.BAD_REQUEST).send(request.validationError);
+      return;
+    }
+    const { identifier, password } = request.body;
 
-    if (!isAuthenticated) {
-      reply
-        .code(HttpStatus.FORBIDDEN)
-        .send({ message: "Access denied. Authentication required." });
-    } else {
-      reply.send({ jwt: await getToken() });
+    try {
+      const { jwt, data } = await this.service.login({ identifier, password });
+
+      reply.send({ jwt, data });
+    } catch (error) {
+      if (isClerkAPIResponseError(error)) {
+        throw new BadRequestError(error.errors[0].message);
+      }
+
+      throw error;
     }
   };
 }

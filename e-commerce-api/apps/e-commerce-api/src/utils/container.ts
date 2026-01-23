@@ -97,28 +97,28 @@ export class Container {
     if (context) {
       const [providerKey] = create<TProviders>(key, "Provider");
       this.setItem(providerKey, new Providers[providerKey](context));
-    } else {
-      const [serviceKey] = create<TService>(key, "Service");
-      const [controllerKey] = create<typeof Controllers>(key, "Controller");
+    }
+
+    const [serviceKey] = create<TService>(key, "Service");
+    const [controllerKey] = create<typeof Controllers>(key, "Controller");
+
+    if (hasProperty<keyof TService, typeof BaseService>(serviceKey, Services)) {
+      const service = new Services[serviceKey]({
+        paymentGatewayProvider: this.getItem("StripePaymentGatewayProvider"),
+        mailProvider: this.getItem("SendGridMailProvider"),
+        ...this.#repositories,
+        authProvider: this.getItem("AuthProvider"),
+      });
+      this.setItem(serviceKey, service);
 
       if (
-        hasProperty<keyof TService, typeof BaseService>(serviceKey, Services)
+        hasProperty<keyof typeof Controllers, typeof BaseController>(
+          controllerKey,
+          Controllers,
+        )
       ) {
-        const service = new Services[serviceKey](this.#repositories, {
-          paymentGatewayProvider: this.getItem("StripePaymentGatewayProvider"),
-          mailProvider: this.getItem("SendGridMailProvider"),
-        });
-        this.setItem(serviceKey, service);
-
-        if (
-          hasProperty<keyof typeof Controllers, typeof BaseController>(
-            controllerKey,
-            Controllers,
-          )
-        ) {
-          const controller = new Controllers[controllerKey](service);
-          this.setItem(controllerKey, controller);
-        }
+        const controller = new Controllers[controllerKey](service);
+        this.setItem(controllerKey, controller);
       }
     }
 

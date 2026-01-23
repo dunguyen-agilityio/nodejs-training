@@ -1,9 +1,15 @@
+import { loginBodySchema, registerBodySchema } from "#schemas/auth.schema";
 import { FastifyPluginCallback } from "fastify";
+
 
 export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.getItem("AuthController");
-  instance.post("/login", controller.login);
-  instance.post("/register", controller.register);
+  instance.post(
+    "/login",
+    { schema: { body: loginBodySchema }, attachValidation: true },
+    controller.login,
+  );
+  instance.post("/register", { schema: { body: registerBodySchema }, attachValidation: true }, controller.register);
   instance.post("/webhooks", controller.register);
 
   done();

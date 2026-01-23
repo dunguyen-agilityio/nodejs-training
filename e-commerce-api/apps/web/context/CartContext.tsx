@@ -36,7 +36,10 @@ export function CartProvider({
 
   const addToCart = debounce(async (product: Product, quantity: number = 1) => {
     try {
-      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+      const token = await getToken({
+        template: CLERK_TOKEN_TEMPLATE,
+      });
+
       const response = await post<CartAddResponse>(
         "/cart/add",
         { productId: product.id, quantity },

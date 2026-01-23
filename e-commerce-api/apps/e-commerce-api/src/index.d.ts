@@ -6,7 +6,7 @@ import { Container } from "./utils/container";
 declare module "fastify" {
   interface FastifyRequest {
     container: Container;
-    userId: string;
+    auth: { userId: string; orgRole: string };
   }
   interface FastifyReply {}
 

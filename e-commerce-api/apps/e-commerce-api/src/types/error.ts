@@ -53,3 +53,18 @@ export class UnexpectedError extends ApiError {
     super(HttpStatus.INTERNAL_SERVER_ERROR, message, details);
   }
 }
+
+type ClerkAPIError = {
+  code: string;
+  message: string;
+  longMessage: string;
+  meta: object;
+};
+
+export type ClerkAPIResponseError = {
+  clerkError: boolean;
+  code: string;
+  status: number;
+  clerkTraceId: string;
+  errors: [ClerkAPIError];
+};

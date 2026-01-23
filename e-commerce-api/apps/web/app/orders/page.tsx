@@ -11,12 +11,14 @@ export default async function OrdersPage() {
     redirect("/sign-in");
   }
 
-  const orders = await getUserOrders(userId);
+  const orders = await getUserOrders();
 
   if (orders.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4 text-foreground">No orders found</h1>
+        <h1 className="text-3xl font-bold mb-4 text-foreground">
+          No orders found
+        </h1>
         <p className="text-muted-foreground mb-8">
           You haven&apos;t placed any orders yet.
         </p>
@@ -42,7 +44,9 @@ export default async function OrdersPage() {
             <div className="bg-muted/50 p-4 flex flex-wrap items-center justify-between gap-4 text-sm">
               <div className="flex gap-8">
                 <div>
-                  <p className="font-medium text-muted-foreground">Order Placed</p>
+                  <p className="font-medium text-muted-foreground">
+                    Order Placed
+                  </p>
                   <p className="text-foreground">
                     {new Date(order.date).toLocaleDateString()}
                   </p>
@@ -53,18 +57,22 @@ export default async function OrdersPage() {
                 </div>
                 <div>
                   <p className="font-medium text-muted-foreground">Ship To</p>
-                  <p className="text-foreground">{order.shippingAddress.name}</p>
+                  <p className="text-foreground">
+                    {order.shippingAddress.name}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-col items-end">
-                <p className="font-medium text-muted-foreground">Order # {order.id}</p>
+                <p className="font-medium text-muted-foreground">
+                  Order # {order.id}
+                </p>
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                     order.status === "Delivered"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                       : order.status === "Cancelled"
-                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                      : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
                   }`}
                 >
                   {order.status}
@@ -83,7 +91,9 @@ export default async function OrdersPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{item.name}</h3>
+                    <h3 className="font-semibold text-foreground">
+                      {item.name}
+                    </h3>
                     <p className="text-muted-foreground text-sm">
                       Quantity: {item.quantity}
                     </p>

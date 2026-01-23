@@ -1,4 +1,7 @@
-import { Order, OrderStatus } from "./types";
+import { auth } from "@clerk/nextjs/server";
+import { get } from "./api";
+import { ApiResponse, Order, OrderStatus } from "./types";
+import { CLERK_TOKEN_TEMPLATE } from "./constants";
 
 // Mock database
 // eslint-disable-next-line prefer-const
@@ -81,22 +84,27 @@ let orders: Order[] = [
   },
 ];
 
-export async function getUserOrders(userId: string) {
-  // Simulate delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  // For demo purposes, if userId matches our mock user, return their orders
-  // In a real app, this would query by the actual userId
-  if (userId) {
-     // Return the mock orders for the main demo user + any new ones created in session
-     // For simplicity in this mock, we'll return orders that match or the 'demo' ones if logged in
-     return orders.filter(o => o.userId === userId || o.userId === "user_2rMv...");
-  }
-  return [];
+export async function getUserOrders() {
+  const { getToken, sessionClaims, ...a } = await auth();
+  console.log(a, sessionClaims);
+
+  const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+
+  const response = await get<ApiResponse<Order[]>>(
+    "/orders?page=1&pageSize=10",
+    {
+      Authorization: `Bearer ${token}`,
+    },
+  );
+
+  return response.data;
 }
 
 export async function getAllOrders() {
   await new Promise((resolve) => setTimeout(resolve, 500));
-  return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return orders.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
 }
 
 export async function createOrder(order: Order) {

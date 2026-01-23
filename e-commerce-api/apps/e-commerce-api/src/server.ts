@@ -2,7 +2,7 @@ import "reflect-metadata";
 import "dotenv/config";
 
 import Fastify from "fastify";
-import { clerkPlugin } from "@clerk/fastify";
+import { clerkClient, clerkPlugin } from "@clerk/fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import fastifyPlugin from "fastify-plugin";
 import cors from "@fastify/cors";
@@ -17,6 +17,8 @@ import { checkoutRoutes } from "./routes/checkout";
 import { AppDataSource } from "#data-source";
 import Stripe from "stripe";
 import sgMail from "@sendgrid/mail";
+import { orderRoutes } from "./routes/order";
+
 
 const fastify = Fastify({
   logger: true,
@@ -28,6 +30,7 @@ fastify.register(cors, {
   allowedHeaders: ["Content-Type", "Authorization"],
 });
 
+
 fastify.register(clerkPlugin);
 
 AppDataSource.initialize().then(async (dataSource) => {
@@ -35,13 +38,16 @@ AppDataSource.initialize().then(async (dataSource) => {
     .setDataSource(dataSource)
     .register("SendGridMail", sgMail.setApiKey(process.env.SENDGRID_API_KEY!))
     .register("StripePaymentGateway", new Stripe(process.env.STRIPE_API_KEY!))
+    .register("Auth", clerkClient)
     .register("User")
     .register("Product")
     .register("Cart")
     .register("CartItem")
     .register("Checkout")
     .register("Category")
-    .register("Auth");
+    .register("Order");
+
+
 
   const decorates = () => {
     fastify.decorate("container", {
@@ -61,6 +67,7 @@ AppDataSource.initialize().then(async (dataSource) => {
       instance.register(productRoutes, { prefix: "/products" });
       instance.register(categoryRoutes, { prefix: "/categories" });
       instance.register(cartRoutes, { prefix: "/cart" });
+      instance.register(orderRoutes, { prefix: "/orders" });
       instance.register(checkoutRoutes);
 
       done();

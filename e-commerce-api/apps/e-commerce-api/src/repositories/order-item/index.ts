@@ -1,7 +1,3 @@
-import { OrderItem } from "#entities";
-import { BaseRepository } from "#repositories/base";
+import { AbstractOrderItemRepository } from "./type";
 
-
-export class OrderItemRepository extends BaseRepository<OrderItem> {
-
-}
+export class OrderItemRepository extends AbstractOrderItemRepository {}

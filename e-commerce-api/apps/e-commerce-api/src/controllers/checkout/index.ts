@@ -1,17 +1,22 @@
 import { UnauthorizedError } from "#types/error";
-import { getAuth } from "@clerk/fastify";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AbstractCheckoutController } from "./type";
+import {
+  checkoutSuccessSchema,
+  createPaymentIntentSchema,
+} from "#schemas/checkout";
+import { FromSchema } from "json-schema-to-ts";
 
 export class CheckoutController extends AbstractCheckoutController {
   createPaymentIntent = async (
-    request: FastifyRequest<{ Body: { amount: string; currency: string } }>,
+    request: FastifyRequest<{
+      Body: FromSchema<typeof createPaymentIntentSchema>;
+    }>,
     reply: FastifyReply,
   ) => {
     const amount = parseInt(request.body.amount);
-    const currency = request.body.currency || "usd";
-
-    const { userId } = getAuth(request);
+    const currency = request.body.currency;
+    const userId = request.auth.userId;
 
     if (!userId) throw new UnauthorizedError();
 
@@ -25,12 +30,7 @@ export class CheckoutController extends AbstractCheckoutController {
 
   checkoutSuccess = async (
     request: FastifyRequest<{
-      Body: {
-        data: {
-          object: { id: string; customer: string; customer_account: string };
-        };
-        type: "payment_intent.succeeded";
-      };
+      Body: FromSchema<typeof checkoutSuccessSchema>;
     }>,
     reply: FastifyReply,
   ): Promise<void> => {

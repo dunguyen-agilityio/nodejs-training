@@ -1,8 +1,11 @@
 import { User } from "#entities";
+import { registerBodySchema } from "#schemas/auth.schema";
 import { USER_ROLES } from "#types/user";
-import { UserJSON } from "@clerk/fastify";
+import { FromSchema } from "json-schema-to-ts";
 
-export const transformatFromClerk = (user: UserJSON) => {
+export const transformatFromClerk = ({
+  data,
+}: FromSchema<typeof registerBodySchema>) => {
   const {
     email_addresses,
     first_name: firstName,
@@ -14,14 +17,14 @@ export const transformatFromClerk = (user: UserJSON) => {
     updated_at: updatedAt,
     phone_numbers,
     role,
-  } = user;
+  } = data;
 
   const newUser = new User({
     avatar: image_url,
-    lastName: lastName ?? "",
+    lastName,
     id,
-    username: username ?? "",
-    firstName: firstName ?? "firstName",
+    username,
+    firstName,
     email: email_addresses[0]?.email_address || "",
     createdAt: new Date(createdAt),
     updatedAt: new Date(updatedAt),

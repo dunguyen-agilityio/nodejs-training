@@ -1,19 +1,20 @@
 import { User } from "#entities";
-import { PaymentGatewayProvider } from "#providers/types";
+import { AuthProvider, PaymentGatewayProvider } from "#providers/types";
 import { CartRepository, UserRepository } from "#repositories/types";
+import { LoginParams } from "#types/auth";
 
-import { BaseService } from "../base";
+import { Dependencies } from "../base";
 
-export abstract class AbstractAuthService<
-  P extends PaymentGatewayProvider = PaymentGatewayProvider,
-> extends BaseService<P> {
+export abstract class AbstractAuthService {
   protected userRepository: UserRepository = null!;
   protected cartRepository: CartRepository = null!;
+  protected authProvider: AuthProvider = null!;
+  protected paymentGatewayProvider: PaymentGatewayProvider = null!;
 
-  constructor(base: AbstractAuthService<P>, provider: BaseService) {
-    super(provider);
+  constructor(base: Dependencies) {
     Object.assign(this, base);
   }
 
   abstract register(body: User): Promise<User>;
+  abstract login(params: LoginParams): Promise<{ jwt: string; data: User }>;
 }

@@ -4,10 +4,10 @@ import { FastifyReply, FastifyRequest } from "fastify";
 
 export const authenticate = async (
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) => {
   const auth = getAuth(request);
-  request.userId = auth.userId ?? "";
+  request.auth.userId = auth.userId ?? "";
 
   if (!auth.isAuthenticated) {
     return reply
@@ -18,9 +18,10 @@ export const authenticate = async (
 
 export const authorizeAdmin = async (
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) => {
   const auth = getAuth(request);
+  console.log(auth);
   const isAdmin = auth.sessionClaims?.org_role === "org:admin";
 
   if (!isAdmin) {
