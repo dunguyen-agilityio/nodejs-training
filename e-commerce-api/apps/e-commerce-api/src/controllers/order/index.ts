@@ -1,23 +1,31 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { AbstractOrderController } from "./type";
-import { getAuth } from "@clerk/fastify";
+import { IOrderController } from "./type";
 import { FromSchema } from "json-schema-to-ts";
 import { getOrdersSchema } from "#schemas/order";
 import { formatOrderDto } from "../../dtos/order";
+import { IOrderService } from "#services/types";
 
+export class OrderController implements IOrderController {
+  constructor(private service: IOrderService) {}
 
-export class OrderController extends AbstractOrderController {
   getOrders = async (
-    request: FastifyRequest<{ Querystring: FromSchema<typeof getOrdersSchema> }>,
+    request: FastifyRequest<{
+      Querystring: FromSchema<typeof getOrdersSchema>;
+    }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const page = parseInt(request.query.page);
-    const pageSize = parseInt(request.query.pageSize);
+    const page = request.query.page;
+    const pageSize = request.query.pageSize;
     const userId = request.auth.userId;
-    console.log(userId);
-    console.log(getAuth(request));
 
-    const orders = await this.service.getOrdersByUserId(userId, { page, pageSize });
-    reply.send({ success: true, data: orders.map(order => formatOrderDto(order)) });
+    const response = await this.service.getOrdersByUserId(userId, {
+      page,
+      pageSize,
+    });
+    reply.send({
+      success: true,
+      data: response.data.map((order) => formatOrderDto(order)),
+      meta: response.meta,
+    });
   };
 }

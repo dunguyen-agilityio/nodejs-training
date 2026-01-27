@@ -1,3 +1,2 @@
-export { AbstractMailProvider as MailProvider } from "./mail/type";
-export { AbstractPaymentGatewayProvider as PaymentGatewayProvider } from "./payment-gateway/type";
-export { AbstractAuthProvider as AuthProvider } from "./auth/type";
+export * from "./mail/type";
+export * from "./payment-gateway/type";

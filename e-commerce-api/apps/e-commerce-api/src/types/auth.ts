@@ -8,19 +8,6 @@ export type VerifyPasswordParams = {
   password: string;
 };
 
-export type AuthClient = {
-  users: {
-    verifyPassword: (
-      params: VerifyPasswordParams,
-    ) => Promise<{ verified: boolean }>;
-  };
-  signInTokens: {
-    createSignInToken: (
-      params: CreateSignInTokensParams,
-    ) => Promise<{ token: string }>;
-  };
-};
-
 export type LoginParams = {
   identifier: string;
   password: string;

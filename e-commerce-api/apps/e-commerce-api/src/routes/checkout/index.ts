@@ -19,5 +19,6 @@ export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
     container.createPaymentIntent,
   );
   instance.post("/checkout/webhooks", container.checkoutSuccess);
+  instance.post("/checkout-success/webhooks", container.invoicePaymentSuccess);
   done();
 };

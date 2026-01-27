@@ -3,26 +3,36 @@ import { Params } from "#types/query";
 import { AbstractOrderRepository } from "./type";
 
 export class OrderRepository extends AbstractOrderRepository {
-    async findOrdersByUserId(userId: string, params: Params): Promise<Order[]> {
-        const { page, pageSize } = params;
-        const orders = await this.find({
-            where: { user: { id: userId } },
-            relations: { items: { product: true } },
-            take: pageSize,
-            skip: (page - 1) * pageSize,
-        });
+  async findPendingOrder(userId: string): Promise<Order | null> {
+    return await this.findOne({
+      where: { user: { id: userId }, status: "pending" },
+      relations: { items: { product: true } },
+    });
+  }
 
-        return orders;
-    }
+  async findOrdersByUserId(
+    userId: string,
+    params: Params,
+  ): Promise<[number, Order[]]> {
+    const { page, pageSize } = params;
+    const [orders, count] = await this.findAndCount({
+      where: { user: { id: userId } },
+      relations: { items: { product: true } },
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+    });
 
-    async findOrders(params: Params): Promise<Order[]> {
-        const { page, pageSize } = params;
-        const orders = await this.find({
-            relations: { items: { product: true } },
-            take: pageSize,
-            skip: (page - 1) * pageSize,
-        });
+    return [count, orders];
+  }
 
-        return orders;
-    }
+  async findOrders(params: Params): Promise<[number, Order[]]> {
+    const { page, pageSize } = params;
+    const [orders, count] = await this.findAndCount({
+      relations: { items: { product: true } },
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+    });
+
+    return [count, orders];
+  }
 }

@@ -4,11 +4,15 @@ import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import { debounce } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { CartItem } from "@/components/cart-item"; // Import CartItemComponent
+import { CartItem } from "@/components/cart-item";
+import { useAuth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const [localCart, setLocalCart] = useState(cart);
+
+  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
     setLocalCart(cart);
@@ -23,18 +27,26 @@ export default function CartPage() {
 
       setLocalCart((prevCart) =>
         prevCart.map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        )
+          item.id === itemId ? { ...item, quantity: newQuantity } : item,
+        ),
       );
       updateQuantity(itemId, newQuantity);
     },
-    500
+    500,
   );
 
   const handleRemoveFromCart = (itemId: string) => {
     setLocalCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
     removeFromCart(itemId);
   };
+
+  if (!isLoaded) {
+    return <p>!Please waiting...</p>;
+  }
+
+  if (!isSignedIn) {
+    redirect("/sign-in");
+  }
 
   if (localCart.length === 0) {
     return (

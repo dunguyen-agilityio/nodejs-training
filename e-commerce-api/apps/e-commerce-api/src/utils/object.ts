@@ -8,12 +8,14 @@ export const create = <
   K extends string = string,
   D extends string = string,
 >(
-  t: K,
-  d = "" as D,
-): [StringKey<O>, Uncapitalize<StringKey<O>>] => {
+  key: K,
+  { nameMapping, type }: { type?: D; nameMapping?: Record<K, string> },
+): [StringKey<O>, Uncapitalize<StringKey<O>> | string] => {
   return [
-    `${t}${d}` as StringKey<O>,
-    `${uncapitalize(t)}${d}` as Uncapitalize<StringKey<O>>,
+    `${key}${type || ""}` as StringKey<O>,
+    nameMapping
+      ? nameMapping[key]
+      : (`${uncapitalize(key)}${type || ""}` as Uncapitalize<StringKey<O>>),
   ];
 };
 

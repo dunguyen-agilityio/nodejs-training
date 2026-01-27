@@ -1,25 +1,27 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { AbstractCartController } from "./type";
-import { getAuth } from "@clerk/fastify";
+import { ICartController } from "./type";
 import { UnexpectedError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
+import { ICartService } from "#services/types";
 
-export class CartController extends AbstractCartController {
+export class CartController implements ICartController {
+  constructor(private service: ICartService) {}
+
   getCart = async (
     request: FastifyRequest,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
-    const { userId } = getAuth(request);
+    const { userId } = request.auth;
     const cart = await this.service.getCartByUserId(userId!);
     reply.send({ data: cart, success: true });
   };
 
   addProductToCart = async (
     request: FastifyRequest<{ Body: { productId: number; quantity: number } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const { productId, quantity } = request.body;
-    const { userId } = getAuth(request);
+    const { userId } = request.auth;
 
     const cartItem = await this.service.addProductToCart(
       {
@@ -27,7 +29,7 @@ export class CartController extends AbstractCartController {
         productId,
         quantity,
       },
-      { queryRunner: request.container.queryRunner }
+      { queryRunner: request.container.queryRunner },
     );
 
     reply.send({ data: cartItem, success: true });
@@ -35,7 +37,7 @@ export class CartController extends AbstractCartController {
 
   deleteCart = async (
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const id = parseInt(request.params.id);
     const success = await this.service.deleteCart(id);
@@ -45,10 +47,10 @@ export class CartController extends AbstractCartController {
 
   removeProductFromCart = async (
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const id = parseInt(request.params.id);
-    await this.service.removeProductFromCart(id, request.userId);
+    await this.service.removeProductFromCart(id, request.auth.userId);
     reply.status(HttpStatus.NO_CONTENT).send();
   };
 }

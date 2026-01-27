@@ -1,5 +1,5 @@
 import { HttpStatus } from "#types/http-status";
-import { getAuth } from "@clerk/fastify";
+import { clerkClient, getAuth } from "@clerk/fastify";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 export const authenticate = async (
@@ -7,7 +7,7 @@ export const authenticate = async (
   reply: FastifyReply,
 ) => {
   const auth = getAuth(request);
-  request.auth.userId = auth.userId ?? "";
+  Object.assign(request.auth, auth);
 
   if (!auth.isAuthenticated) {
     return reply
@@ -21,8 +21,17 @@ export const authorizeAdmin = async (
   reply: FastifyReply,
 ) => {
   const auth = getAuth(request);
-  console.log(auth);
-  const isAdmin = auth.sessionClaims?.org_role === "org:admin";
+  if (!auth.userId) {
+    return reply
+      .status(HttpStatus.UNAUTHORIZED)
+      .send({ message: "Unauthenticated: Please log in." });
+  }
+
+  const response = await clerkClient.users.getOrganizationMembershipList({
+    userId: auth.userId,
+  });
+
+  const isAdmin = response.data.find(({ role }) => role === "org:admin");
 
   if (!isAdmin) {
     return reply

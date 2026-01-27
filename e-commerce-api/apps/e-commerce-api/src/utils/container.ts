@@ -4,42 +4,40 @@ import * as Entities from "#entities";
 import * as Repositories from "#repositories";
 import * as Services from "#services";
 import * as Controllers from "#controllers";
-import * as TControllers from "#controllers/types";
 import * as Providers from "#providers";
-
-import { BaseRepository } from "#repositories/base";
-import { BaseService } from "#services/base";
-import { BaseController } from "#controllers/base";
 import { create, hasProperty } from "./object";
+import { Dependencies } from "#services/base";
+
+const ProviderMapping = {
+  SendGridMailProvider: "mailProvider",
+  StripePaymentGatewayProvider: "paymentGatewayProvider",
+};
 
 type ModuleKey =
   | keyof typeof Entities
   | "Checkout"
-  | "SendGridMail"
-  | "StripePaymentGateway"
   | "Auth"
-  | keyof TProviders;
-
-const AllRegister = { ...TControllers, ...Services, ...Providers };
+  | keyof Providers.Providers;
 
 type TRepository = typeof Repositories;
 type TService = typeof Services;
-type TProviders = typeof Providers;
 
-type KeyRegister = keyof typeof AllRegister;
+type AllRegister = Controllers.Controllers &
+  Services.Services &
+  Providers.Providers;
 
 type TAllRegister = {
-  [key in KeyRegister]: InstanceType<(typeof AllRegister)[key]>;
+  [key in keyof AllRegister]: AllRegister[key];
 };
 
-type Register<T extends KeyRegister> = TAllRegister[T];
+type Register<T extends keyof AllRegister> = TAllRegister[T];
 
 export class Container {
   static #instance: Container;
   #dataSource: DataSource;
   #queryRunner: QueryRunner;
   items: Map<string, any> = new Map();
-  #repositories: Record<string, BaseRepository> = {};
+  #dependencies = {} as Record<keyof Dependencies, any>;
 
   private constructor() {}
 
@@ -51,7 +49,7 @@ export class Container {
     return this.#instance;
   }
 
-  getItem<T extends KeyRegister>(name: T): Register<T> {
+  getItem<T extends keyof AllRegister>(name: T): Register<T> {
     const item = this.items.get(name);
 
     if (!item) {
@@ -69,55 +67,43 @@ export class Container {
     this.#dataSource = dataSource;
     this.#queryRunner = this.#dataSource.createQueryRunner();
 
-    this.#repositories = Object.entries(Entities).reduce(
-      (prev, [key, Entity]) => {
-        const [repositoryKey, repositoryName] = create<TRepository>(
-          key,
-          "Repository",
-        );
+    Object.entries(Entities).forEach(([key, Entity]) => {
+      const [repositoryKey, repositoryName] = create<TRepository>(key, {
+        type: "Repository",
+      });
 
-        return {
-          ...prev,
-          [repositoryName]: new Repositories[repositoryKey](
-            dataSource.manager.getRepository(Entity) as any,
-          ),
-        };
-      },
-      {} as {
-        [key in keyof TRepository as Uncapitalize<key>]: InstanceType<
-          TRepository[key]
-        >;
-      },
-    );
+      this.#dependencies[repositoryName as keyof Dependencies] =
+        new Repositories[repositoryKey](
+          dataSource.manager.getRepository(Entity) as any,
+        );
+    });
 
     return this;
   }
 
-  register<T extends ModuleKey>(key: T, context?: any) {
-    if (context) {
-      const [providerKey] = create<TProviders>(key, "Provider");
-      this.setItem(providerKey, new Providers[providerKey](context));
+  register<T extends ModuleKey>(key: T) {
+    const [providerKey, providerName] = create<typeof Providers>(key, {
+      nameMapping: ProviderMapping,
+    });
+
+    if (hasProperty<keyof typeof Providers>(providerKey, Providers)) {
+      this.#dependencies[providerName as keyof Dependencies] = new Providers[
+        providerKey
+      ]();
+      return this;
     }
 
-    const [serviceKey] = create<TService>(key, "Service");
-    const [controllerKey] = create<typeof Controllers>(key, "Controller");
+    const [serviceKey] = create<TService>(key, { type: "Service" });
+    const [controllerKey] = create<typeof Controllers>(key, {
+      type: "Controller",
+    });
 
-    if (hasProperty<keyof TService, typeof BaseService>(serviceKey, Services)) {
-      const service = new Services[serviceKey]({
-        paymentGatewayProvider: this.getItem("StripePaymentGatewayProvider"),
-        mailProvider: this.getItem("SendGridMailProvider"),
-        ...this.#repositories,
-        authProvider: this.getItem("AuthProvider"),
-      });
+    if (hasProperty<keyof TService>(serviceKey, Services)) {
+      const service = new Services[serviceKey](this.#dependencies);
       this.setItem(serviceKey, service);
 
-      if (
-        hasProperty<keyof typeof Controllers, typeof BaseController>(
-          controllerKey,
-          Controllers,
-        )
-      ) {
-        const controller = new Controllers[controllerKey](service);
+      if (hasProperty<keyof typeof Controllers>(controllerKey, Controllers)) {
+        const controller = new Controllers[controllerKey](service as any);
         this.setItem(controllerKey, controller);
       }
     }

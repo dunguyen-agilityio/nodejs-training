@@ -1,14 +1,17 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 
-import { AbstractAuthController } from "./type";
+import { IAuthController } from "./type";
 import { transformatFromClerk } from "../../dtos/user";
 import { HttpStatus } from "#types/http-status";
 import { isClerkAPIResponseError } from "#utils/clerk";
 import { BadRequestError } from "#types/error";
 import { loginBodySchema, registerBodySchema } from "#schemas/auth.schema";
 import { FromSchema } from "json-schema-to-ts";
+import { IAuthService } from "#services/types";
 
-export class AuthController extends AbstractAuthController {
+export class AuthController implements IAuthController {
+  constructor(private service: IAuthService) {}
+
   register = async (
     request: FastifyRequest<{ Body: FromSchema<typeof registerBodySchema> }>,
     reply: FastifyReply,

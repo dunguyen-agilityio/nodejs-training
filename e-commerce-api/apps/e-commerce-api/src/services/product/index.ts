@@ -1,9 +1,19 @@
 import { Product } from "#entities";
+import { IPaymentGatewayProvider } from "#providers/types";
+import { ProductRepository } from "#repositories/types";
+import { Dependencies } from "#services/base";
 import { NotFoundError } from "#types/error";
 import { Pagination } from "#types/query";
-import { AbstractProductService } from "./type";
+import { IProductService } from "./type";
 
-export class ProductService extends AbstractProductService {
+export class ProductService implements IProductService {
+  private productRepository: ProductRepository;
+  private paymentGatewayProvider: IPaymentGatewayProvider;
+
+  constructor(dependencies: Dependencies) {
+    Object.assign(this, dependencies);
+  }
+
   async getProducts(params: {
     query: string;
     page: number;
@@ -38,7 +48,25 @@ export class ProductService extends AbstractProductService {
   }
 
   async saveProduct(product: Omit<Product, "id">): Promise<Product> {
-    return this.productRepository.save(product);
+    try {
+      const { price } = product;
+      const newProduct = this.productRepository.create(product);
+
+      await this.paymentGatewayProvider.createProduct({
+        ...newProduct,
+        id: newProduct.id.toString(),
+        active: true,
+        default_price_data: { currency: "usd", unit_amount: price },
+        url: `${process.env.CLIENT_BASE_URL}/products/${newProduct.id}`,
+      });
+
+      await this.productRepository.save(newProduct);
+
+      return newProduct;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 
   async updateProduct(
@@ -48,7 +76,7 @@ export class ProductService extends AbstractProductService {
         Product,
         "category" | "description" | "images" | "name" | "price" | "stock"
       >
-    >
+    >,
   ): Promise<Product> {
     const product = await this.getProductById(id);
 

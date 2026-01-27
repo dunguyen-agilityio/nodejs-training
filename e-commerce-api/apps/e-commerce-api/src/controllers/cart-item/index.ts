@@ -1,8 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { AbstractCartItemController } from "./type";
 import { HttpStatus } from "#types/http-status";
+import { ICartItemService } from "#services/types";
 
-export class CartItemController extends AbstractCartItemController {
+export class CartItemController implements CartItemController {
+  constructor(private service: ICartItemService) {}
+
   getAll = async (request: FastifyRequest, reply: FastifyReply) => {};
 
   deleteCartItem = async (
@@ -11,7 +13,7 @@ export class CartItemController extends AbstractCartItemController {
   ): Promise<void> => {
     await this.service.deleteCartItem(
       parseInt(request.params.id),
-      request.userId,
+      request.auth.userId,
     );
 
     reply.status(HttpStatus.NO_CONTENT).send();

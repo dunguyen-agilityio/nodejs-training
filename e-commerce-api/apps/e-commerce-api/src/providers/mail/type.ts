@@ -1,10 +1,6 @@
-import { BaseProvider } from "#providers/base";
+import { MailData } from "#types/mail";
 
-export abstract class AbstractMailProvider<T> extends BaseProvider<T> {
-  abstract sendWithTemplate(
-    from: string,
-    to: string,
-    data: Record<string, any>,
-    templateId: string,
-  ): Promise<void>;
+export interface IMailProvider {
+  sendWithTemplate(data: MailData): Promise<void>;
+  send(data: MailData): Promise<void>;
 }

@@ -1,10 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 
-import { AbstractProductController } from "./type";
+import { IProductController } from "./type";
 import { Product } from "#entities";
 import { HttpStatus } from "#types/http-status";
+import { IProductService } from "#services/types";
 
-export class ProductController extends AbstractProductController {
+export class ProductController implements IProductController {
+  constructor(private service: IProductService) {}
+
   updateProduct = async (
     request: FastifyRequest<{
       Params: { id: string };

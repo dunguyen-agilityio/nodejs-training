@@ -1,8 +1,16 @@
-import { AbstractUserService } from "./type";
+import { IUserService } from "./type";
 import { USER_ROLES } from "#types/user";
 import { User } from "#entities";
+import { UserRepository } from "#repositories/types";
+import { Dependencies } from "#services/base";
 
-export class UserService extends AbstractUserService {
+export class UserService implements IUserService {
+  private userRepository: UserRepository;
+
+  constructor(dependencies: Dependencies) {
+    Object.assign(this, dependencies);
+  }
+
   async addRoleForUser(userId: string, role: USER_ROLES): Promise<boolean> {
     const user = await this.userRepository.getById(userId);
 

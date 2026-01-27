@@ -19,6 +19,9 @@ export class Order extends BaseWithCreatedAndUpdated {
   @Column({ name: "total_amount", type: "decimal" })
   totalAmount: number;
 
+  @Column({ name: "invoice_id", type: "varchar", nullable: true })
+  invoiceId: string;
+
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   items?: OrderItem[];
 

@@ -33,7 +33,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           price: initialData.price,
           stock: initialData.stock,
           category: initialData.category,
-          image: initialData.image,
+          image: initialData.images[0],
         }
       : {
           image: "/file-text.svg",
@@ -45,7 +45,17 @@ export function ProductForm({ initialData }: ProductFormProps) {
       const token = await getToken();
 
       if (!id) {
-        await post("/products", data, { Authorization: `Bearer ${token}` });
+        await post(
+          "/products",
+          {
+            ...data,
+            images: [
+              "https://fastly.picsum.photos/id/0/5000/3333.jpg?hmac=_j6ghY5fCfSD6tvtcV74zXivkJSPIfR9B8w34XeQmvU",
+            ],
+            category: "Books",
+          },
+          { Authorization: `Bearer ${token}` },
+        );
       } else {
         await put(`/products/${id}`, data, {
           Authorization: `Bearer ${token}`,
@@ -55,7 +65,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       toast.success(
         isEditing
           ? "Product updated successfully."
-          : "Product created successfully."
+          : "Product created successfully.",
       );
       router.push("/admin/products");
       router.refresh();

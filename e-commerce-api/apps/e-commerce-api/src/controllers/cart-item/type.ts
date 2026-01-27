@@ -1,16 +1,10 @@
-import { CartItemService } from "#services/types";
 import { FastifyReply, FastifyRequest } from "fastify";
 
-import { BaseController } from "../base";
-
-export abstract class AbstractCartItemController extends BaseController<CartItemService> {
-  abstract getAll(request: FastifyRequest, reply: FastifyReply): Promise<void>;
-  abstract deleteCartItem(
+export interface ICartItemController {
+  getAll(request: FastifyRequest, reply: FastifyReply): Promise<void>;
+  deleteCartItem(request: FastifyRequest, reply: FastifyReply): Promise<void>;
+  updateCartItemQuantity(
     request: FastifyRequest,
-    reply: FastifyReply
-  ): Promise<void>;
-  abstract updateCartItemQuantity(
-    request: FastifyRequest,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void>;
 }

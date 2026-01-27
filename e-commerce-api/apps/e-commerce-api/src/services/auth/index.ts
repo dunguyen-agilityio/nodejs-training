@@ -1,14 +1,26 @@
 import { User } from "#entities";
+import { CartRepository, UserRepository } from "#repositories/types";
+import { Dependencies } from "#services/base";
 import { LoginParams } from "#types/auth";
 import { NotFoundError } from "#types/error";
-import { AbstractAuthService } from "./type";
+import { IAuthService } from "./type";
+import { IMailProvider, IPaymentGatewayProvider } from "#providers/types";
 
-export class AuthService extends AbstractAuthService {
+export class AuthService implements IAuthService {
+  private userRepository: UserRepository;
+  private cartRepository: CartRepository;
+  private paymentGatewayProvider: IPaymentGatewayProvider;
+  private mailProvider: IMailProvider;
+
+  constructor(dependecies: Dependencies) {
+    Object.assign(this, dependecies);
+  }
+
   async register(body: User) {
-    const { email, firstName, lastName } = body;
-    const customer = await this.paymentGatewayProvider.createCustomer({
+    const { email, name } = body;
+    const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
       email,
-      name: `${firstName} ${lastName}`,
+      name,
     });
     const user = await this.userRepository.save({
       ...body,
@@ -18,6 +30,23 @@ export class AuthService extends AbstractAuthService {
       user,
       status: "active",
       items: [],
+    });
+
+    const loginPath = `${process.env.CLIENT_BASE_URL}${process.env.CLIENT_LOGIN_PATH}`;
+
+    await this.mailProvider.sendWithTemplate({
+      from: process.env.SENDGRID_FROM_EMAIL!,
+      templateId: process.env.SENDGRID_TEMPLATE_REGISTER_SUCCESS!,
+      to: email,
+      dynamicTemplateData: {
+        name,
+        email,
+        app_name: process.env.APP_NAME,
+        logo_url: process.env.LOGO_URL,
+        login_url: loginPath,
+        support_email: process.env.SENDGRID_SUPPORT_EMAIL,
+        year: process.env.APP_YEAR,
+      },
     });
     return user;
   }
@@ -32,8 +61,8 @@ export class AuthService extends AbstractAuthService {
       throw new NotFoundError("User not found");
     }
 
-    const jwt = await this.authProvider.login(user.id, password);
+    // const jwt = await this.authProvider.login(user.id, password);
 
-    return { jwt, data: user };
+    return { jwt: "jwt", data: user };
   }
 }

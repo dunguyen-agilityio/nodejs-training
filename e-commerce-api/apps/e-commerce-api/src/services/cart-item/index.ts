@@ -1,13 +1,15 @@
 import { CartItem } from "#entities";
+import { CartItemRepository } from "#repositories/types";
+import { Dependencies } from "#services/base";
 import { NotFoundError } from "#types/error";
-import { AbstractCartItemService } from "./type";
+import { ICartItemService } from "./type";
 
-export class CartItemService extends AbstractCartItemService {
-  // async save(
-  //   cart: Pick<CartItem, "productId" | "quantity" | "cartId">
-  // ): Promise<CartItem> {
-  //   return await this.cartitemRepository.save(cart);
-  // }
+export class CartItemService implements ICartItemService {
+  private cartItemRepository: CartItemRepository;
+
+  constructor(dependencies: Dependencies) {
+    Object.assign(this, dependencies);
+  }
 
   async getCartItemByProduct(
     productId: number,

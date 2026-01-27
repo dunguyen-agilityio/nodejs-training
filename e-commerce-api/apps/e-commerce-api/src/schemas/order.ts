@@ -1,8 +1,8 @@
 export const getOrdersSchema = {
     type: 'object',
     properties: {
-        page: { type: 'string', },
-        pageSize: { type: 'string', },
+        page: { type: 'number', default: 1 },
+        pageSize: { type: 'number', default: 10 },
     },
-    required: ['page', 'pageSize'],
+    required: [],
 } as const;

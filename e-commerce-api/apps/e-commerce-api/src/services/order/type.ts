@@ -1,17 +1,14 @@
 import { Order } from "#entities";
-import { OrderItemRepository, OrderRepository } from "#repositories/types";
-import { Dependencies } from "#services/base";
-import { Params } from "#types/query";
+import { Pagination, Params } from "#types/query";
 
-export abstract class AbstractOrderService {
-  protected orderRepository: OrderRepository;
-  protected orderItemRepository: OrderItemRepository;
+export interface IOrderService {
+  getOrders(
+    params: Omit<Params, "query">,
+  ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>;
+  createOrder(userId: string): Promise<Order>;
 
-  constructor(dependencies: Partial<Dependencies>) {
-    Object.assign(this, dependencies);
-  }
-
-  abstract getOrders(params: Omit<Params, 'query'>): Promise<Order[]>;
-
-  abstract getOrdersByUserId(userId: string, params: Omit<Params, 'query'>): Promise<Order[]>;
+  getOrdersByUserId(
+    userId: string,
+    params: Omit<Params, "query">,
+  ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>;
 }

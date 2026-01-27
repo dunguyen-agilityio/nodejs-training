@@ -1,21 +1,35 @@
-import { BaseProvider } from "#providers/base";
+import {
+  Invoice,
+  InvoiceCreateParams,
+  InvoiceItem,
+  InvoiceItemCreateParams,
+  InvoicePayment,
+  PaymentMethod,
+} from "#types/invoice";
+import {
+  Customer,
+  CustomerCreateParams,
+  InvoicePaymentExpand,
+  PaymentIntent,
+  PaymentIntentCreateParams,
+  Response,
+} from "#types/payment";
+import { Product, ProductCreateParams } from "#types/product";
 
-type Payment<C = any, P = any, R = any, E = any> = {
-  Customer: C;
-  PaymentIntent: P;
-  PaymentIntentCreateParams: R;
-  CustomerCreateParams: E;
-};
-
-export abstract class AbstractPaymentGatewayProvider<
-  P = any,
-  T extends Payment = Payment,
-> extends BaseProvider<P> {
-  abstract getPaymentIntents(id: string): Promise<T["PaymentIntent"]>;
-  abstract createPaymentIntents(
-    payload: T["PaymentIntentCreateParams"],
-  ): Promise<T["PaymentIntent"]>;
-  abstract createCustomer(
-    params: T["CustomerCreateParams"],
-  ): Promise<T["Customer"]>;
+export interface IPaymentGatewayProvider {
+  getPaymentIntents(id: string): Promise<Response<PaymentIntent>>;
+  createPaymentIntents(
+    payload: PaymentIntentCreateParams,
+  ): Promise<Response<PaymentIntent>>;
+  findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>;
+  createInvoice(params: InvoiceCreateParams): Promise<Response<Invoice>>;
+  createProduct(params: ProductCreateParams): Promise<Response<Product>>;
+  createInvoiceItem(
+    params: InvoiceItemCreateParams,
+  ): Promise<Response<InvoiceItem>>;
+  finalizeInvoice(id: string): Promise<Response<Invoice>>;
+  getInvoice(id: string): Promise<Response<Invoice>>;
+  getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>>;
+  getPaymentIntent(id: string): Promise<Response<PaymentIntent>>;
+  getPaymentMethod(id: string): Promise<Response<PaymentMethod>>;
 }

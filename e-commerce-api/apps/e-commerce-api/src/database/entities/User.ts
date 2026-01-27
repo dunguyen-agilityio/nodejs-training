@@ -60,6 +60,10 @@ export class User {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  get name() {
+    return [this.firstName, this.lastName].filter(Boolean).join(" ");
+  }
+
   constructor(user: User) {
     if (user) {
       Object.assign(this, user);

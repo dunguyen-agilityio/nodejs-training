@@ -1,10 +1,24 @@
 import { Cart, CartItem } from "#entities";
 import { CartPayLoad } from "#types/cart";
 import { QueryRunner } from "typeorm";
-import { AbstractCartService } from "./type";
+import { ICartService } from "./type";
 import { BadRequestError, NotFoundError, UnexpectedError } from "#types/error";
+import {
+  CartItemRepository,
+  CartRepository,
+  ProductRepository,
+} from "#repositories/types";
+import { Dependencies } from "#services/base";
 
-export class CartService extends AbstractCartService {
+export class CartService implements ICartService {
+  private cartRepository: CartRepository;
+  private cartItemRepository: CartItemRepository;
+  private productRepository: ProductRepository;
+
+  constructor(dependencies: Dependencies) {
+    Object.assign(this, dependencies);
+  }
+
   async createCart(userId: string): Promise<Cart> {
     try {
       const newCart = this.cartRepository.create({
