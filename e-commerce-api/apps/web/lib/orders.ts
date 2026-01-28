@@ -85,8 +85,7 @@ let orders: Order[] = [
 ];
 
 export async function getUserOrders() {
-  const { getToken, sessionClaims, ...a } = await auth();
-  console.log(a, sessionClaims);
+  const { getToken } = await auth();
 
   const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
 

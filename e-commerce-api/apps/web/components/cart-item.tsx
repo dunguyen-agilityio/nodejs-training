@@ -24,7 +24,7 @@ export function CartItem({
     >
       <div className="relative h-24 w-24 bg-secondary rounded-md overflow-hidden flex-shrink-0">
         <Image
-          src={item.product.image || "/file-text.svg"}
+          src={item.product.images[0] || "/file-text.svg"}
           alt={item.product.name}
           fill
           className="object-contain p-2"

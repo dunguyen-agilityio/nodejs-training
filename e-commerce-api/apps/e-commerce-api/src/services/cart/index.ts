@@ -29,16 +29,20 @@ export class CartService implements ICartService {
       await this.cartRepository.insert(newCart);
       return newCart;
     } catch (error) {
-      console.log(error);
+      console.error("Error - createCart: ", error);
       throw error;
     }
   }
 
-  async addProductToCart(
-    { productId, userId, quantity }: CartPayLoad,
-    { queryRunner }: { queryRunner: QueryRunner },
-  ): Promise<CartItem> {
+  async addProductToCart({
+    productId,
+    userId,
+    quantity,
+  }: CartPayLoad): Promise<CartItem> {
     const cart = await this.getCartByUserId(userId);
+
+    const queryRunner =
+      this.cartRepository.manager.connection.createQueryRunner();
 
     const { id: cartId } = cart;
 
@@ -97,12 +101,6 @@ export class CartService implements ICartService {
     return cart;
   }
 
-  async deleteCart(cartId: number): Promise<boolean> {
-    const success = await this.cartRepository.delete(cartId);
-
-    return !!success.affected;
-  }
-
   async removeProductFromCart(
     itemId: number,
     userId: string,
@@ -110,10 +108,9 @@ export class CartService implements ICartService {
     return this.cartItemRepository.deleteCartItem(itemId, userId);
   }
 
-  async clearCart(userId: string): Promise<boolean> {
+  async clearCart(userId: string): Promise<void> {
     const cart = await this.getCartByUserId(userId);
     // delete all items in cart
     await this.cartItemRepository.deleteCartItem(cart.id, userId);
-    return this.deleteCart(cart.id);
   }
 }

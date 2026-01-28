@@ -1,16 +1,9 @@
 import { getUserOrders } from "@/lib/orders";
-import { auth } from "@clerk/nextjs/server";
+
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 export default async function OrdersPage() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
   const orders = await getUserOrders();
 
   if (orders.length === 0) {

@@ -55,10 +55,34 @@ export interface PaymentIntent {
   payment_method: string | PaymentMethod | null;
 }
 
+export interface Charge {
+  id: string;
+  object: "charge";
+  amount: number;
+  amount_captured: number;
+  amount_refunded: number;
+  application_fee_amount: number | null;
+  authorization_code?: string;
+  calculated_statement_descriptor: string | null;
+  captured: boolean;
+  created: number;
+  currency: string;
+  customer: string | Customer | DeletedCustomer | null;
+  description: string | null;
+  paid: boolean;
+  payment_intent: string | PaymentIntent | null;
+
+  payment_method: string | null;
+  receipt_email: string | null;
+  receipt_number: string | null;
+  receipt_url: string | null;
+}
+
 export type InvoicePaymentExpand = Omit<InvoicePayment, "payment"> & {
   payment: {
     payment_intent: {
       payment_method: PaymentMethod;
+      latest_charge: Charge;
     };
   };
 };

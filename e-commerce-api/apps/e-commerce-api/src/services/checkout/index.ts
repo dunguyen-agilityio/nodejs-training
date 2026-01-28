@@ -1,8 +1,9 @@
-import { CartItem, Order, OrderItem, Product, User } from "#entities";
-import { NotFoundError } from "#types/error";
+import { OrderItem } from "#entities";
+import { NotFoundError, UnexpectedError } from "#types/error";
 import Stripe from "stripe";
 import { ICheckoutService } from "./type";
 import {
+  CartItemRepository,
   CartRepository,
   OrderRepository,
   ProductRepository,
@@ -12,13 +13,20 @@ import { StripePaymentGatewayProvider } from "#providers";
 import { Dependencies } from "#services/base";
 import { Response } from "#types/payment";
 import { IMailProvider } from "#providers/types";
-import { Invoice } from "#types/invoice";
-import { IUserService } from "#services/types";
-import { formatStripeAmount, formatStripeDate } from "#utils/format";
+import { Invoice, PaymentMethodType } from "#types/invoice";
+
+import {
+  formatAmount,
+  formatPaymentMethod,
+  formatStripeAmount,
+  formatStripeDate,
+} from "#utils/format";
 
 export class CheckoutService implements ICheckoutService {
   private userRepository: UserRepository;
   private cartRepository: CartRepository;
+  private cartItemRepository: CartItemRepository;
+  private orderRepository: OrderRepository;
   private productRepository: ProductRepository;
   private paymentGatewayProvider: StripePaymentGatewayProvider;
   private mailProvider: IMailProvider;
@@ -31,235 +39,86 @@ export class CheckoutService implements ICheckoutService {
     payload: Stripe.PaymentIntentCreateParams,
     userId: string,
   ): Promise<Response<Invoice>> {
-    const user = await this.userRepository.getUserRelationsById(userId);
-
-    if (!user) {
-      throw new NotFoundError("Not found user");
-    }
-
-    const { stripeId, cart } = user;
-
-    if (!stripeId) {
-      const { email, firstName, lastName } = user;
-      const stripeUser = await this.paymentGatewayProvider.findOrCreateCustomer(
-        {
-          email,
-          name: `${firstName} ${lastName}`,
-        },
-      );
-
-      user.stripeId = stripeUser.id;
-      await this.userRepository.save(user);
-    }
-
-    if (!cart || !cart.items.length) {
-      throw new NotFoundError("Cart is empty");
-    }
-
-    const { currency } = payload;
-    const cartItems = cart.items;
-
-    const invoice = await this.paymentGatewayProvider.createInvoice({
-      currency,
-      customer: user.stripeId,
-    });
-
-    await Promise.all(
-      cartItems.map(({ quantity, product: { price, name, id: productId } }) =>
-        this.paymentGatewayProvider.createInvoiceItem({
-          invoice: invoice.id,
-          description: name,
-          customer: user.stripeId,
-          price_data: {
-            currency,
-            product: productId.toString(),
-            unit_amount: Math.round(price * 1000),
-          },
-          quantity,
-        }),
-      ),
-    );
-
-    return await this.paymentGatewayProvider.finalizeInvoice(invoice.id);
-  }
-
-  async checkout(
-    stripeId: string,
-    paymentIntentId: string,
-    userService: IUserService,
-  ): Promise<boolean> {
-    const user = await userService.getUserByStripeId(stripeId);
-
-    if (!user) {
-      throw new NotFoundError("User not found");
-    }
-
-    const { id: userId } = user;
-    const paymentIntent =
-      await this.paymentGatewayProvider.getPaymentIntents(paymentIntentId);
-
-    if (!paymentIntent) throw new NotFoundError("Payment intent not found");
-
-    if (paymentIntent.status !== "succeeded")
-      throw new Error("Payment intent not succeeded");
-
-    const cart = await this.cartRepository.getCartByUserId(userId);
-
-    if (!cart || !cart.items || cart.items.length === 0) {
-      throw new NotFoundError("Cart is empty");
-    }
-
-    // Start transaction
-    const queryRunner =
-      this.cartRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
-      const totalAmount = await cart.items.reduce(async (sumPromise, item) => {
-        const sum = await sumPromise;
-        const product = await this.productRepository.getById(item.product.id);
+      const user = await this.userRepository.getUserRelationsById(userId);
 
-        if (!product) throw new NotFoundError("Product not found");
-        return sum + item.quantity * product.price;
-      }, Promise.resolve(0));
+      if (!user) {
+        throw new NotFoundError("Not found user");
+      }
 
-      // Create order
-      const order = await queryRunner.manager.save(
-        queryRunner.manager.create(Order, {
-          user: { id: userId },
-          status: "paid",
-          totalAmount,
-        }),
-      );
+      const { stripeId, cart } = user;
 
-      const orderItems = await Promise.all(
-        cart.items.map(async (cartItem) => {
-          const product = await queryRunner.manager.findOne(Product, {
-            where: { id: cartItem.product.id },
+      if (!stripeId) {
+        const { email, firstName, lastName } = user;
+        const stripeUser =
+          await this.paymentGatewayProvider.findOrCreateCustomer({
+            email,
+            name: `${firstName} ${lastName}`,
           });
 
-          if (!product) {
-            throw new NotFoundError(`Product ${cartItem.product.id} not found`);
-          }
+        user.stripeId = stripeUser.id;
+        await this.userRepository.save(user);
+      }
 
-          if (product.stock < cartItem.quantity) {
-            throw new Error(`Insufficient stock for ${product.name}`);
-          }
-          // Decrease stock
-          product.stock -= cartItem.quantity;
-          await queryRunner.manager.save(product);
+      if (!cart || !cart.items.length) {
+        throw new NotFoundError("Cart is empty");
+      }
 
-          // Create order item
-          return queryRunner.manager.create(OrderItem, {
-            order,
-            priceAtPurchase: product.price,
-            product,
-            quantity: cartItem.quantity,
-          });
-        }),
+      const { currency } = payload;
+      const cartItems = cart.items;
+
+      const invoice = await this.paymentGatewayProvider.createInvoice({
+        currency,
+        customer: user.stripeId,
+      });
+
+      await Promise.all(
+        cartItems.map(({ quantity, product: { price, name } }) =>
+          this.paymentGatewayProvider.createInvoiceItem({
+            invoice: invoice.id,
+            description: name,
+            customer: user.stripeId,
+            amount: Math.round(price * 100) * quantity, // to cents
+          }),
+        ),
       );
 
-      await queryRunner.manager.save(orderItems);
-
-      // Clear cart items
-      await queryRunner.manager.delete(CartItem, { cartId: cart.id });
-      await queryRunner.commitTransaction();
-
-      // const { name, email } = user;
-
-      //   this.paymentGatewayProvider.getInvoice()
-
-      //  const {amount, created,} =  paymentIntent
-      //   await this.mailProvider
-      //     .sendWithTemplate({
-      //       from: process.env.SENDGRID_FROM_EMAIL!,
-      //       templateId: process.env.SENDGRID_TEMPLATE_REGISTER_SUCCESS!,
-      //       to: email,
-      //       dynamicTemplateData: {
-      //         name,
-      //         email,
-      //         company_name: process.env.APP_NAME,
-      //         support_email: process.env.SENDGRID_SUPPORT_EMAIL,
-      //         amount_paid: "$121.00",
-      //         paid_date: "January 21, 2026",
-      //         receipt_number: "2383-4080",
-      //         invoice_number: "CBAMGZRJ-0001",
-      //         payment_method: "VISA •••• 4242",
-      //         invoice_url: "https://example.com/invoice",
-      //         receipt_url: "https://example.com/receipt",
-      //         items: [
-      //           {
-      //             name: "Product 1",
-      //             quantity: 3,
-      //             unit_price: "$23.00",
-      //             total: "$69.00",
-      //           },
-      //           {
-      //             name: "Product 2",
-      //             quantity: 4,
-      //             unit_price: "$13.00",
-      //             total: "$52.00",
-      //           },
-      //         ],
-      //       },
-      //     })
-      //     .then((e) => {
-      //       console.log(e);
-      //     });
-
-      return true;
+      const finalizeInvoice = await this.paymentGatewayProvider.finalizeInvoice(
+        invoice.id,
+      );
+      return finalizeInvoice;
     } catch (error) {
-      // Rollback on error
-      await queryRunner.rollbackTransaction();
+      console.error("Error - createCheckoutPayment: ", error);
       throw error;
-    } finally {
-      await queryRunner.release();
     }
   }
 
-  async checkout1(
-    stripeId: string,
-    invoiceId: string,
-    userService: IUserService,
-  ): Promise<boolean> {
+  async checkout(stripeId: string, invoiceId: string): Promise<boolean> {
     const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId);
 
     const invoicePaymentId = invoice.payments?.data[0]?.id;
 
     if (!invoicePaymentId) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError("Invoice Payment not found");
     }
 
     const invoicePayment =
       await this.paymentGatewayProvider.getInvoicePayment(invoicePaymentId);
 
-    const { card } =
-      invoicePayment.payment?.payment_intent?.payment_method || {};
-
-    if (!card) {
-      throw new NotFoundError("User not found");
+    const { latest_charge } = invoicePayment.payment.payment_intent || {};
+    if (!latest_charge) {
+      throw new UnexpectedError("Missing latest charge");
     }
 
-    //   if (!payment_method) {
-    //     throw new NotFoundError("User not found");
-    //   }
+    const { receipt_url } = latest_charge;
 
-    // const paymethod = await  this.paymentGatewayProvider.getPaymentMethod(
-    //     typeof payment_method === "string" ? payment_method : payment_method.id,
-    //   );
+    const { payment_method } = invoicePayment.payment?.payment_intent || {};
 
-    //  (await this.stripe.paymentMethods.retrieve('')).card?.last4
-    // console.log(
-    //   (await this.stripe.paymentIntents.retrieve("pi_3Su9F62fECJWDqwm1RIuEvYm"))
-    //     .payment_method,
-    //   (await this.stripe.paymentMethods.retrieve("pm_1Su9F42fECJWDqwmOXM7JaOy"))
-    //     .card?.brand,
+    if (!payment_method) {
+      throw new NotFoundError("Payment method not found");
+    }
 
-    //   "  (await this.stripe.invoicePayments.retrieve('in_1Su93C2fECJWDqwmbQFmQrcw')).payment.type",
-    // );
-
-    const user = await userService.getUserByStripeId(stripeId);
+    const user = await this.userRepository.getByStripeId(stripeId);
 
     if (!user) {
       throw new NotFoundError("User not found");
@@ -293,37 +152,30 @@ export class CheckoutService implements ICheckoutService {
       }, Promise.resolve(0));
 
       // Create order
-      const order = await queryRunner.manager.save(
-        queryRunner.manager.create(Order, {
-          user: { id: userId },
+      const order = await this.orderRepository.createOrder(
+        queryRunner,
+        userId,
+        {
           status: "paid",
           totalAmount,
-        }),
+        },
       );
 
       const orderItems = await Promise.all(
-        cart.items.map(async (cartItem) => {
-          const product = await queryRunner.manager.findOne(Product, {
-            where: { id: cartItem.product.id },
-          });
-
-          if (!product) {
-            throw new NotFoundError(`Product ${cartItem.product.id} not found`);
-          }
-
-          if (product.stock < cartItem.quantity) {
-            throw new Error(`Insufficient stock for ${product.name}`);
-          }
-          // Decrease stock
-          product.stock -= cartItem.quantity;
-          await queryRunner.manager.save(product);
+        cart.items.map(async ({ product, quantity }) => {
+          const { id: productId } = product;
+          await this.productRepository.decreaseStock(
+            queryRunner,
+            productId,
+            quantity,
+          );
 
           // Create order item
           return queryRunner.manager.create(OrderItem, {
             order,
             priceAtPurchase: product.price,
             product,
-            quantity: cartItem.quantity,
+            quantity: quantity,
           });
         }),
       );
@@ -331,7 +183,8 @@ export class CheckoutService implements ICheckoutService {
       await queryRunner.manager.save(orderItems);
 
       // Clear cart items
-      await queryRunner.manager.delete(CartItem, { cartId: cart.id });
+      await this.cartItemRepository.clearCartItems(queryRunner, cart.id);
+
       await queryRunner.commitTransaction();
 
       const {
@@ -341,46 +194,41 @@ export class CheckoutService implements ICheckoutService {
         customer_email,
         customer_name,
         status_transitions,
+        invoice_pdf,
+        receipt_number,
       } = invoice;
 
-      await this.mailProvider
-        .sendWithTemplate({
-          from: process.env.SENDGRID_FROM_EMAIL!,
-          templateId: process.env.SENDGRID_TEMPLATE_REGISTER_SUCCESS!,
-          to: customer_email ?? user.email,
-          dynamicTemplateData: {
-            name: customer_name ?? user.name,
-            email: customer_email ?? user.email,
-            company_name: process.env.APP_NAME,
-            support_email: process.env.SENDGRID_SUPPORT_EMAIL,
-            amount_paid: formatStripeAmount(total, currency),
-            paid_date: formatStripeDate(
-              status_transitions?.paid_at || Date.now(),
-            ),
-            receipt_number: "2383-4080",
-            invoice_number: number,
-            payment_method: `${card.brand.toUpperCase()} •••• ${card.last4}`,
-            invoice_url: "https://example.com/invoice",
-            receipt_url: "https://example.com/receipt",
-            items: [
-              {
-                name: "Product 1",
-                quantity: 3,
-                unit_price: "$23.00",
-                total: "$69.00",
-              },
-              {
-                name: "Product 2",
-                quantity: 4,
-                unit_price: "$13.00",
-                total: "$52.00",
-              },
-            ],
-          },
-        })
-        .then((e) => {
-          console.log(e);
-        });
+      const message = {
+        from: process.env.SENDGRID_FROM_EMAIL!,
+        templateId: process.env.SENDGRID_TEMPLATE_ORDER_SUCCESS!,
+        to: customer_email ?? user.email,
+        dynamicTemplateData: {
+          name: customer_name ?? user.name,
+          email: customer_email ?? user.email,
+          company_name: process.env.APP_NAME,
+          support_email: process.env.SENDGRID_SUPPORT_EMAIL,
+          amount_paid: formatStripeAmount(total, currency),
+          paid_date: formatStripeDate(
+            status_transitions?.paid_at || Date.now(),
+          ),
+          receipt_number,
+          invoice_number: number,
+          payment_method: formatPaymentMethod(
+            payment_method.type as PaymentMethodType,
+            payment_method,
+          ),
+          invoice_url: invoice_pdf,
+          receipt_url,
+          items: orderItems.map(({ product, quantity }) => ({
+            name: product.name,
+            quantity: quantity,
+            unit_price: formatAmount(product.price, currency),
+            total: formatAmount(product.price * quantity, currency),
+          })),
+        },
+      };
+
+      await this.mailProvider.sendWithTemplate(message);
 
       return true;
     } catch (error) {
@@ -390,6 +238,5 @@ export class CheckoutService implements ICheckoutService {
     } finally {
       await queryRunner.release();
     }
-    return true;
   }
 }

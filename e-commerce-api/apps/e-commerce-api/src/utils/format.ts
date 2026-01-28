@@ -1,3 +1,5 @@
+import { PaymentMethod, PaymentMethodType } from "#types/invoice";
+
 /**
  * Format Stripe amount (in smallest unit) to currency string
  * Example: (2000, "usd") -> "$20.00"
@@ -11,6 +13,17 @@ export function formatStripeAmount(
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(amount / 100);
+}
+
+export function formatAmount(
+  amount: number,
+  currency: string,
+  locale = "en-US",
+): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount);
 }
 
 /**
@@ -27,3 +40,21 @@ export function formatStripeDate(
     year: "numeric",
   }).format(new Date(unixSeconds * 1000));
 }
+
+export const formatPaymentMethod = (
+  type: PaymentMethodType,
+  paymentMethod: PaymentMethod,
+) => {
+  if (!paymentMethod[type]) return "";
+
+  switch (type) {
+    case "card":
+      return `${paymentMethod[type].brand.toUpperCase()} •••• ${paymentMethod[type].last4}`;
+
+    case "link":
+      return `Link ${paymentMethod[type].email}`;
+
+    default:
+      return "";
+  }
+};

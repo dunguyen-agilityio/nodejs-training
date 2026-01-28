@@ -6,3 +6,4 @@ export * from "./category/type";
 export * from "./cart-item/type";
 export * from "./checkout/type";
 export * from "./order/type";
+export * from "./metric/type";

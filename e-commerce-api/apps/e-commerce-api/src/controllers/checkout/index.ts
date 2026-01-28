@@ -45,13 +45,11 @@ export class CheckoutController implements ICheckoutController {
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const userService = request.container.getItem("UserService");
-
     const { type, data } = request.body;
 
     if (type === "payment_intent.succeeded") {
       const customer = data.object.customer;
-      await this.service.checkout(customer, data.object.id, userService);
+      await this.service.checkout(customer, data.object.id);
     }
 
     reply.send({ received: true });
@@ -61,25 +59,11 @@ export class CheckoutController implements ICheckoutController {
     request: FastifyRequest<{ Body: FromSchema<typeof paymentSuccessSchema> }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const userService = request.container.getItem("UserService");
-
     const { data, type } = request.body;
 
     if (type === "invoice.payment_succeeded") {
-      const { id: invoiceId, customer, lines, ...rest } = data.object;
-
-      const items = lines.data.map(
-        ({ amount, currency, description, quantity }) => ({
-          name: description,
-          quantity: quantity,
-          unit_price: formatStripeAmount(amount, currency),
-          total: formatStripeAmount(amount * quantity, currency),
-        }),
-      );
-
-      // console.log(items, rest);
-
-      await this.service.checkout1(customer, invoiceId, userService);
+      const { id: invoiceId, customer } = data.object;
+      await this.service.checkout(customer, invoiceId);
     }
 
     reply.send({ received: true });

@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { clerkClient } from "@clerk/fastify";
 import { MigrationInterface, QueryRunner } from "typeorm";
 import { USER_ROLES } from "#types/user";
@@ -11,6 +10,7 @@ export class SeedData1768297791711 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     const { data } = await clerkClient.users.getUserList();
+
     if (data.length > 0) {
       await Promise.all(
         data.map(async (user) => {
@@ -34,7 +34,7 @@ export class SeedData1768297791711 implements MigrationInterface {
     }
 
     const CATEGORIES_COUNT = 20;
-    const MAX_PRODUCTS = 10;
+    const MAX_PRODUCTS = 2;
 
     faker.seed(MAX_PRODUCTS * 1000);
 
@@ -71,22 +71,23 @@ export class SeedData1768297791711 implements MigrationInterface {
             blur: 0,
           });
 
-          const productId = await queryRunner.query(
+          await queryRunner.query(
             `INSERT INTO products (name, description, price, stock, category, images) VALUES ('${name}', '${description}', ${price}, ${stock}, '${randomCategory()}', '${imageUrl}')`,
           );
 
-          await this.stripe.createProduct({
-            name,
-            description,
-            default_price_data: {
-              currency: "usd",
-              unit_amount: Math.round(parseFloat(price) * 1000),
-            },
-            active: true,
-            id: productId,
-            images: [imageUrl],
-            url: `${process.env.CLIENT_BASE_URL}/products/${productId}`,
-          });
+          // await this.stripe.createProduct({
+          //   name,
+          //   description,
+
+          // default_price_data: {
+          //   currency: "usd",
+          //   unit_amount: Math.round(parseFloat(price) * 100),
+          // },
+          //   active: true,
+          //   id: productId,
+          //   images: [imageUrl],
+          //   url: `${process.env.CLIENT_BASE_URL}/products/${productId}`,
+          // });
         }),
     );
   }

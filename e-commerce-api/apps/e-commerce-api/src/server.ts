@@ -17,6 +17,7 @@ import { checkoutRoutes } from "./routes/checkout";
 import { AppDataSource } from "#data-source";
 
 import { orderRoutes } from "./routes/order";
+import { metricRoutes } from "./routes/metric";
 
 const fastify = Fastify({
   logger: true,
@@ -43,7 +44,10 @@ AppDataSource.initialize()
       .register("CartItem")
       .register("Checkout")
       .register("Category")
+      .register("Metric")
       .register("Order");
+
+    // console.log(await container.getItem("MetricController"));
 
     const decorates = () => {
       fastify.decorate("container", {
@@ -65,6 +69,7 @@ AppDataSource.initialize()
         instance.register(cartRoutes, { prefix: "/cart" });
         instance.register(orderRoutes, { prefix: "/orders" });
         instance.register(checkoutRoutes);
+        instance.register(metricRoutes, { prefix: "/metrics" });
 
         done();
       },
@@ -104,8 +109,8 @@ AppDataSource.initialize()
       });
     });
   })
-  .catch(() => {
-    console.log("Database connection failed");
+  .catch((error) => {
+    console.log("Database connection failed", error);
     fastify.close(() => {
       process.exit(0);
     });

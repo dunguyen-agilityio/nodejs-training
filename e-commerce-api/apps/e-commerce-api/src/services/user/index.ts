@@ -21,10 +21,6 @@ export class UserService implements IUserService {
     return true;
   }
 
-  async getUserByStripeId(stripeId: string): Promise<User | null> {
-    return this.userRepository.getByStripeId(stripeId);
-  }
-
   async getById(id: string): Promise<User | null> {
     return this.userRepository.findOneBy({ id });
   }

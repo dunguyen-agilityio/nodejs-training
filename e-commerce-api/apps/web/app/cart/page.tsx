@@ -6,13 +6,12 @@ import { debounce } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { CartItem } from "@/components/cart-item";
 import { useAuth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const [localCart, setLocalCart] = useState(cart);
 
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isLoaded } = useAuth();
 
   useEffect(() => {
     setLocalCart(cart);
@@ -42,10 +41,6 @@ export default function CartPage() {
 
   if (!isLoaded) {
     return <p>!Please waiting...</p>;
-  }
-
-  if (!isSignedIn) {
-    redirect("/sign-in");
   }
 
   if (localCart.length === 0) {

@@ -14,7 +14,7 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit1 = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
@@ -50,7 +50,7 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
   return (
     <form
       // onSubmit1={handleSubmit(onSubmit)}
-      onSubmit={handleSubmit1}
+      onSubmit={handleSubmit}
       className="space-y-6"
     >
       <PaymentElement options={{ layout: "accordion" }} />

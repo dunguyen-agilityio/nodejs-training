@@ -1,4 +1,4 @@
-import { authenticate, authorizeAdmin } from "#middlewares";
+import { authenticate } from "#middlewares";
 import { FastifyPluginCallback } from "fastify";
 
 export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
@@ -11,11 +11,6 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
     controller.addProductToCart,
   );
   instance.get("/", { preHandler: [authenticate] }, controller.getCart);
-  instance.delete(
-    "/:id",
-    { preHandler: [authenticate, authorizeAdmin] },
-    controller.deleteCart,
-  );
   instance.delete(
     "/items/:id",
     { preHandler: [authenticate] },

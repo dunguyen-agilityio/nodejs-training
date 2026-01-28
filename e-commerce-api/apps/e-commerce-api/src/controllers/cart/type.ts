@@ -7,5 +7,4 @@ export interface ICartController {
     reply: FastifyReply,
   ): Promise<void>;
   getCart(request: FastifyRequest, reply: FastifyReply): Promise<void>;
-  deleteCart(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 }

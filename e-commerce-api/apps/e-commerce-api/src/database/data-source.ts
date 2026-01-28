@@ -1,3 +1,7 @@
-import { createDataSource } from "./create-data-source";
+import "dotenv/config";
+import {
+  createMysqlDataSource,
+  createPostgresDataSource,
+} from "./create-data-source";
 
-export const AppDataSource = createDataSource();
+export const AppDataSource = createPostgresDataSource();

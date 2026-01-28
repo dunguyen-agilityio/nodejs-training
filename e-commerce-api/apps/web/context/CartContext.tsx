@@ -6,7 +6,8 @@ import { post, del, put } from "@/lib/api"; // Import post, del, and put functio
 import { useAuth } from "@clerk/nextjs"; // Import useAuth hook
 import { toast } from "sonner";
 import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
-import { debounce } from "@/lib/utils";
+import { debounce, getCartTotal } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
 interface CartContextType {
   cart: CartItem[];
@@ -32,10 +33,13 @@ export function CartProvider({
   initialCart?: CartItem[];
 }) {
   const [cart, setCart] = useState<CartItem[]>(initialCart);
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
 
   const addToCart = debounce(async (product: Product, quantity: number = 1) => {
     try {
+      if (!isSignedIn) {
+        redirect("/sign-in");
+      }
       const token = await getToken({
         template: CLERK_TOKEN_TEMPLATE,
       });
@@ -64,7 +68,7 @@ export function CartProvider({
       console.error("Failed to add to cart", error);
       toast.error("Failed to add product to cart");
     }
-  }, 3000);
+  }, 1000);
 
   const removeFromCart = async (cartItemId: string) => {
     try {
@@ -108,10 +112,7 @@ export function CartProvider({
 
   const clearCart = () => setCart([]);
 
-  const cartTotal = cart.reduce(
-    (total, item) => total + item.product.price * item.quantity,
-    0,
-  );
+  const cartTotal = getCartTotal(cart);
 
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
 

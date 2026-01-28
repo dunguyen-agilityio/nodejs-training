@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import {
   ClerkProvider,
+  OrganizationSwitcher,
   SignInButton,
   SignUpButton,
   SignedIn,
@@ -41,9 +42,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { userId, getToken } = await auth();
+  const { isAuthenticated, getToken } = await auth();
+
   let cart: CartItem[] = [];
-  if (userId) {
+  if (isAuthenticated) {
     try {
       const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
       const response = await get<ApiResponse<Cart>>("/cart", {
@@ -71,9 +73,12 @@ export default async function RootLayout({
             <QueryProvider>
               <CartProvider initialCart={cart}>
                 <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
-                  <Link href="/" className="font-bold text-xl">
-                    MyStore
-                  </Link>
+                  <div className="flex items-center gap-4">
+                    <Link href="/" className="font-bold text-xl">
+                      MyStore
+                    </Link>
+                    <OrganizationSwitcher />
+                  </div>
                   <div className="flex items-center gap-4">
                     <Link
                       href="/cart"
@@ -89,12 +94,7 @@ export default async function RootLayout({
                         Orders
                       </Link>
                     </SignedIn>
-                    <Link
-                      href="/admin"
-                      className="text-sm font-medium hover:underline"
-                    >
-                      Admin
-                    </Link>
+
                     <ModeToggle />
                     <SignedOut>
                       <SignInButton mode="modal" />

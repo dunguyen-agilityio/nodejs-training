@@ -153,7 +153,7 @@ export const paymentSuccessSchema = {
               additionalProperties: false,
             },
           },
-          additionalProperties: true, // Stripe adds fields often
+          additionalProperties: true,
         },
       },
       additionalProperties: false,

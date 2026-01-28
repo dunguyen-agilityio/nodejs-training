@@ -1,6 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { ICartController } from "./type";
-import { UnexpectedError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
 import { ICartService } from "#services/types";
 
@@ -23,26 +22,13 @@ export class CartController implements ICartController {
     const { productId, quantity } = request.body;
     const { userId } = request.auth;
 
-    const cartItem = await this.service.addProductToCart(
-      {
-        userId: userId ?? "",
-        productId,
-        quantity,
-      },
-      { queryRunner: request.container.queryRunner },
-    );
+    const cartItem = await this.service.addProductToCart({
+      userId: userId ?? "",
+      productId,
+      quantity,
+    });
 
     reply.send({ data: cartItem, success: true });
-  };
-
-  deleteCart = async (
-    request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ): Promise<void> => {
-    const id = parseInt(request.params.id);
-    const success = await this.service.deleteCart(id);
-    if (!success) throw new UnexpectedError(`Cannot delete Cart by ID: ${id}`);
-    reply.status(HttpStatus.NO_CONTENT).send();
   };
 
   removeProductFromCart = async (

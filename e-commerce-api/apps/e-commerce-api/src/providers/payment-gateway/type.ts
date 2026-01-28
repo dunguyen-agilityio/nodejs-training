@@ -3,10 +3,9 @@ import {
   InvoiceCreateParams,
   InvoiceItem,
   InvoiceItemCreateParams,
-  InvoicePayment,
-  PaymentMethod,
 } from "#types/invoice";
 import {
+  Charge,
   Customer,
   CustomerCreateParams,
   InvoicePaymentExpand,
@@ -31,5 +30,5 @@ export interface IPaymentGatewayProvider {
   getInvoice(id: string): Promise<Response<Invoice>>;
   getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>>;
   getPaymentIntent(id: string): Promise<Response<PaymentIntent>>;
-  getPaymentMethod(id: string): Promise<Response<PaymentMethod>>;
+  getCharge(id: string): Promise<Charge>;
 }

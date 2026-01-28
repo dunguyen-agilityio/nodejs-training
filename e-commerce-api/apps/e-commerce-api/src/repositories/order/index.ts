@@ -1,5 +1,6 @@
 import { Order } from "#entities";
 import { Params } from "#types/query";
+import { QueryRunner } from "typeorm";
 import { AbstractOrderRepository } from "./type";
 
 export class OrderRepository extends AbstractOrderRepository {
@@ -34,5 +35,16 @@ export class OrderRepository extends AbstractOrderRepository {
     });
 
     return [count, orders];
+  }
+
+  async createOrder(
+    queryRunner: QueryRunner,
+    userId: string,
+    data: Order,
+  ): Promise<Order> {
+    const order = await queryRunner.manager.save(
+      queryRunner.manager.create(Order, { ...data, user: { id: userId } }),
+    );
+    return order;
   }
 }

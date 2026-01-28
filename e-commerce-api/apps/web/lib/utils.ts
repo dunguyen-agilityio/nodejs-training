@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { CartItem } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -7,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  delay: number
+  delay: number,
 ) {
   let timeout: NodeJS.Timeout;
 
@@ -17,3 +18,12 @@ export function debounce<T extends (...args: any[]) => void>(
     timeout = setTimeout(() => func.apply(context, args), delay);
   } as T;
 }
+
+export const getCartTotal = (cartItems: CartItem[]) => {
+  const cartTotal = cartItems.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0,
+  );
+
+  return cartTotal;
+};

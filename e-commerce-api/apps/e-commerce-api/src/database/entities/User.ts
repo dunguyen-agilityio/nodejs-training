@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   OneToOne,
@@ -50,13 +51,12 @@ export class User {
   @OneToMany(() => Order, (order) => order.user)
   orders?: Order[];
 
-  @Column({ name: "created_at", type: "datetime", nullable: true })
+  @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
   @Column({ type: "varchar", nullable: true })
   role: USER_ROLES;
 
-  @Column({ name: "updated_at", type: "datetime", nullable: true })
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 

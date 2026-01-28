@@ -1,5 +1,7 @@
 import { Product } from "#entities";
+import { QueryRunner } from "typeorm";
 import { BaseRepository } from "../base";
+import { ProductMetric } from "#types/metrics";
 
 export abstract class AbstractProductRepository extends BaseRepository<Product> {
   abstract getById(id: number): Promise<Product | null>;
@@ -9,5 +11,10 @@ export abstract class AbstractProductRepository extends BaseRepository<Product> 
     pageSize: number;
   }): Promise<[Product[], number]>;
 
-  abstract decreaseStock(productId: number, quantity: number): Promise<void>;
+  abstract decreaseStock(
+    queryRunner: QueryRunner,
+    productId: number,
+    quantity: number,
+  ): Promise<void>;
+  abstract getAdminMetrics(): Promise<ProductMetric | undefined>;
 }

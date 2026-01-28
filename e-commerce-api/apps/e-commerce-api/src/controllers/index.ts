@@ -4,6 +4,7 @@ import {
   ICartItemController,
   ICategoryController,
   ICheckoutController,
+  IMetricController,
   IOrderController,
   IProductController,
   IUserController,
@@ -17,6 +18,7 @@ export * from "./category";
 export * from "./cart-item";
 export * from "./checkout";
 export * from "./order";
+export * from "./metric";
 
 export type Controllers = {
   AuthController: IAuthController;
@@ -27,4 +29,5 @@ export type Controllers = {
   CartItemController: ICartItemController;
   CheckoutController: ICheckoutController;
   OrderController: IOrderController;
+  MetricController: IMetricController;
 };

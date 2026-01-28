@@ -1,4 +1,4 @@
-import { DataSource, QueryRunner } from "typeorm";
+import { DataSource } from "typeorm";
 
 import * as Entities from "#entities";
 import * as Repositories from "#repositories";
@@ -17,7 +17,8 @@ type ModuleKey =
   | keyof typeof Entities
   | "Checkout"
   | "Auth"
-  | keyof Providers.Providers;
+  | "Metric"
+  | keyof typeof ProviderMapping;
 
 type TRepository = typeof Repositories;
 type TService = typeof Services;
@@ -34,8 +35,6 @@ type Register<T extends keyof AllRegister> = TAllRegister[T];
 
 export class Container {
   static #instance: Container;
-  #dataSource: DataSource;
-  #queryRunner: QueryRunner;
   items: Map<string, any> = new Map();
   #dependencies = {} as Record<keyof Dependencies, any>;
 
@@ -64,9 +63,6 @@ export class Container {
   }
 
   setDataSource(dataSource: DataSource) {
-    this.#dataSource = dataSource;
-    this.#queryRunner = this.#dataSource.createQueryRunner();
-
     Object.entries(Entities).forEach(([key, Entity]) => {
       const [repositoryKey, repositoryName] = create<TRepository>(key, {
         type: "Repository",
@@ -109,9 +105,5 @@ export class Container {
     }
 
     return this;
-  }
-
-  get queryRunner() {
-    return this.#queryRunner;
   }
 }

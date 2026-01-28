@@ -14,7 +14,7 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
     {
       schema: { body: registerBodySchema },
       attachValidation: true,
-      preHandler: [validateRequest as any],
+      preHandler: [validateRequest],
     },
     controller.register,
   );

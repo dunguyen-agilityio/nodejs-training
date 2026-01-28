@@ -1,4 +1,3 @@
-import { checkAdmin } from "@/lib/auth";
 import Link from "next/link";
 
 export default async function AdminLayout({
@@ -6,8 +5,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await checkAdmin();
-
   return (
     <div className="flex min-h-screen bg-muted/40">
       <aside className="hidden w-64 border-r bg-background lg:block">
@@ -34,12 +31,6 @@ export default async function AdminLayout({
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
           >
             Orders
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
-          >
-            View Store
           </Link>
         </nav>
       </aside>

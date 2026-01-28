@@ -1,6 +1,28 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "DATABASE_TYPE",
+    "DATABASE_CONNECTOR_PACKAGE",
+    "DATABASE_PORT",
+    "DATABASE_USERNAME",
+    "DATABASE_PASSWORD",
+    "DATABASE_NAME",
+    "DATABASE_HOST",
+    "CLERK_PUBLISHABLE_KEY",
+    "CLERK_SECRET_KEY",
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+    "CLERK_ORGANIZATION_ID",
+    "STRIPE_API_KEY",
+    "STRIPE_WEBHOOK_SIGNING_SECRET",
+    "SENDGRID_API_KEY",
+    "SENDGRID_TEMPLATE_ORDER_SUCCESS",
+    "SENDGRID_TEMPLATE_REGISTER_SUCCESS",
+    "SENDGRID_SUPPORT_EMAIL",
+    "SENDGRID_FROM_EMAIL",
+    "CLIENT_BASE_URL",
+    "CLIENT_LOGIN_PATH"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

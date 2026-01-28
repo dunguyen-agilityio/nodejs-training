@@ -133,13 +133,21 @@ interface PaymentMethodCard {
   last4: string;
 }
 
+interface PaymentMethodLink {
+  email: string | null;
+  persistent_token?: string;
+}
+
+export type PaymentMethodType = "card" | "link";
 export interface PaymentMethod {
   id: string;
   object: "payment_method";
   card?: PaymentMethodCard;
+  link?: PaymentMethodLink;
   created: number;
   customer: string | Customer | null;
   customer_account: string | null;
+  type: PaymentMethodType | string;
 }
 
 export interface Invoice {
@@ -174,6 +182,9 @@ export interface Invoice {
   confirmation_secret?: InvoiceConfirmationSecret | null;
   effective_at: number | null;
   status_transitions: StatusTransitions;
+  hosted_invoice_url?: string | null;
+  invoice_pdf?: string | null;
+  receipt_number: string | null;
 }
 
 interface InvoiceConfirmationSecret {
@@ -215,7 +226,7 @@ export interface InvoiceItemCreateParams {
   description?: string;
   invoice?: string;
   quantity?: number;
-  price_data: PriceData;
+  price_data?: PriceData;
 }
 
 export interface InvoiceItem {

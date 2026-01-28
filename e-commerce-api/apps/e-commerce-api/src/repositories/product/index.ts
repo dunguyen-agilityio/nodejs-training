@@ -1,5 +1,7 @@
 import { Product } from "#entities";
+import { QueryRunner } from "typeorm";
 import { AbstractProductRepository } from "./type";
+import { ProductMetric } from "#types/metrics";
 
 export class ProductRepository extends AbstractProductRepository {
   async getById(id: number): Promise<Product | null> {
@@ -22,16 +24,33 @@ export class ProductRepository extends AbstractProductRepository {
       .getManyAndCount();
   }
 
-  async decreaseStock(productId: number, quantity: number): Promise<void> {
-    const product = await this.createQueryBuilder("product")
-      .where("product.id = :id", { id: productId })
-      .setLock("pessimistic_write")
-      .getOne();
+  async decreaseStock(
+    queryRunner: QueryRunner,
+    productId: number,
+    quantity: number,
+  ): Promise<void> {
+    const product = await queryRunner.manager.findOne(Product, {
+      where: { id: productId },
+      lock: { mode: "pessimistic_write" },
+    });
+
     if (!product) throw new Error("Product not found");
     if (product.stock < quantity) {
       throw new Error("Insufficient stock");
     }
     product.stock -= quantity;
-    await this.save(product);
+    await queryRunner.manager.save(product);
+  }
+
+  async getAdminMetrics(): Promise<ProductMetric | undefined> {
+    const metric = await this.createQueryBuilder("product")
+      .select("COUNT(product.id)", "totalProducts")
+      .addSelect("SUM(product.stock)", "totalStock")
+      .addSelect("SUM(product.price * product.stock)", "totalValue")
+      // Cache the result for 1 minute to protect the DB
+      .cache("metrics", 60000)
+      .getRawOne<ProductMetric>();
+
+    return metric;
   }
 }

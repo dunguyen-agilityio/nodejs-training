@@ -64,7 +64,7 @@ export class ProductService implements IProductService {
 
       return newProduct;
     } catch (error) {
-      console.log(error);
+      console.error("Error - saveProduct", error);
       throw error;
     }
   }

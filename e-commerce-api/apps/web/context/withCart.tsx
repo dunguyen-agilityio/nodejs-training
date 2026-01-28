@@ -12,10 +12,12 @@ export const withCart = <T,>(Comp: TChild<T>) => {
   const NewCompoent = ({ product, ...props }: { product: Product } & T) => {
     const { cart, addToCart } = useCart();
     const { isSignedIn } = useAuth();
+
     const item = useMemo(
       () => cart.find((item) => item.product.id === product.id),
       [cart, product],
     );
+
     const [quantity, setQuantity] = useState(item?.quantity || 1);
 
     const handleAddToCart = (product: Product) => {

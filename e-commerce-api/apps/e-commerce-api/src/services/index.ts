@@ -4,6 +4,7 @@ import {
   ICartService,
   ICategoryService,
   ICheckoutService,
+  IMetricService,
   IOrderService,
   IProductService,
   IUserService,
@@ -17,6 +18,7 @@ export * from "./cart";
 export * from "./cart-item";
 export * from "./checkout";
 export * from "./order";
+export * from "./metric";
 
 export type Services = {
   AuthService: IAuthService;
@@ -27,4 +29,5 @@ export type Services = {
   OrderService: IOrderService;
   ProductService: IProductService;
   UserService: IUserService;
+  AdminService: IMetricService;
 };

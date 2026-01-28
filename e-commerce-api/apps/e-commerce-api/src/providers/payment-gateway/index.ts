@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { IPaymentGatewayProvider } from "./type";
 import { convertToSubcurrency } from "#utils/convertToSubcurrency";
 import {
+  Charge,
   Customer,
   CustomerCreateParams,
   InvoicePaymentExpand,
@@ -14,8 +15,6 @@ import {
   InvoiceCreateParams,
   InvoiceItem,
   InvoiceItemCreateParams,
-  InvoicePayment,
-  PaymentMethod,
 } from "#types/invoice";
 import { Product, ProductCreateParams } from "#types/product";
 
@@ -100,19 +99,27 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
     });
   }
 
-  async getPaymentMethod(id: string): Promise<Response<PaymentMethod>> {
-    return await this.stripe.paymentMethods.retrieve(id);
+  async getInvoice(id: string): Promise<Response<Invoice>> {
+    try {
+      return await this.stripe.invoices.retrieve(id, {
+        expand: ["payments", "payment_intent.latest_charge"],
+      });
+    } catch (error) {
+      console.error("Error - getInvoice: ", error);
+      throw error;
+    }
   }
 
-  async getInvoice(id: string): Promise<Response<Invoice>> {
-    return await this.stripe.invoices.retrieve(id, {
-      expand: ["payments", "payment_intent.latest_charge"],
-    });
+  async getCharge(id: string): Promise<Charge> {
+    return await this.stripe.charges.retrieve(id);
   }
 
   async getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>> {
     return (await this.stripe.invoicePayments.retrieve(id, {
-      expand: ["payment.payment_intent.payment_method"],
+      expand: [
+        "payment.payment_intent.payment_method",
+        "payment.payment_intent.latest_charge",
+      ],
     })) as Response<InvoicePaymentExpand>;
   }
 }

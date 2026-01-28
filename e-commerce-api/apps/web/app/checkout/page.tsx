@@ -1,79 +1,34 @@
-"use client";
-
-import { useCart } from "@/context/CartContext";
-
 import Link from "next/link";
 
-import { useAuth } from "@clerk/nextjs";
-
-import { useEffect, useState } from "react";
 import { post } from "@/lib/api";
-import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "./CheckoutForm";
-import { Elements } from "@stripe/react-stripe-js";
+import { auth } from "@clerk/nextjs/server";
+import Provider from "./Provider";
+import { getCarts } from "@/lib/cart";
+import { getCartTotal } from "@/lib/utils";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
+export default async function CheckoutPage() {
+  const { getToken } = await auth();
 
-export default function CheckoutPage() {
-  const { cart, cartTotal } = useCart();
+  const getClientSecret = async () => {
+    const token = await getToken({
+      template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE,
+    });
+    return await post<{ clientSecret: string }>(
+      "/create-payment-intent",
+      { amount: 200 },
+      {
+        Authorization: `Bearer ${token}`,
+      },
+    ).then((data) => data.clientSecret);
+  };
+  const clientSecret = await getClientSecret();
 
-  const { getToken } = useAuth();
+  const cartItems = await getCarts();
 
-  const [clientSecret, setClientSecret] = useState("");
+  const cartTotal = getCartTotal(cartItems);
 
-  useEffect(() => {
-    const getClientSecret = async () => {
-      await post<{ clientSecret: string }>(
-        "/create-payment-intent",
-        { amount: 200 },
-        {
-          Authorization: `Bearer ${await getToken({ template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE })}`,
-        }
-      ).then((data) => setClientSecret(data.clientSecret));
-    };
-    getClientSecret();
-  }, [getToken]);
-
-  // const onSubmit = async (data: CheckoutFormData) => {
-  //   if (!userId) {
-  //     toast.error("You must be logged in to place an order.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const newOrder: Order = {
-  //       id: `ORD-${Date.now()}`,
-  //       userId: userId,
-  //       date: new Date().toISOString(),
-  //       status: "Pending",
-  //       total: cartTotal,
-  //       items: cart.map((item) => ({
-  //         productId: item.product.id,
-  //         name: item.product.name,
-  //         price: item.product.price,
-  //         quantity: item.quantity,
-  //         image: item.product.image,
-  //       })),
-  //       shippingAddress: {
-  //         name: `${data.firstName} ${data.lastName}`,
-  //         address: data.address,
-  //         city: data.city,
-  //         zipCode: data.zipCode,
-  //         country: data.country,
-  //       },
-  //     };
-
-  //     await createOrderAction(newOrder);
-  //     clearCart();
-  //     toast.success("Order placed successfully!");
-  //     router.push("/checkout/success");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("Failed to place order. Please try again.");
-  //   }
-  // };
-
-  if (cart.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -94,18 +49,9 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div>
-          {clientSecret && (
-            <Elements
-              stripe={stripePromise}
-              options={{
-                loader: "auto",
-                appearance: { theme: "stripe" },
-                clientSecret,
-              }}
-            >
-              <CheckoutForm cartTotal={cartTotal} />
-            </Elements>
-          )}
+          <Provider clientSecret={clientSecret}>
+            <CheckoutForm cartTotal={cartTotal} />
+          </Provider>
         </div>
 
         <div className="bg-muted p-6 rounded-lg h-fit">
@@ -113,7 +59,7 @@ export default function CheckoutPage() {
             Order Summary
           </h2>
           <div className="space-y-4 mb-4">
-            {cart.map((item) => (
+            {cartItems.map((item) => (
               <div
                 key={item.id}
                 className="flex justify-between items-center text-sm"

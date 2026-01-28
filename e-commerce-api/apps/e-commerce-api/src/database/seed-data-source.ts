@@ -1,5 +1,6 @@
-import { createDataSource } from "./create-data-source";
+import "dotenv/config";
+import { createPostgresDataSource } from "./create-data-source";
 
-export const SeedDataSource = createDataSource({
+export const SeedDataSource = createPostgresDataSource({
   migrations: ["src/database/seeds/*{.js,.ts}"],
 });
