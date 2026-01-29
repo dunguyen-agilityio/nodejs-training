@@ -40,4 +40,13 @@ export class CartItemRepository extends AbstractCartItemRepository {
   ): Promise<void> {
     await queryRunner.manager.delete(CartItem, { cartId });
   }
+
+  async getByCartId(cartId: number): Promise<CartItem[]> {
+    const cartItems = await this.find({
+      where: { cartId },
+      relations: { product: true },
+    });
+
+    return cartItems;
+  }
 }

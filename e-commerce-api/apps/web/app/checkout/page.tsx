@@ -15,8 +15,8 @@ export default async function CheckoutPage() {
       template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE,
     });
     return await post<{ clientSecret: string }>(
-      "/create-payment-intent",
-      { amount: 200 },
+      "/checkout/create",
+      { currency: "usd" },
       {
         Authorization: `Bearer ${token}`,
       },

@@ -15,4 +15,6 @@ export abstract class AbstractCartItemRepository extends BaseRepository<CartItem
     queryRunner: QueryRunner,
     cartId: number,
   ): Promise<void>;
+
+  abstract getByCartId(id: number): Promise<CartItem[]>;
 }

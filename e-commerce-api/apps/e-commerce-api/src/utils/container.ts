@@ -7,10 +7,11 @@ import * as Controllers from "#controllers";
 import * as Providers from "#providers";
 import { create, hasProperty } from "./object";
 import { Dependencies } from "#services/base";
+import { uncapitalize } from "./string";
 
 const ProviderMapping = {
-  SendGridMailProvider: "mailProvider",
-  StripePaymentGatewayProvider: "paymentGatewayProvider",
+  SendGridMailProvider: "MailProvider",
+  StripePaymentGatewayProvider: "PaymentGatewayProvider",
 };
 
 type ModuleKey =
@@ -68,10 +69,14 @@ export class Container {
         type: "Repository",
       });
 
-      this.#dependencies[repositoryName as keyof Dependencies] =
-        new Repositories[repositoryKey](
-          dataSource.manager.getRepository(Entity) as any,
-        );
+      if (repositoryKey in Repositories) {
+        this.#dependencies[uncapitalize(repositoryName) as keyof Dependencies] =
+          new Repositories[repositoryKey](
+            dataSource.manager.getRepository(Entity) as any,
+          );
+      } else {
+        console.log("Missing register: ", key);
+      }
     });
 
     return this;
@@ -83,9 +88,12 @@ export class Container {
     });
 
     if (hasProperty<keyof typeof Providers>(providerKey, Providers)) {
-      this.#dependencies[providerName as keyof Dependencies] = new Providers[
-        providerKey
-      ]();
+      const provider = new Providers[providerKey]();
+
+      this.#dependencies[uncapitalize(providerName) as keyof Dependencies] =
+        provider;
+      console.log("providerName", providerName);
+      this.setItem(providerName, provider);
       return this;
     }
 

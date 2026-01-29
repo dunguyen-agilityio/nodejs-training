@@ -4,7 +4,7 @@ import { AbstractProductRepository } from "./type";
 import { ProductMetric } from "#types/metrics";
 
 export class ProductRepository extends AbstractProductRepository {
-  async getById(id: number): Promise<Product | null> {
+  async getById(id: string): Promise<Product | null> {
     return await this.findOneBy({ id });
   }
 
@@ -16,7 +16,7 @@ export class ProductRepository extends AbstractProductRepository {
     const { query, skip, pageSize } = params;
 
     return this.createQueryBuilder("product")
-      .where("product.name LIKE :query OR product.description LIKE :query", {
+      .where("product.name ILIKE :query OR product.description ILIKE :query", {
         query: `%${query}%`,
       })
       .skip(skip)
@@ -26,7 +26,7 @@ export class ProductRepository extends AbstractProductRepository {
 
   async decreaseStock(
     queryRunner: QueryRunner,
-    productId: number,
+    productId: string,
     quantity: number,
   ): Promise<void> {
     const product = await queryRunner.manager.findOne(Product, {

@@ -1,4 +1,6 @@
+import { Emptyable, MetadataParam } from "./common";
 import { Customer, DeletedCustomer, Payment } from "./payment";
+import { InvoiceLineItemPricing } from "./price";
 
 export interface InvoiceItemPreview {
   amount?: number;
@@ -9,95 +11,15 @@ export interface InvoiceItemPreview {
   price_data: PriceData;
 }
 
-interface InvoiceLineItem {
-  /**
-   * Unique identifier for the object.
-   */
+export interface InvoiceLineItem {
   id: string;
-
-  /**
-   * String representing the object's type. Objects of the same type share the same value.
-   */
   object: "line_item";
-
-  /**
-   * The amount, in cents (or local equivalent).
-   */
   amount: number;
-
-  /**
-   * Three-letter [ISO currency code](https://www.iso.org/iso-4217-currency-codes.html), in lowercase. Must be a [supported currency](https://stripe.com/docs/currencies).
-   */
   currency: string;
-
-  /**
-   * An arbitrary string attached to the object. Often useful for displaying to users.
-   */
   description: string | null;
-
-  // /**
-  //  * The amount of discount calculated per discount for this line item.
-  //  */
-  // discount_amounts: Array<InvoiceLineItem.DiscountAmount> | null;
-
-  // /**
-  //  * If true, discounts will apply to this line item. Always false for prorations.
-  //  */
-  // discountable: boolean;
-
-  // /**
-  //  * The discounts applied to the invoice line item. Line item discounts are applied before invoice discounts. Use `expand[]=discounts` to expand each discount.
-  //  */
-  // discounts: Array<string | Stripe.Discount>;
-
-  // /**
-  //  * The ID of the invoice that contains this line item.
-  //  */
-  // invoice: string | null;
-
-  // /**
-  //  * Has the value `true` if the object exists in live mode or the value `false` if the object exists in test mode.
-  //  */
-  // livemode: boolean;
-
-  // /**
-  //  * Set of [key-value pairs](https://docs.stripe.com/api/metadata) that you can attach to an object. This can be useful for storing additional information about the object in a structured format. Note that for line items with `type=subscription`, `metadata` reflects the current metadata from the subscription associated with the line item, unless the invoice line was directly updated with different metadata after creation.
-  //  */
-  // metadata: Stripe.Metadata;
-
-  // /**
-  //  * The parent that generated this line item.
-  //  */
-  // parent: InvoiceLineItem.Parent | null;
-
-  // period: InvoiceLineItem.Period;
-
-  // /**
-  //  * Contains pretax credit amounts (ex: discount, credit grants, etc) that apply to this line item.
-  //  */
-  // pretax_credit_amounts: Array<InvoiceLineItem.PretaxCreditAmount> | null;
-
-  // /**
-  //  * The pricing information of the line item.
-  //  */
-  // pricing: InvoiceLineItem.Pricing | null;
-
-  // /**
-  //  * The quantity of the subscription, if the line item is a subscription or a proration.
-  //  */
-  // quantity: number | null;
-
-  // subscription: string | Stripe.Subscription | null;
-
-  // /**
-  //  * The subtotal of the line item, in cents (or local equivalent), before any discounts or taxes.
-  //  */
-  // subtotal: number;
-
-  // /**
-  //  * The tax information of the line item.
-  //  */
-  // taxes: Array<InvoiceLineItem.Tax> | null;
+  pricing: InvoiceLineItemPricing | null;
+  quantity: number | null;
+  subtotal: number;
 }
 
 export interface ApiList<T> {
@@ -113,7 +35,7 @@ interface DeletedInvoice {
   deleted: true;
 }
 
-interface StatusTransitions {
+export interface StatusTransitions {
   finalized_at: number | null;
   marked_uncollectible_at: number | null;
   paid_at: number | null;
@@ -177,7 +99,7 @@ export interface Invoice {
   number: string | null;
   payments?: ApiList<InvoicePayment>;
   statement_descriptor: string | null;
-  status: InvoiceStatus | null;
+  status: TInvoiceStatus | null;
   total: number;
   confirmation_secret?: InvoiceConfirmationSecret | null;
   effective_at: number | null;
@@ -185,6 +107,16 @@ export interface Invoice {
   hosted_invoice_url?: string | null;
   invoice_pdf?: string | null;
   receipt_number: string | null;
+}
+
+type TInvoiceStatus = "draft" | "open" | "paid" | "failed" | "void";
+
+export enum InvoiceStatus {
+  DRAFT = "draft",
+  OPEN = "open",
+  PAID = "paid",
+  FAILED = "failed",
+  VOID = "void",
 }
 
 interface InvoiceConfirmationSecret {
@@ -210,8 +142,6 @@ interface PriceData {
   unit_amount?: number;
 }
 
-type InvoiceStatus = "draft" | "open" | "paid" | "uncollectible" | "void";
-
 export interface InvoiceCreatePreviewParams {
   currency?: string;
   customer?: string;
@@ -227,6 +157,7 @@ export interface InvoiceItemCreateParams {
   invoice?: string;
   quantity?: number;
   price_data?: PriceData;
+  metadata?: Emptyable<MetadataParam>;
 }
 
 export interface InvoiceItem {
@@ -241,6 +172,7 @@ export interface InvoiceItem {
   description: string | null;
   invoice: string | Invoice | null;
   quantity: number;
+  metadata?: Emptyable<MetadataParam>;
 }
 
 export interface InvoiceCreateParams {

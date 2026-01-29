@@ -71,16 +71,21 @@ export interface Charge {
   description: string | null;
   paid: boolean;
   payment_intent: string | PaymentIntent | null;
-
   payment_method: string | null;
   receipt_email: string | null;
   receipt_number: string | null;
   receipt_url: string | null;
 }
 
+interface StatusTransitions {
+  canceled_at: number | null;
+  paid_at: number | null;
+}
+
 export type InvoicePaymentExpand = Omit<InvoicePayment, "payment"> & {
+  status_transitions: StatusTransitions;
   payment: {
-    payment_intent: {
+    payment_intent: PaymentIntent & {
       payment_method: PaymentMethod;
       latest_charge: Charge;
     };

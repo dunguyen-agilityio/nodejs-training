@@ -6,9 +6,5 @@ export interface ICheckoutController {
     reply: FastifyReply,
   ): Promise<void>;
 
-  checkoutSuccess(request: FastifyRequest, reply: FastifyReply): Promise<void>;
-  invoicePaymentSuccess(
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<void>;
+  checkout(request: FastifyRequest, reply: FastifyReply): Promise<void>;
 }

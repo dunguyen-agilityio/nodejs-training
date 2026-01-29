@@ -1,14 +1,5 @@
-import {
-  ICartItemService,
-  IOrderService,
-  IProductService,
-  IUserService,
-} from "#services/types";
-
-export type CheckoutDependecies = {
-  userService: IUserService;
-  productService: IProductService;
-  orderService: IOrderService;
-  //    orderItemService: IOrderItemService;
-  cartItemService: ICartItemService;
-};
+export enum StockReservationStatus {
+  RESERVED = "reserved",
+  RELEASED = "released",
+  CONVERTED = "converted",
+}

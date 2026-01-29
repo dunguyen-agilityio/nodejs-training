@@ -1,4 +1,5 @@
 import {
+  ApiList,
   Invoice,
   InvoiceCreateParams,
   InvoiceItem,
@@ -31,4 +32,5 @@ export interface IPaymentGatewayProvider {
   getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>>;
   getPaymentIntent(id: string): Promise<Response<PaymentIntent>>;
   getCharge(id: string): Promise<Charge>;
+  getProducts(): Promise<Response<ApiList<Product>>>;
 }

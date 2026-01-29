@@ -1,5 +1,3 @@
-import { uncapitalize } from "./string";
-
 type Target = Record<string, unknown>;
 type StringKey<T> = Extract<keyof T, string>;
 
@@ -10,12 +8,12 @@ export const create = <
 >(
   key: K,
   { nameMapping, type }: { type?: D; nameMapping?: Record<K, string> },
-): [StringKey<O>, Uncapitalize<StringKey<O>> | string] => {
+): [StringKey<O>, StringKey<O> | string] => {
   return [
     `${key}${type || ""}` as StringKey<O>,
     nameMapping
       ? nameMapping[key]
-      : (`${uncapitalize(key)}${type || ""}` as Uncapitalize<StringKey<O>>),
+      : (`${key}${type || ""}` as Uncapitalize<StringKey<O>>),
   ];
 };
 

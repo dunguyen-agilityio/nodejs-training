@@ -42,6 +42,8 @@ AppDataSource.initialize()
       .register("Product")
       .register("Cart")
       .register("CartItem")
+      .register("Invoice")
+      .register("InvoiceItem")
       .register("Checkout")
       .register("Category")
       .register("Metric")
@@ -68,7 +70,7 @@ AppDataSource.initialize()
         instance.register(categoryRoutes, { prefix: "/categories" });
         instance.register(cartRoutes, { prefix: "/cart" });
         instance.register(orderRoutes, { prefix: "/orders" });
-        instance.register(checkoutRoutes);
+        instance.register(checkoutRoutes, { prefix: "/checkout" });
         instance.register(metricRoutes, { prefix: "/metrics" });
 
         done();

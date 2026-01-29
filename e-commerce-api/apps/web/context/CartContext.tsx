@@ -57,7 +57,9 @@ export function CartProvider({
         );
         if (existingItem) {
           return prevCart.map((item) =>
-            item.product.id === product.id ? { ...item, quantity } : item,
+            item.product.id === product.id
+              ? { ...item, quantity: quantity + existingItem.quantity }
+              : item,
           );
         }
 

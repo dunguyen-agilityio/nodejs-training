@@ -15,6 +15,7 @@ export class UserRepository extends AbstractUserRepository {
       where: { id },
       relations: { cart: { items: { product: true } } },
     });
+
     return user;
   }
 

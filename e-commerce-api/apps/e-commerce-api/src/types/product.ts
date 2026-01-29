@@ -1,3 +1,4 @@
+import { MetadataParam } from "./common";
 import { Price } from "./price";
 
 export interface ProductCreateParams {
@@ -8,6 +9,7 @@ export interface ProductCreateParams {
   id?: string;
   images?: Array<string>;
   url?: string;
+  metadata?: MetadataParam;
 }
 
 interface DefaultPriceData {
@@ -27,4 +29,5 @@ export interface Product {
   name: string;
   updated: number;
   url: string | null;
+  metadata?: MetadataParam;
 }

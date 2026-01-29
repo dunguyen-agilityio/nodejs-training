@@ -5,9 +5,8 @@ import { FastifyPluginCallback } from "fastify";
 const createPaymentIntentSchema = {
   body: {
     type: "object",
-    required: ["amount"],
+    required: ["currency"],
     properties: {
-      amount: { type: "string", pattern: "^[0-9]+$" },
       currency: { type: "string", pattern: "^[a-z]{3}$", default: "usd" },
     },
   },
@@ -16,15 +15,14 @@ const createPaymentIntentSchema = {
 export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
   const container = instance.container.getItem("CheckoutController");
   instance.post(
-    "/create-payment-intent",
+    "/create",
     { schema: createPaymentIntentSchema },
     container.createPaymentIntent,
   );
-  instance.post("/checkout/webhooks", container.checkoutSuccess);
   instance.post(
-    "/checkout-success/webhooks",
+    "/webhooks",
     { preHandler: [validateRequest], schema: { body: paymentSuccessSchema } },
-    container.invoicePaymentSuccess,
+    container.checkout,
   );
   done();
 };

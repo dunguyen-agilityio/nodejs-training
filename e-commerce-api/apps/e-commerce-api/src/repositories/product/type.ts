@@ -4,7 +4,7 @@ import { BaseRepository } from "../base";
 import { ProductMetric } from "#types/metrics";
 
 export abstract class AbstractProductRepository extends BaseRepository<Product> {
-  abstract getById(id: number): Promise<Product | null>;
+  abstract getById(id: string): Promise<Product | null>;
   abstract getProducts(params: {
     query: string;
     skip: number;
@@ -13,7 +13,7 @@ export abstract class AbstractProductRepository extends BaseRepository<Product> 
 
   abstract decreaseStock(
     queryRunner: QueryRunner,
-    productId: number,
+    productId: string,
     quantity: number,
   ): Promise<void>;
   abstract getAdminMetrics(): Promise<ProductMetric | undefined>;

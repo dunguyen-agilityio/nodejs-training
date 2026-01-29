@@ -11,6 +11,7 @@ import {
   Response,
 } from "#types/payment";
 import {
+  ApiList,
   Invoice,
   InvoiceCreateParams,
   InvoiceItem,
@@ -78,19 +79,21 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
       ...params,
     });
 
-    return invoice;
+    return invoice as Response<Invoice>;
   }
 
   async createInvoiceItem(
     params: InvoiceItemCreateParams,
   ): Promise<Response<InvoiceItem>> {
-    return await this.stripe.invoiceItems.create(params);
+    return (await this.stripe.invoiceItems.create(
+      params,
+    )) as Response<InvoiceItem>;
   }
 
-  async finalizeInvoice(id: string) {
-    return await this.stripe.invoices.finalizeInvoice(id, {
+  async finalizeInvoice(id: string): Promise<Response<Invoice>> {
+    return (await this.stripe.invoices.finalizeInvoice(id, {
       expand: ["confirmation_secret"],
-    });
+    })) as Response<Invoice>;
   }
 
   async getPaymentIntent(id: string): Promise<Response<PaymentIntent>> {
@@ -101,9 +104,10 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
 
   async getInvoice(id: string): Promise<Response<Invoice>> {
     try {
-      return await this.stripe.invoices.retrieve(id, {
+      const invoice = await this.stripe.invoices.retrieve(id, {
         expand: ["payments", "payment_intent.latest_charge"],
       });
+      return invoice as Response<Invoice>;
     } catch (error) {
       console.error("Error - getInvoice: ", error);
       throw error;
@@ -121,5 +125,10 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
         "payment.payment_intent.latest_charge",
       ],
     })) as Response<InvoicePaymentExpand>;
+  }
+
+  async getProducts(): Promise<Response<ApiList<Product>>> {
+    const products = await this.stripe.products.list();
+    return products;
   }
 }

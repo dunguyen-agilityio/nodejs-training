@@ -15,6 +15,18 @@ export abstract class Base {
 
 export type BaseProps<T extends Base> = Omit<T, "id"> & Partial<Pick<T, "id">>;
 
+export abstract class CreatedAndUpdated {
+  @CreateDateColumn({ name: "created_at" })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date;
+
+  constructor(base?: Partial<CreatedAndUpdated>) {
+    Object.assign(this, base);
+  }
+}
+
 export abstract class BaseWithCreatedAndUpdated extends Base {
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
