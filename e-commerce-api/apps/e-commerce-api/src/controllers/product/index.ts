@@ -4,9 +4,10 @@ import { IProductController } from "./type";
 import { Product } from "#entities";
 import { HttpStatus } from "#types/http-status";
 import { IProductService } from "#services/types";
+import { productToObject } from "../../dtos/product";
 
 export class ProductController implements IProductController {
-  constructor(private service: IProductService) {}
+  constructor(private service: IProductService) { }
 
   updateProduct = async (
     request: FastifyRequest<{
@@ -20,7 +21,7 @@ export class ProductController implements IProductController {
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const id = parseInt(request.params.id);
+    const { id } = request.params;
     const body = request.body;
 
     const product = await this.service.updateProduct(id, body);
@@ -44,14 +45,15 @@ export class ProductController implements IProductController {
     reply: FastifyReply,
   ): Promise<void> => {
     const { page = "1", pageSize = "10", query = "" } = request.query;
-    const response = await this.service.getProducts({
+    const { data, meta } = await this.service.getProducts({
       page: parseInt(page),
       pageSize: parseInt(pageSize),
       query,
     });
     reply.send({
       success: true,
-      ...response,
+      data: data.map(productToObject),
+      meta
     });
   };
 
@@ -61,21 +63,22 @@ export class ProductController implements IProductController {
   ): Promise<void> => {
     const { id } = request.params;
 
-    const product = await this.service.getProductById(parseInt(id));
+    const product = await this.service.getProductById(id);
+
     if (!product) {
       reply
         .status(HttpStatus.NOT_FOUND)
         .send({ success: false, error: "Product not found" });
       return;
     }
-    reply.send({ success: true, data: product });
+    reply.send({ success: true, data: productToObject(product) });
   };
 
   deleteProduct = async (
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const id = parseInt(request.params.id);
+    const id = request.params.id;
     await this.service.deleteProduct(id);
     reply.send({ success: true, message: "Product deleted successfully" });
   };

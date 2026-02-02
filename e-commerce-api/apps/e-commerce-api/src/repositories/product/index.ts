@@ -5,7 +5,7 @@ import { ProductMetric } from "#types/metrics";
 
 export class ProductRepository extends AbstractProductRepository {
   async getById(id: string): Promise<Product | null> {
-    return await this.findOneBy({ id });
+    return await this.findOne({ where: { id }, relations: { category: true } });
   }
 
   async getProducts(params: {
@@ -19,6 +19,7 @@ export class ProductRepository extends AbstractProductRepository {
       .where("product.name ILIKE :query OR product.description ILIKE :query", {
         query: `%${query}%`,
       })
+      .leftJoinAndSelect('product.category', 'category')
       .skip(skip)
       .take(pageSize)
       .getManyAndCount();

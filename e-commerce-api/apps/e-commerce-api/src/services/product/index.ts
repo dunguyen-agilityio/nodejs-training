@@ -3,6 +3,7 @@ import { IPaymentGatewayProvider } from "#providers/types";
 import { ProductRepository } from "#repositories/types";
 import { Dependencies } from "#services/base";
 import { NotFoundError } from "#types/error";
+import { PartialProduct } from "#types/product";
 import { Pagination } from "#types/query";
 import { IProductService } from "./type";
 
@@ -42,42 +43,37 @@ export class ProductService implements IProductService {
     };
   }
 
-  async getProductById(id: number): Promise<Product | null> {
+  async getProductById(id: string): Promise<Product | null> {
     const product = await this.productRepository.getById(id);
+
     return product;
   }
 
-  async saveProduct(product: Omit<Product, "id">): Promise<Product> {
+  async saveProduct(payload: Omit<Product, "id">): Promise<Product> {
     try {
-      const { price } = product;
-      const newProduct = this.productRepository.create(product);
+      const { price, name, images, description } = payload;
 
-      await this.paymentGatewayProvider.createProduct({
-        ...newProduct,
-        id: newProduct.id.toString(),
+      const newProduct = await this.paymentGatewayProvider.createProduct({
+        name,
+        description,
+        images,
         active: true,
-        default_price_data: { currency: "usd", unit_amount: price },
-        url: `${process.env.CLIENT_BASE_URL}/products/${newProduct.id}`,
+        default_price_data: { currency: "usd", unit_amount: price * 100 },
       });
 
-      await this.productRepository.save(newProduct);
+      const product = await this.productRepository.save({
+        ...payload,
+        id: newProduct.id,
+      });
 
-      return newProduct;
+      return product;
     } catch (error) {
       console.error("Error - saveProduct", error);
       throw error;
     }
   }
 
-  async updateProduct(
-    id: number,
-    body: Partial<
-      Pick<
-        Product,
-        "category" | "description" | "images" | "name" | "price" | "stock"
-      >
-    >,
-  ): Promise<Product> {
+  async updateProduct(id: string, body: PartialProduct): Promise<Product> {
     const product = await this.getProductById(id);
 
     if (!product) throw new NotFoundError(`Not found Product by ID: ${id}`);
@@ -85,7 +81,7 @@ export class ProductService implements IProductService {
     return await this.productRepository.save({ ...product, ...body });
   }
 
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: string): Promise<void> {
     await this.productRepository.delete(id);
   }
 }

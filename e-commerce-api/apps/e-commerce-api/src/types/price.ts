@@ -1,4 +1,4 @@
-import { Product } from "./product";
+import { IProduct } from "./product";
 
 export interface Price {
   id: string;
@@ -8,7 +8,7 @@ export interface Price {
   currency: string;
   deleted?: void;
   nickname: string | null;
-  product: string | Product | DeletedProduct;
+  product: string | IProduct | DeletedProduct;
   unit_amount: number | null;
 }
 

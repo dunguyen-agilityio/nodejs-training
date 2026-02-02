@@ -1,5 +1,7 @@
+import { Product } from "#entities";
 import { MetadataParam } from "./common";
 import { Price } from "./price";
+import { Pagination } from "./query";
 
 export interface ProductCreateParams {
   name: string;
@@ -17,7 +19,7 @@ interface DefaultPriceData {
   unit_amount?: number;
 }
 
-export interface Product {
+export interface IProduct {
   id: string;
   object: "product";
   active: boolean;
@@ -31,3 +33,15 @@ export interface Product {
   url: string | null;
   metadata?: MetadataParam;
 }
+
+export type PartialProduct = Partial<
+  Pick<
+    Product,
+    "category" | "description" | "images" | "name" | "price" | "stock"
+  >
+>;
+
+export type ProductsResponse = {
+  data: Product[];
+  meta: { pagination: Pagination };
+};

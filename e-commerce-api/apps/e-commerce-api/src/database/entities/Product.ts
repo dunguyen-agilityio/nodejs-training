@@ -43,7 +43,7 @@ export class Product extends CreatedAndUpdated {
 
   @JoinColumn({ referencedColumnName: "name", name: "category" })
   @ManyToOne(() => Category, (category) => category.products)
-  category: string;
+  category: Category;
 
   constructor(product: Product) {
     super();

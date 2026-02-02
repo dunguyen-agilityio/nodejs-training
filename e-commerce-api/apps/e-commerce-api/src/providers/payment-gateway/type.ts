@@ -1,5 +1,4 @@
 import {
-  ApiList,
   Invoice,
   InvoiceCreateParams,
   InvoiceItem,
@@ -14,7 +13,7 @@ import {
   PaymentIntentCreateParams,
   Response,
 } from "#types/payment";
-import { Product, ProductCreateParams } from "#types/product";
+import { IProduct, ProductCreateParams } from "#types/product";
 
 export interface IPaymentGatewayProvider {
   getPaymentIntents(id: string): Promise<Response<PaymentIntent>>;
@@ -24,7 +23,7 @@ export interface IPaymentGatewayProvider {
   findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>;
   createCustomer(params: CustomerCreateParams): Promise<Customer>;
   createInvoice(params: InvoiceCreateParams): Promise<Response<Invoice>>;
-  createProduct(params: ProductCreateParams): Promise<Response<Product>>;
+  createProduct(params: ProductCreateParams): Promise<Response<IProduct>>;
   createInvoiceItem(
     params: InvoiceItemCreateParams,
   ): Promise<Response<InvoiceItem>>;
@@ -33,6 +32,5 @@ export interface IPaymentGatewayProvider {
   getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>>;
   getPaymentIntent(id: string): Promise<Response<PaymentIntent>>;
   getCharge(id: string): Promise<Charge>;
-  getProducts(): Promise<Response<ApiList<Product>>>;
   getOpenedInvoiceByUser(id: string): Promise<Invoice>;
 }

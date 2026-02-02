@@ -1,20 +1,18 @@
 import { Product } from "#entities";
 import { Pagination, Params } from "#types/query";
 
+type PartialProduct = Partial<
+  Pick<
+    Product,
+    "category" | "description" | "images" | "name" | "price" | "stock"
+  >
+>;
+
+type ProductsResponse = { data: Product[]; meta: { pagination: Pagination } };
 export interface IProductService {
-  getProducts(
-    params: Params,
-  ): Promise<{ data: Product[]; meta: { pagination: Pagination } }>;
-  getProductById(id: number): Promise<Product | null>;
+  getProducts(params: Params): Promise<ProductsResponse>;
+  getProductById(id: string): Promise<Product | null>;
   saveProduct(product: Omit<Product, "id">): Promise<Product>;
-  updateProduct(
-    id: number,
-    product: Partial<
-      Pick<
-        Product,
-        "category" | "description" | "images" | "name" | "price" | "stock"
-      >
-    >,
-  ): Promise<Product>;
-  deleteProduct(id: number): Promise<void>;
+  updateProduct(id: string, product: PartialProduct): Promise<Product>;
+  deleteProduct(id: string): Promise<void>;
 }

@@ -12,10 +12,4 @@ export const requiredId = async (
       .status(HttpStatus.BAD_REQUEST)
       .send({ success: false, error: "Params ID is required" });
   }
-
-  if (isNaN(parseInt(id))) {
-    return reply
-      .status(HttpStatus.BAD_REQUEST)
-      .send({ success: false, error: "Params ID is number" });
-  }
 };

@@ -21,7 +21,10 @@ export const productSchema = z.object({
   price: z.coerce.number().min(0, 'Price must be positive'),
   stock: z.coerce.number().int().min(0, 'Stock must be non-negative'),
   category: z.string().min(1, 'Category is required'),
-  image: z.string().optional().default('/file-text.svg'),
+  image: z.string().default('/file-text.svg'),
 });
 
-export type ProductFormData = z.infer<typeof productSchema>;
+// Input type (before coercion) - form inputs are strings
+export type ProductFormInput = z.input<typeof productSchema>;
+// Output type (after coercion) - validated data has numbers
+export type ProductFormData = z.output<typeof productSchema>;

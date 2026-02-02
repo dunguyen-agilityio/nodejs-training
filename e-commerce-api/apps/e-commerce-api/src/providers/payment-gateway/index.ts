@@ -17,7 +17,7 @@ import {
   InvoiceItem,
   InvoiceItemCreateParams,
 } from "#types/invoice";
-import { Product, ProductCreateParams } from "#types/product";
+import { IProduct, ProductCreateParams } from "#types/product";
 import { NotFoundError } from "#types/error";
 
 export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
@@ -41,7 +41,9 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
     return customer;
   }
 
-  async createProduct(params: ProductCreateParams): Promise<Response<Product>> {
+  async createProduct(
+    params: ProductCreateParams,
+  ): Promise<Response<IProduct>> {
     return await this.stripe.products.create(params);
   }
 

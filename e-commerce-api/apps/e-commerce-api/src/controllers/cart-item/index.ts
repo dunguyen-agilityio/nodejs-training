@@ -26,7 +26,6 @@ export class CartItemController implements CartItemController {
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    console.log("request.params", request.params);
     const id = parseInt(request.params.id);
     const quantity = parseInt(request.body.quantity);
     await this.service.updateCartItemQuantity(id, quantity);
