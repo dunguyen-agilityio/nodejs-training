@@ -61,7 +61,7 @@ export class AuthService implements IAuthService {
         name,
         email,
         app_name: process.env.APP_NAME,
-        logo_url: process.env.LOGO_URL,
+        logo_url: process.env.APP_LOGO_URL,
         login_url: loginPath,
         support_email: process.env.SENDGRID_SUPPORT_EMAIL,
         year: process.env.APP_YEAR,
