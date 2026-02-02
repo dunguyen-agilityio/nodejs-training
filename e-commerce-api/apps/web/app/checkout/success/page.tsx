@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import ClearCart from "./ClearCart";
 
 export default function CheckoutSuccessPage() {
   return (
@@ -7,10 +8,12 @@ export default function CheckoutSuccessPage() {
       <div className="bg-green-100 dark:bg-green-900/20 p-4 rounded-full mb-6">
         <CheckCircle2 className="h-16 w-16 text-green-600 dark:text-green-500" />
       </div>
-      <h1 className="text-4xl font-bold mb-4 text-foreground">Order Placed Successfully!</h1>
+      <h1 className="text-4xl font-bold mb-4 text-foreground">
+        Order Placed Successfully!
+      </h1>
       <p className="text-muted-foreground max-w-md mb-8">
-        Thank you for your purchase. We have received your order and will send you
-        a confirmation email shortly.
+        Thank you for your purchase. We have received your order and will send
+        you a confirmation email shortly.
       </p>
       <Link
         href="/"
@@ -18,6 +21,7 @@ export default function CheckoutSuccessPage() {
       >
         Continue Shopping
       </Link>
+      <ClearCart />
     </div>
   );
 }

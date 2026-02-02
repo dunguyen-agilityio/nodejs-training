@@ -5,17 +5,18 @@ import { Response } from "#types/payment";
 import { User } from "#entities";
 
 export interface ICheckoutService {
-  checkout(stripeId: string, invoiceId: string): Promise<boolean>;
-
-  createCheckoutPayment(
-    payload: Stripe.PaymentIntentCreateParams,
-    user: User,
-  ): Promise<Response<Invoice>>;
-
-  createPreviewInvoice(
+  generatePaymentIntent(
     payload: Stripe.PaymentIntentCreateParams,
     userId: string,
     userStripeId: string,
   ): Promise<Response<Invoice>>;
-  preCheckout(userId: string, stripeId: string): Promise<Invoice>;
+  // initiatePaymentProcess(
+  //   payload: Stripe.PaymentIntentCreateParams,
+  //   user: User,
+  // ): Promise<Response<Invoice>>;
+  prepareOrderForPayment(userId: string, stripeId: string): Promise<Invoice>;
+  handleSuccessfulPayment(
+    stripeId: string,
+    invoiceId: string,
+  ): Promise<boolean>;
 }

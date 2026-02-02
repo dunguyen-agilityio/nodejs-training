@@ -1,10 +1,9 @@
 import { CartItem } from "#entities";
-import { QueryRunner } from "typeorm";
 import { AbstractCartItemRepository } from "./type";
 
 export class CartItemRepository extends AbstractCartItemRepository {
   getCartItemByProduct(
-    productId: number,
+    productId: string,
     cartId: number,
   ): Promise<CartItem | null> {
     return this.findOneBy({
@@ -32,13 +31,6 @@ export class CartItemRepository extends AbstractCartItemRepository {
       .execute();
 
     return !!result.affected;
-  }
-
-  async clearCartItems(
-    queryRunner: QueryRunner,
-    cartId: number,
-  ): Promise<void> {
-    await queryRunner.manager.delete(CartItem, { cartId });
   }
 
   async getByCartId(cartId: number): Promise<CartItem[]> {

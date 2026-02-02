@@ -117,3 +117,10 @@ export interface Customer {
   phone?: string | null;
   metadata: MetadataParam;
 }
+
+export type PaymentDetails = {
+  receipt_url: string;
+  payment_method: PaymentMethod;
+  paymentIntentId: string;
+  paid_at: number;
+};

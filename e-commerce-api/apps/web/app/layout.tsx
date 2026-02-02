@@ -77,7 +77,7 @@ export default async function RootLayout({
                     <Link href="/" className="font-bold text-xl">
                       MyStore
                     </Link>
-                    <OrganizationSwitcher />
+                    <OrganizationSwitcher hidePersonal />
                   </div>
                   <div className="flex items-center gap-4">
                     <Link

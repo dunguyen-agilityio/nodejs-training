@@ -27,7 +27,7 @@ export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
   instance.post(
     "/stripe-webhooks",
     {
-      preHandler: [validateRequest, authenticate],
+      preHandler: [validateRequest],
       schema: { body: paymentSuccessSchema },
     },
     container.stripeWebhookHandler,
