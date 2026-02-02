@@ -23,11 +23,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+const buildUrl = (url: string): string => {
+  return url.startsWith("/") ? `${API_ENPOINT}${url}` : url;
+};
+
 export async function get<T>(
   path: string,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_ENPOINT}${path}`, {
+  const url = buildUrl(path);
+  const response = await fetch(url, {
     headers: { ...defaultHeaders, ...headers },
   });
 
@@ -39,7 +44,9 @@ export async function post<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_ENPOINT}${path}`, {
+  const url = buildUrl(path);
+
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       ...defaultHeaders,
@@ -56,7 +63,9 @@ export async function put<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_ENPOINT}${path}`, {
+  const url = buildUrl(path);
+
+  const response = await fetch(url, {
     method: "PUT",
     headers: {
       ...defaultHeaders,
@@ -72,7 +81,8 @@ export async function del<T>(
   path: string,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_ENPOINT}${path}`, {
+  const url = buildUrl(path);
+  const response = await fetch(url, {
     method: "DELETE",
     headers: { ...defaultHeaders, ...headers },
   });

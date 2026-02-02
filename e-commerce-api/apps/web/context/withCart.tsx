@@ -3,16 +3,23 @@
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/lib/types";
 
-import { JSX } from "react";
+import { JSX, useMemo } from "react";
 
 type TChild<T> = (props: TWithCart<T>) => React.ReactNode;
 
 export const withCart = <T,>(Comp: TChild<T>) => {
   const NewCompoent = ({ product, ...props }: { product: Product } & T) => {
-    const { addToCart } = useCart();
+    const { addToCart, cart } = useCart();
+
+    const existingItem = useMemo(
+      () => cart.find((item) => item.product.id === product.id),
+      [cart],
+    );
+
+    const quantity = existingItem?.quantity || 0;
 
     const handleAddToCart = (product: Product) => {
-      addToCart(product, 1);
+      addToCart(product, quantity + 1);
     };
 
     return (

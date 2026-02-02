@@ -34,7 +34,7 @@ export function CartProvider({
   initialCart?: CartItem[];
 }) {
   const [cart, setCart] = useState<CartItem[]>(initialCart);
-  const { getToken, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
   const { signOut } = useClerk();
 
   const handleApiError = (error: any) => {
@@ -51,15 +51,12 @@ export function CartProvider({
       if (!isSignedIn) {
         redirect("/sign-in");
       }
-      const token = await getToken({
-        template: CLERK_TOKEN_TEMPLATE,
-      });
 
       const response = await post<CartAddResponse>(
-        "/cart/add",
-        { productId: product.id, quantity },
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/add`,
         {
-          Authorization: `Bearer ${token}`,
+          productId: product.id,
+          quantity,
         },
       );
       setCart((prevCart) => {
@@ -69,7 +66,7 @@ export function CartProvider({
         if (existingItem) {
           return prevCart.map((item) =>
             item.product.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
+              ? { ...item, quantity: quantity }
               : item,
           );
         }
@@ -84,10 +81,9 @@ export function CartProvider({
 
   const removeFromCart = async (cartItemId: string) => {
     try {
-      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
-      await del(`/cart/items/${cartItemId}`, {
-        Authorization: `Bearer ${token}`,
-      });
+      await del(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/items/${cartItemId}`,
+      );
       setCart((prevCart) => prevCart.filter((item) => item.id !== cartItemId));
       toast.success("Item removed from cart");
     } catch (error) {
@@ -101,13 +97,9 @@ export function CartProvider({
       return;
     }
     try {
-      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
       await put(
-        `/cart/items/${cartItemId}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/items/${cartItemId}`,
         { quantity },
-        {
-          Authorization: `Bearer ${token}`,
-        },
       );
       setCart((prevCart) =>
         prevCart.map((item) =>

@@ -3,7 +3,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 
 export const requiredId = async (
   request: FastifyRequest<{ Params: { id: string } }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) => {
   const { id } = request.params;
 

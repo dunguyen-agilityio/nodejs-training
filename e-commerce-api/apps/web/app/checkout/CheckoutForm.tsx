@@ -30,14 +30,9 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
 
     setIsLoading(true);
 
-    const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
-
     await post(
-      "/checkout/orders/prepare",
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/orders/prepare`,
       {},
-      {
-        Authorization: `Bearer ${token}`,
-      },
     );
 
     const { error } = await stripe.confirmPayment({
