@@ -34,24 +34,20 @@ export const metadata: Metadata = {
   description: "Built with Next.js and Clerk",
 };
 
-import { ApiResponse, Cart, CartItem } from "@/lib/types";
-import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
+import { CartItem } from "@/lib/types";
+import { getCarts } from "@/lib/cart";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isAuthenticated, getToken } = await auth();
+  const { isAuthenticated } = await auth();
 
   let cart: CartItem[] = [];
   if (isAuthenticated) {
     try {
-      const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
-      const response = await get<ApiResponse<Cart>>("/cart", {
-        Authorization: `Bearer ${token}`,
-      });
-      cart = response.data.items;
+      cart = await getCarts();
     } catch (error) {
       console.error("Failed to fetch cart on server:", error);
       // Handle error gracefully, maybe show a toast on the client

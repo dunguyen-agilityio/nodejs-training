@@ -1,10 +1,20 @@
+import { auth } from "@clerk/nextjs/server";
 import { API_ENPOINT } from "./constants";
+
+import { UnauthorizedError } from "./errors";
 
 const defaultHeaders = {};
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const error = await response.json();
+    const error = (await response.json()) as {
+      message: string;
+      status: number;
+    };
+    if (response.status === 401) {
+      throw new UnauthorizedError(error.message);
+    }
+
     throw new Error(error.message || "Something went wrong");
   }
   if (response.status === 204) {
@@ -15,7 +25,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function get<T>(
   path: string,
-  headers: HeadersInit = {}
+  headers: HeadersInit = {},
 ): Promise<T> {
   const response = await fetch(`${API_ENPOINT}${path}`, {
     headers: { ...defaultHeaders, ...headers },
@@ -27,7 +37,7 @@ export async function get<T>(
 export async function post<T>(
   path: string,
   data: unknown,
-  headers: HeadersInit = {}
+  headers: HeadersInit = {},
 ): Promise<T> {
   const response = await fetch(`${API_ENPOINT}${path}`, {
     method: "POST",
@@ -44,7 +54,7 @@ export async function post<T>(
 export async function put<T>(
   path: string,
   data: unknown,
-  headers: HeadersInit = {}
+  headers: HeadersInit = {},
 ): Promise<T> {
   const response = await fetch(`${API_ENPOINT}${path}`, {
     method: "PUT",
@@ -60,7 +70,7 @@ export async function put<T>(
 
 export async function del<T>(
   path: string,
-  headers: HeadersInit = {}
+  headers: HeadersInit = {},
 ): Promise<T> {
   const response = await fetch(`${API_ENPOINT}${path}`, {
     method: "DELETE",

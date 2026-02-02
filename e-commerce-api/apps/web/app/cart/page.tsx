@@ -23,12 +23,6 @@ export default function CartPage() {
         handleRemoveFromCart(itemId);
         return;
       }
-
-      setLocalCart((prevCart) =>
-        prevCart.map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item,
-        ),
-      );
       updateQuantity(itemId, newQuantity);
     },
     500,

@@ -87,7 +87,10 @@ let orders: Order[] = [
 export async function getUserOrders() {
   const { getToken } = await auth();
 
-  const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+  const token = await getToken({
+    template: CLERK_TOKEN_TEMPLATE,
+    expiresInSeconds: 3,
+  });
 
   const response = await get<ApiResponse<Order[]>>(
     "/orders?page=1&pageSize=10",

@@ -42,7 +42,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      const token = await getToken();
+      const token = await getToken({ leewayInSeconds: 3 });
 
       if (!id) {
         await post(

@@ -12,15 +12,17 @@ export const authenticate = async (
   if (!auth.isAuthenticated) {
     return reply
       .status(HttpStatus.UNAUTHORIZED)
-      .send({ message: "Unauthenticated: Please log in." });
+      .send({
+        message: "Unauthenticated: Please log in.",
+        status: HttpStatus.UNAUTHORIZED,
+      });
   }
 
-  Object.assign(request.auth, auth);
   const userService = request.container.getItem("UserService");
   const user = await userService.getById(auth.userId);
 
   if (!user) {
-    throw new UnauthorizedError();
+    throw new UnauthorizedError("Unauthenticated: Missing user");
   }
 
   if (!user.stripeId) {
@@ -31,7 +33,11 @@ export const authenticate = async (
     await userService.save(user);
   }
 
-  Object.assign(request.auth, { userId: user.id, stripeId: user.stripeId });
+  Object.assign(request.auth, {
+    ...auth,
+    userId: user.id,
+    stripeId: user.stripeId,
+  });
 };
 
 export const authorizeAdmin = async (

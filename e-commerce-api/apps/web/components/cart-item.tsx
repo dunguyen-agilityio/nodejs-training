@@ -18,6 +18,18 @@ export function CartItem({
 }: CartItemProps) {
   const [quantity, setQuantity] = useState(item.quantity);
 
+  const handleDecrease = () => {
+    const newQuantity = quantity - 1;
+    setQuantity(newQuantity);
+    updateQuantity(item.id, newQuantity);
+  };
+
+  const handleIncrease = () => {
+    const newQuantity = quantity + 1;
+    setQuantity(newQuantity);
+    updateQuantity(item.id, newQuantity);
+  };
+
   return (
     <div
       key={item.id}
@@ -33,24 +45,20 @@ export function CartItem({
       </div>
       <div className="flex-grow">
         <h3 className="font-semibold text-foreground">{item.product.name}</h3>
-        <p className="text-muted-foreground text-sm">${item.product.price}</p>
+        <p className="text-muted-foreground text-sm">
+          {formatCurrency(item.product.price)}
+        </p>
         <div className="flex items-center gap-4 mt-2">
           <div className="flex items-center border border-input rounded-md">
             <button
-              onClick={() => {
-                setQuantity(quantity - 1);
-                updateQuantity(item.id, quantity - 1);
-              }}
+              onClick={handleDecrease}
               className="px-3 py-1 hover:bg-accent hover:text-accent-foreground"
             >
               -
             </button>
             <span className="px-3 py-1 border-x border-input">{quantity}</span>
             <button
-              onClick={() => {
-                setQuantity(quantity + 1);
-                updateQuantity(item.id, quantity + 1);
-              }}
+              onClick={handleIncrease}
               className="px-3 py-1 hover:bg-accent hover:text-accent-foreground"
             >
               +

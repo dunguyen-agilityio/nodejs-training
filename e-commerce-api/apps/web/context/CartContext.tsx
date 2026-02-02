@@ -2,12 +2,13 @@
 
 import React, { createContext, useContext, useState } from "react";
 import { CartItem, Product } from "@/lib/types";
-import { post, del, put } from "@/lib/api"; // Import post, del, and put functions
-import { useAuth } from "@clerk/nextjs"; // Import useAuth hook
+import { post, del, put } from "@/lib/api";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
 import { debounce, getCartTotal } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { UnauthorizedError } from "@/lib/errors";
 
 interface CartContextType {
   cart: CartItem[];
@@ -34,6 +35,16 @@ export function CartProvider({
 }) {
   const [cart, setCart] = useState<CartItem[]>(initialCart);
   const { getToken, isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+
+  const handleApiError = (error: any) => {
+    if (error instanceof UnauthorizedError) {
+      signOut();
+    } else {
+      console.error(error);
+      toast.error(error.message || "An error occurred");
+    }
+  };
 
   const addToCart = debounce(async (product: Product, quantity: number = 1) => {
     try {
@@ -58,7 +69,7 @@ export function CartProvider({
         if (existingItem) {
           return prevCart.map((item) =>
             item.product.id === product.id
-              ? { ...item, quantity: quantity + existingItem.quantity }
+              ? { ...item, quantity: item.quantity + quantity }
               : item,
           );
         }
@@ -67,10 +78,9 @@ export function CartProvider({
       });
       toast.success(`${product.name} added to cart`);
     } catch (error) {
-      console.error("Failed to add to cart", error);
-      toast.error("Failed to add product to cart");
+      handleApiError(error);
     }
-  }, 1000);
+  }, 300);
 
   const removeFromCart = async (cartItemId: string) => {
     try {
@@ -81,8 +91,7 @@ export function CartProvider({
       setCart((prevCart) => prevCart.filter((item) => item.id !== cartItemId));
       toast.success("Item removed from cart");
     } catch (error) {
-      console.error("Failed to remove from cart", error);
-      toast.error("Failed to remove item from cart");
+      handleApiError(error);
     }
   };
 
@@ -107,8 +116,7 @@ export function CartProvider({
       );
       toast.success("Cart updated");
     } catch (error) {
-      console.error("Failed to update quantity", error);
-      toast.error("Failed to update cart");
+      handleApiError(error);
     }
   };
 
