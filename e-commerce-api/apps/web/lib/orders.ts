@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { get } from "./api";
-import { ApiResponse, Order, OrderStatus } from "./types";
+import { get, patch } from "./api";
+import { ApiPagination, ApiResponse, Order, OrderStatus } from "./types";
 import { CLERK_TOKEN_TEMPLATE } from "./constants";
 
 // Mock database
@@ -92,7 +92,7 @@ export async function getUserOrders() {
     expiresInSeconds: 3,
   });
 
-  const response = await get<ApiResponse<Order[]>>(
+  const response = await get<ApiResponse<Order[], { meta: { pagination: ApiPagination } }>>(
     "/orders?page=1&pageSize=10",
     {
       Authorization: `Bearer ${token}`,
@@ -103,10 +103,21 @@ export async function getUserOrders() {
 }
 
 export async function getAllOrders() {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return orders.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  const { getToken } = await auth();
+
+  const token = await getToken({
+    template: CLERK_TOKEN_TEMPLATE,
+    expiresInSeconds: 3,
+  });
+
+  const response = await get<ApiResponse<Order[], { meta: { pagination: ApiPagination } }>>(
+    "/admin/orders?page=1&pageSize=100",
+    {
+      Authorization: `Bearer ${token}`,
+    },
   );
+
+  return response.data;
 }
 
 export async function createOrder(order: Order) {
@@ -116,10 +127,20 @@ export async function createOrder(order: Order) {
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  const order = orders.find((o) => o.id === orderId);
-  if (order) {
-    order.status = status;
-  }
-  return order;
+  const { getToken } = await auth();
+
+  const token = await getToken({
+    template: CLERK_TOKEN_TEMPLATE,
+    expiresInSeconds: 3,
+  });
+
+  const response = await patch<ApiResponse<Order>>(
+    `/admin/orders/${orderId}/status`,
+    { status },
+    {
+      Authorization: `Bearer ${token}`,
+    },
+  );
+
+  return response.data;
 }

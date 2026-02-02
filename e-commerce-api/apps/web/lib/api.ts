@@ -77,6 +77,25 @@ export async function put<T>(
   return handleResponse<T>(response);
 }
 
+export async function patch<T>(
+  path: string,
+  data: unknown,
+  headers: HeadersInit = {},
+): Promise<T> {
+  const url = buildUrl(path);
+
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      ...defaultHeaders,
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<T>(response);
+}
+
 export async function del<T>(
   path: string,
   headers: HeadersInit = {},

@@ -60,7 +60,7 @@ export class OrderService implements IOrderService {
 
       const orderItemByProduct = order.items.reduce(
         (prev, item) => ({ ...prev, [item.product.id]: item.id }),
-        {} as Record<number, number>,
+        {} as Record<string, number>,
       );
 
       // Create order items and decrease stock
@@ -141,5 +141,23 @@ export class OrderService implements IOrderService {
         },
       },
     };
+  }
+
+  async updateOrderStatus(orderId: number, status: Order["status"]): Promise<Order | null> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundError("Order not found");
+    }
+
+    order.status = status;
+    await this.orderRepository.save(order);
+
+    return await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: { items: { product: true }, user: true },
+    });
   }
 }

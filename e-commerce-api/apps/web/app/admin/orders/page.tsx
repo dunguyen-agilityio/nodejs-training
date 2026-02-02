@@ -17,6 +17,9 @@ export default async function AdminOrdersPage() {
                   Order ID
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  User ID
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   Date
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
@@ -33,7 +36,7 @@ export default async function AdminOrdersPage() {
             <tbody className="[&_tr:last-child]:border-0">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={6} className="p-4 text-center text-muted-foreground">
                     No orders found.
                   </td>
                 </tr>
@@ -44,6 +47,11 @@ export default async function AdminOrdersPage() {
                     className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                   >
                     <td className="p-4 align-middle font-medium">{order.id}</td>
+                    <td className="p-4 align-middle">
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {order.userId}
+                      </span>
+                    </td>
                     <td className="p-4 align-middle">
                       {new Date(order.date).toLocaleDateString()}
                     </td>

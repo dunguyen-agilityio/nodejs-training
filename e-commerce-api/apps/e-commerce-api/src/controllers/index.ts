@@ -1,4 +1,5 @@
 import {
+  IAdminOrderController,
   IAuthController,
   ICartController,
   ICartItemController,
@@ -18,9 +19,11 @@ export * from "./category";
 export * from "./cart-item";
 export * from "./checkout";
 export * from "./order";
+export * from "./admin-order";
 export * from "./metric";
 
 export type Controllers = {
+  AdminOrderController: IAdminOrderController;
   AuthController: IAuthController;
   ProductController: IProductController;
   UserController: IUserController;

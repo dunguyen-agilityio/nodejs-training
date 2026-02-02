@@ -30,7 +30,7 @@ export const transformatFromClerk = ({
     updatedAt: new Date(updatedAt),
     phone: phone_numbers[0]?.phone_number,
     role: role as USER_ROLES,
-  });
+  } as User);
 
   return newUser;
 };

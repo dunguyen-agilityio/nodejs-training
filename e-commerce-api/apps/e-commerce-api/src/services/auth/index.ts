@@ -17,14 +17,33 @@ export class AuthService implements IAuthService {
   }
 
   async register(body: User) {
-    const { email, name } = body;
+    const {
+      email,
+      name,
+      avatar,
+      firstName,
+      lastName,
+      username,
+      phone,
+      age,
+      role,
+      id,
+    } = body;
     const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
       email,
       name,
     });
     const user = await this.userRepository.save({
-      ...body,
+      avatar,
+      firstName,
+      lastName,
+      username,
+      phone,
       stripeId: customer.id,
+      age,
+      role,
+      id,
+      email,
     });
     await this.cartRepository.save({
       user,

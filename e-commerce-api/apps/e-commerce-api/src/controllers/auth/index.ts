@@ -18,6 +18,7 @@ export class AuthController implements IAuthController {
   ): Promise<void> => {
     const newUser = transformatFromClerk(request.body);
     const user = await this.service.register(newUser);
+
     reply
       .code(HttpStatus.CREATED)
       .send({ message: "User registered successfully.", user });

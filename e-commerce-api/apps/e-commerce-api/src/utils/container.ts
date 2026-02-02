@@ -19,6 +19,7 @@ type ModuleKey =
   | "Checkout"
   | "Auth"
   | "Metric"
+  | "AdminOrder"
   | keyof typeof ProviderMapping;
 
 type TRepository = typeof Repositories;
@@ -92,7 +93,6 @@ export class Container {
 
       this.#dependencies[uncapitalize(providerName) as keyof Dependencies] =
         provider;
-      console.log("providerName", providerName);
       this.setItem(providerName, provider);
       return this;
     }

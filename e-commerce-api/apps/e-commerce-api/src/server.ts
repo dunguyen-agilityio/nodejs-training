@@ -17,6 +17,7 @@ import { checkoutRoutes } from "./routes/checkout";
 import { AppDataSource } from "#data-source";
 
 import { orderRoutes } from "./routes/order";
+import { adminOrderRoutes } from "./routes/admin-order";
 import { metricRoutes } from "./routes/metric";
 
 const fastify = Fastify({
@@ -47,7 +48,8 @@ AppDataSource.initialize()
       .register("Checkout")
       .register("Category")
       .register("Metric")
-      .register("Order");
+      .register("Order")
+      .register("AdminOrder");
 
     // console.log(await container.getItem("MetricController"));
 
@@ -70,6 +72,7 @@ AppDataSource.initialize()
         instance.register(categoryRoutes, { prefix: "/categories" });
         instance.register(cartRoutes, { prefix: "/cart" });
         instance.register(orderRoutes, { prefix: "/orders" });
+        // instance.register(adminOrderRoutes, { prefix: "/admin/orders" });
         instance.register(checkoutRoutes, { prefix: "/checkout" });
         instance.register(metricRoutes, { prefix: "/metrics" });
 

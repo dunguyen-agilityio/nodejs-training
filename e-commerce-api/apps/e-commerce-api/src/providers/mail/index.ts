@@ -17,10 +17,19 @@ export class SendGridMailProvider implements IMailProvider {
       { to, from, templateId, dynamicTemplateData },
       false,
       (error) => {
-        if (error) {
-          console.error("Error - sendWithTemplate: ", error);
+        if (error instanceof ResponseError) {
+          console.error("Error - sendWithTemplate: ", error.response.body);
         }
       },
     );
   }
+}
+
+export default class ResponseError extends Error {
+  code: number;
+  message: string;
+  response: {
+    headers: { [key: string]: string };
+    body: string;
+  };
 }
