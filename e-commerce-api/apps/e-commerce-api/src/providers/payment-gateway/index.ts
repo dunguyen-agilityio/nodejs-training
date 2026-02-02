@@ -18,6 +18,7 @@ import {
   InvoiceItemCreateParams,
 } from "#types/invoice";
 import { Product, ProductCreateParams } from "#types/product";
+import { NotFoundError } from "#types/error";
 
 export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
   constructor(private stripe = new Stripe(process.env.STRIPE_API_KEY!)) {}
@@ -29,9 +30,14 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
     });
     let customer = response.data[0];
     if (!customer) {
-      customer = await this.stripe.customers.create(params);
+      customer = await this.createCustomer(params);
     }
 
+    return customer as Customer;
+  }
+
+  async createCustomer(params: CustomerCreateParams): Promise<Customer> {
+    const customer = await this.stripe.customers.create(params);
     return customer;
   }
 
@@ -130,5 +136,19 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
   async getProducts(): Promise<Response<ApiList<Product>>> {
     const products = await this.stripe.products.list();
     return products;
+  }
+
+  async getOpenedInvoiceByUser(id: string): Promise<Invoice> {
+    const { data: invoices } = await this.stripe.invoices.list({
+      customer: id,
+      status: "open",
+      limit: 1,
+    });
+
+    const invoice = invoices[0];
+
+    if (!invoice) throw new NotFoundError("Invoice not found");
+
+    return invoice as Invoice;
   }
 }

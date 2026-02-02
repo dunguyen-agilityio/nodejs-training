@@ -1,3 +1,4 @@
+import { MetadataParam } from "./common";
 import { InvoicePayment, PaymentMethod } from "./invoice";
 
 export interface CustomerCreateParams {
@@ -114,4 +115,5 @@ export interface Customer {
   email: string | null;
   name?: string | null;
   phone?: string | null;
+  metadata: MetadataParam;
 }

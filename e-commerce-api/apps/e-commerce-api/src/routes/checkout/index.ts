@@ -1,4 +1,4 @@
-import { validateRequest } from "#middlewares";
+import { authenticate, validateRequest } from "#middlewares";
 import { paymentSuccessSchema } from "#schemas/checkout";
 import { FastifyPluginCallback } from "fastify";
 
@@ -16,12 +16,16 @@ export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
   const container = instance.container.getItem("CheckoutController");
   instance.post(
     "/create",
-    { schema: createPaymentIntentSchema },
-    container.createPaymentIntent,
+    { schema: createPaymentIntentSchema, preHandler: [authenticate] },
+    container.createPreviewInvoice,
   );
+  instance.post("/prev", { preHandler: [authenticate] }, container.preCheckout);
   instance.post(
     "/webhooks",
-    { preHandler: [validateRequest], schema: { body: paymentSuccessSchema } },
+    {
+      preHandler: [validateRequest, authenticate],
+      schema: { body: paymentSuccessSchema },
+    },
     container.checkout,
   );
   done();

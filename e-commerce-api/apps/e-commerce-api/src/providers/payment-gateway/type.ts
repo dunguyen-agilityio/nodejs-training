@@ -22,6 +22,7 @@ export interface IPaymentGatewayProvider {
     payload: PaymentIntentCreateParams,
   ): Promise<Response<PaymentIntent>>;
   findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>;
+  createCustomer(params: CustomerCreateParams): Promise<Customer>;
   createInvoice(params: InvoiceCreateParams): Promise<Response<Invoice>>;
   createProduct(params: ProductCreateParams): Promise<Response<Product>>;
   createInvoiceItem(
@@ -33,4 +34,5 @@ export interface IPaymentGatewayProvider {
   getPaymentIntent(id: string): Promise<Response<PaymentIntent>>;
   getCharge(id: string): Promise<Charge>;
   getProducts(): Promise<Response<ApiList<Product>>>;
+  getOpenedInvoiceByUser(id: string): Promise<Invoice>;
 }

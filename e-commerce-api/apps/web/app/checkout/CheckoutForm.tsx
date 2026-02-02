@@ -1,5 +1,8 @@
 "use client";
 
+import { post } from "@/lib/api";
+import { CLERK_TOKEN_TEMPLATE } from "@/lib/constants";
+import { useAuth } from "@clerk/nextjs";
 import {
   PaymentElement,
   useElements,
@@ -10,13 +13,13 @@ import React, { FormEvent, useState } from "react";
 function CheckoutForm({ cartTotal }: { cartTotal: number }) {
   const stripe = useStripe();
   const elements = useElements();
+  const { getToken } = useAuth();
 
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!stripe || !elements) {
       // Stripe.js hasn't yet loaded.
       // Make sure to disable form submission until Stripe.js has loaded.
@@ -24,6 +27,16 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
     }
 
     setIsLoading(true);
+
+    const token = await getToken({ template: CLERK_TOKEN_TEMPLATE });
+
+    await post(
+      "/checkout/prev",
+      {},
+      {
+        Authorization: `Bearer ${token}`,
+      },
+    );
 
     const { error } = await stripe.confirmPayment({
       elements,

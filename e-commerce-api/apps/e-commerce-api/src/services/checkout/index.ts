@@ -160,7 +160,7 @@ export class CheckoutService implements ICheckoutService {
   async createLocalInvoice(
     userId: string,
     cart: Cart,
-    paymentInvoice: Response<Invoice>,
+    paymentInvoice: Invoice,
   ) {
     const { lines, currency, total, id: invoiceId } = paymentInvoice;
     const itemMap: Record<string, InvoiceLineItem> = {};
@@ -217,6 +217,38 @@ export class CheckoutService implements ICheckoutService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async createPreviewInvoice(
+    payload: Stripe.PaymentIntentCreateParams,
+    userId: string,
+    userStripeId: string,
+  ): Promise<Response<Invoice>> {
+    const cart = await this.cartRepository.getCartByUserId(userId);
+
+    if (!cart) {
+      throw new NotFoundError("Cart not found");
+    }
+
+    const { currency } = payload;
+
+    const invoice = await this.createStripepayment(
+      { currency, customer: userStripeId },
+      cart.items,
+    );
+
+    return invoice;
+  }
+
+  async preCheckout(userId: string, stripeId: string): Promise<Invoice> {
+    const cart = await this.prepareCheckout(userId);
+
+    const invoice =
+      await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId);
+
+    await this.createLocalInvoice(userId, cart, invoice);
+
+    return invoice;
   }
 
   async createCheckoutPayment(

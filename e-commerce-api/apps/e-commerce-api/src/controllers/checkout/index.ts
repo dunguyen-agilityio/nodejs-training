@@ -16,6 +16,40 @@ import { ICheckoutService } from "#services/types";
 export class CheckoutController implements ICheckoutController {
   constructor(private service: ICheckoutService) {}
 
+  createPreviewInvoice = async (
+    request: FastifyRequest<{
+      Body: FromSchema<typeof createPaymentIntentSchema>;
+    }>,
+    reply: FastifyReply,
+  ) => {
+    const { amount, currency } = request.body;
+    const { stripeId, userId } = request.auth;
+
+    const invoice = await this.service.createPreviewInvoice(
+      { amount, currency },
+      userId,
+      stripeId,
+    );
+
+    const { confirmation_secret } = invoice;
+
+    if (!confirmation_secret) {
+      throw new UnexpectedError();
+    }
+
+    const { client_secret } = confirmation_secret;
+    reply.send({ clientSecret: client_secret });
+  };
+
+  preCheckout = async (
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> => {
+    const { stripeId, userId } = request.auth;
+    await this.service.preCheckout(userId, stripeId);
+    reply.status(204).send();
+  };
+
   createPaymentIntent = async (
     request: FastifyRequest<{
       Body: FromSchema<typeof createPaymentIntentSchema>;
