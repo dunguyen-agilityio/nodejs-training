@@ -1,15 +1,16 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
 export interface ICheckoutController {
-  createPaymentIntent(
+  stripeWebhookHandler(
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<void>;
-
-  checkout(request: FastifyRequest, reply: FastifyReply): Promise<void>;
-  createPreviewInvoice(
+  createPaymentIntentHandler(
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<void>;
-  preCheckout(request: FastifyRequest, reply: FastifyReply): Promise<void>;
+  prepareOrderHandler(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void>;
 }

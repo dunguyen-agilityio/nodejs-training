@@ -6,7 +6,6 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ICheckoutController } from "./type";
 import {
-  checkoutSuccessSchema,
   createPaymentIntentSchema,
   paymentSuccessSchema,
 } from "#schemas/checkout";
@@ -16,7 +15,7 @@ import { ICheckoutService } from "#services/types";
 export class CheckoutController implements ICheckoutController {
   constructor(private service: ICheckoutService) {}
 
-  createPreviewInvoice = async (
+  createPaymentIntentHandler = async (
     request: FastifyRequest<{
       Body: FromSchema<typeof createPaymentIntentSchema>;
     }>,
@@ -41,16 +40,7 @@ export class CheckoutController implements ICheckoutController {
     reply.send({ clientSecret: client_secret });
   };
 
-  preCheckout = async (
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<void> => {
-    const { stripeId, userId } = request.auth;
-    await this.service.preCheckout(userId, stripeId);
-    reply.status(204).send();
-  };
-
-  createPaymentIntent = async (
+  createPaymentIntentHandler1 = async (
     request: FastifyRequest<{
       Body: FromSchema<typeof createPaymentIntentSchema>;
     }>,
@@ -97,7 +87,21 @@ export class CheckoutController implements ICheckoutController {
     reply.send({ clientSecret: client_secret });
   };
 
-  checkout = async (
+  /**
+   * @description Prepares an order for checkout. This is a prerequisite step before confirming the payment.
+   * @param request
+   * @param reply
+   */
+  prepareOrderHandler = async (
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> => {
+    const { stripeId, userId } = request.auth;
+    await this.service.preCheckout(userId, stripeId);
+    reply.status(204).send();
+  };
+
+  stripeWebhookHandler = async (
     request: FastifyRequest<{ Body: FromSchema<typeof paymentSuccessSchema> }>,
     reply: FastifyReply,
   ): Promise<void> => {

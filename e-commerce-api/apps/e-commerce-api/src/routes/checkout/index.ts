@@ -15,18 +15,22 @@ const createPaymentIntentSchema = {
 export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
   const container = instance.container.getItem("CheckoutController");
   instance.post(
-    "/create",
+    "/payment-intents",
     { schema: createPaymentIntentSchema, preHandler: [authenticate] },
-    container.createPreviewInvoice,
+    container.createPaymentIntentHandler,
   );
-  instance.post("/prev", { preHandler: [authenticate] }, container.preCheckout);
   instance.post(
-    "/webhooks",
+    "/orders/prepare",
+    { preHandler: [authenticate] },
+    container.prepareOrderHandler,
+  );
+  instance.post(
+    "/stripe-webhooks",
     {
       preHandler: [validateRequest, authenticate],
       schema: { body: paymentSuccessSchema },
     },
-    container.checkout,
+    container.stripeWebhookHandler,
   );
   done();
 };
