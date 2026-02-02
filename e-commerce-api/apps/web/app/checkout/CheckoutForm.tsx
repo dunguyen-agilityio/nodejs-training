@@ -10,6 +10,8 @@ import {
 } from "@stripe/react-stripe-js";
 import React, { FormEvent, useState } from "react";
 
+import { formatCurrency } from "@/lib/utils";
+
 function CheckoutForm({ cartTotal }: { cartTotal: number }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -73,7 +75,7 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
         disabled={isLoading || !stripe || !elements}
         className="w-full bg-primary text-primary-foreground py-4 rounded-md font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
-        {isLoading ? "Processing..." : `Pay $${cartTotal}`}
+        {isLoading ? "Processing..." : `Pay ${formatCurrency(cartTotal)}`}
       </button>
     </form>
   );

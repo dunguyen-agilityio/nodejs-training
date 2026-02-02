@@ -2,7 +2,7 @@
 
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
-import { debounce } from "@/lib/utils";
+import { debounce, formatCurrency } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { CartItem } from "@/components/cart-item";
 import { useAuth } from "@clerk/nextjs";
@@ -40,7 +40,7 @@ export default function CartPage() {
   };
 
   if (!isLoaded) {
-    return <p>!Please waiting...</p>;
+    return <p>Please waiting...</p>;
   }
 
   if (localCart.length === 0) {
@@ -83,7 +83,7 @@ export default function CartPage() {
           <div className="space-y-2 mb-4 text-sm text-muted-foreground">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="text-foreground">${cartTotal}</span>
+              <span className="text-foreground">{formatCurrency(cartTotal)}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
@@ -92,7 +92,7 @@ export default function CartPage() {
           </div>
           <div className="border-t border-border pt-4 flex justify-between font-bold text-lg mb-6 text-foreground">
             <span>Total</span>
-            <span>${cartTotal}</span>
+            <span>{formatCurrency(cartTotal)}</span>
           </div>
           <Link
             href="/checkout"

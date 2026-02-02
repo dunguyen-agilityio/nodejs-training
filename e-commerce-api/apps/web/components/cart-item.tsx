@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { CartItem as TCartItem } from "@/lib/types";
 import { useState } from "react";
+import { formatCurrency } from "@/lib/utils";
 
 interface CartItemProps {
   item: TCartItem;
@@ -64,7 +65,7 @@ export function CartItem({
         </div>
       </div>
       <div className="text-right font-semibold text-foreground">
-        ${item.product.price * item.quantity}
+        {formatCurrency(item.product.price * item.quantity)}
       </div>
     </div>
   );

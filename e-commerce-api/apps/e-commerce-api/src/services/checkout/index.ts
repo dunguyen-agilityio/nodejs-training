@@ -38,7 +38,6 @@ import { StockReservationStatus } from "#types/checkout";
 import { QueryRunner } from "typeorm";
 
 /**
- * @class CheckoutService
  * @description Service responsible for handling all checkout-related operations,
  * including stock reservation, payment intent creation, local invoice management,
  * and order fulfillment after successful payment.
@@ -46,7 +45,6 @@ import { QueryRunner } from "typeorm";
 export class CheckoutService implements ICheckoutService {
   private userRepository: UserRepository;
   private cartRepository: CartRepository;
-  private cartItemRepository: CartItemRepository;
   private orderRepository: OrderRepository;
   private paymentGatewayProvider: StripePaymentGatewayProvider;
   private mailProvider: IMailProvider;
@@ -327,7 +325,7 @@ export class CheckoutService implements ICheckoutService {
   async handleSuccessfulPayment(
     stripeId: string,
     invoiceId: string,
-  ): Promise<boolean> {
+  ): Promise<void> {
     const queryRunner =
       this.cartRepository.manager.connection.createQueryRunner();
     try {
@@ -343,7 +341,7 @@ export class CheckoutService implements ICheckoutService {
       }
 
       const cart = await this._getCart(queryRunner, user.id);
-      if (!cart) return false;
+      if (!cart) return;
 
       const { paymentDetails, invoiceItems } =
         await this._getPaymentDetailsAndItems(invoiceId, invoice);
@@ -382,7 +380,6 @@ export class CheckoutService implements ICheckoutService {
         receipt_url,
         total,
       });
-      return true;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

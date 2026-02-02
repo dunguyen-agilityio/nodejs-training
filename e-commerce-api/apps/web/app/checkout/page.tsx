@@ -5,7 +5,7 @@ import CheckoutForm from "./CheckoutForm";
 import { auth } from "@clerk/nextjs/server";
 import Provider from "./Provider";
 import { getCarts } from "@/lib/cart";
-import { getCartTotal } from "@/lib/utils";
+import { getCartTotal, formatCurrency } from "@/lib/utils";
 
 export default async function CheckoutPage() {
   const { getToken } = await auth();
@@ -68,14 +68,14 @@ export default async function CheckoutPage() {
                   {item.product.name} x {item.quantity}
                 </span>
                 <span className="font-medium text-foreground">
-                  ${item.product.price * item.quantity}
+                  {formatCurrency(item.product.price * item.quantity)}
                 </span>
               </div>
             ))}
           </div>
           <div className="border-t border-border pt-4 flex justify-between font-bold text-lg">
             <span className="text-foreground">Total</span>
-            <span className="text-foreground">${cartTotal}</span>
+            <span className="text-foreground">{formatCurrency(cartTotal)}</span>
           </div>
         </div>
       </div>
