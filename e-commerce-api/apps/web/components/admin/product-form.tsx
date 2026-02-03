@@ -1,12 +1,11 @@
 "use client";
 
-import { get, post, put } from "@/lib/api";
+import { post, put } from "@/lib/api";
 import { productSchema, type ProductFormInput } from "@/lib/schema";
-import { Product, ApiResponse } from "@/lib/types";
+import { Product } from "@/lib/types";
 import { useAuth } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { faker } from "@faker-js/faker";
@@ -15,33 +14,15 @@ type Category = { id: number; name: string };
 
 interface ProductFormProps {
   initialData?: Product;
+  categories: Category[];
 }
 
-export function ProductForm({ initialData }: ProductFormProps) {
+export function ProductForm({ initialData, categories }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!initialData;
   const { getToken } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const { id } = initialData || {};
-
-  // Fetch categories from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await get<ApiResponse<Category[]>>("/categories");
-        setCategories(response.data);
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-        toast.error("Failed to load categories");
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
 
   const {
     register,
@@ -74,7 +55,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     setValue("name", faker.commerce.productName());
     setValue("description", faker.commerce.productDescription());
     setValue("price", faker.commerce.price({ min: 10, max: 500 }));
-    setValue("stock", faker.number.int({ min: 0, max: 100 }).toString());
+    setValue("stock", faker.number.int({ min: 20, max: 200 }).toString());
     setValue("category", randomCategory);
     setValue("image", faker.image.url({ width: 800, height: 600 }));
 
@@ -198,26 +179,21 @@ export function ProductForm({ initialData }: ProductFormProps) {
           <label htmlFor="category" className="text-sm font-medium">
             Category
           </label>
-          {isLoadingCategories ? (
-            <div className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
-          ) : (
-            <select
-              id="category"
-              {...register("category")}
-              disabled={isLoadingCategories}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">
-                {isLoadingCategories ? "Loading..." : "Select a category"}
-              </option>
+          <select
+            id="category"
+            {...register("category")}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">
+              Select a category
+            </option>
 
-              {categories.map((category) => (
-                <option key={category.id} value={category.name}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          )}
+            {categories.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </select>
 
           {errors.category && (
             <p className="text-sm text-destructive">
@@ -232,7 +208,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
           <button
             type="button"
             onClick={generateMockData}
-            disabled={isLoadingCategories}
             className="bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/90 disabled:opacity-50"
           >
             🎲 Generate Mock Data

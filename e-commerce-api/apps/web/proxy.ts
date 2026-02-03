@@ -10,6 +10,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-out(.*)",
 ]);
 
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
@@ -17,8 +19,15 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { sessionClaims } = await auth();
 
-  if (sessionClaims?.org_role === "org:admin" && !req.url.includes("/admin")) {
+  const isAdmin = sessionClaims?.org_role === "org:admin"
+
+  if (isAdmin && !isAdminRoute(req)) {
     return NextResponse.redirect(new URL("/admin", req.url));
+  }
+
+  if (isAdminRoute(req) && !isAdmin) {
+
+    return NextResponse.redirect(new URL("/", req.url));
   }
 });
 

@@ -42,10 +42,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isAuthenticated } = await auth();
+  const { isAuthenticated, sessionClaims } = await auth();
+
+  const isAdmin = sessionClaims?.org_role === "org:admin"
 
   let cart: CartItem[] = [];
-  if (isAuthenticated) {
+  if (isAuthenticated && !isAdmin) {
     try {
       cart = await getCarts();
     } catch (error) {
@@ -73,23 +75,25 @@ export default async function RootLayout({
                     <Link href="/" className="font-bold text-xl">
                       MyStore
                     </Link>
-                    <OrganizationSwitcher hidePersonal />
+                    <OrganizationSwitcher hidePersonal={isAdmin} />
                   </div>
                   <div className="flex items-center gap-4">
-                    <Link
-                      href="/cart"
-                      className="relative p-2 hover:bg-accent rounded-md"
-                    >
-                      🛒
-                    </Link>
-                    <SignedIn>
+                    {!isAdmin && <>
                       <Link
-                        href="/orders"
-                        className="text-sm font-medium hover:underline"
+                        href="/cart"
+                        className="relative p-2 hover:bg-accent rounded-md"
                       >
-                        Orders
+                        🛒
                       </Link>
-                    </SignedIn>
+                      <SignedIn>
+                        <Link
+                          href="/orders"
+                          className="text-sm font-medium hover:underline"
+                        >
+                          Orders
+                        </Link>
+                      </SignedIn>
+                    </>}
 
                     <ModeToggle />
                     <SignedOut>

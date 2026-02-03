@@ -32,94 +32,94 @@ fastify.register(cors, {
   allowedHeaders: ["Content-Type", "Authorization"],
 });
 
-fastify.register(clerkPlugin);
-fastify.register(stripePlugin);
-fastify.register(sendgridPlugin);
+await Promise.all([
+  AppDataSource.initialize(),
+  fastify.register(clerkPlugin),
+  fastify.register(stripePlugin),
+  fastify.register(sendgridPlugin),
+]).then(([dataSource]) => {
+  buildContainer(fastify, dataSource);
 
-AppDataSource.initialize()
-  .then(async (dataSource) => {
-    const contai = buildContainer(fastify, dataSource);
-    console.log("contai", contai);
-    const container = Container.instance
-      .setDataSource(dataSource)
-      .register("SendGridMailProvider")
-      .register("StripePaymentGatewayProvider")
-      .register("Auth")
-      .register("User")
-      .register("Product")
-      .register("Cart")
-      .register("CartItem")
-      .register("Invoice")
-      .register("InvoiceItem")
-      .register("Checkout")
-      .register("Category")
-      .register("Metric")
-      .register("Order")
-      .register("AdminOrder");
+  const container = Container.instance
+    .setDataSource(dataSource)
+    .register("SendGridMailProvider")
+    .register("StripePaymentGatewayProvider")
+    .register("Auth")
+    .register("User")
+    .register("Product")
+    .register("Cart")
+    .register("CartItem")
+    .register("Invoice")
+    .register("InvoiceItem")
+    .register("Checkout")
+    .register("Category")
+    .register("Metric")
+    .register("Order")
+    .register("AdminOrder");
 
-    // console.log(await container.getItem("MetricController"));
 
-    const decorates = () => {
-      fastify.decorate("container", {
-        getter: () => container,
-      });
 
-      fastify.decorateRequest("container", {
-        getter: () => container,
-      });
-    };
-
-    fastify.register(fastifyPlugin(decorates, { name: "container" }));
-
-    fastify.register(
-      (instance, opts, done) => {
-        instance.register(authRoutes, { prefix: "/auth" });
-        instance.register(productRoutes, { prefix: "/products" });
-        instance.register(categoryRoutes, { prefix: "/categories" });
-        instance.register(cartRoutes, { prefix: "/cart" });
-        instance.register(orderRoutes, { prefix: "/orders" });
-        instance.register(adminOrderRoutes, { prefix: "/admin/orders" });
-        instance.register(checkoutRoutes, { prefix: "/checkout" });
-        instance.register(metricRoutes, { prefix: "/metrics" });
-
-        done();
-      },
-      { prefix: "/api/v1" },
-    );
-
-    // Run the server!
-    fastify.listen({ port: 8080 }, function (err, address) {
-      if (err) {
-        fastify.log.error(err);
-        process.exit(1);
-      }
-      console.info(`Server is now listening on ${address}`);
+  const decorates = () => {
+    fastify.decorate("container", {
+      getter: () => container,
     });
 
-    fastify.setErrorHandler(function (error: ApiError, _, reply) {
-      // Log error
-      this.log.error(error);
-
-      const statusCode = error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR;
-
-      // Send error response
-      reply.status(statusCode).send(error);
+    fastify.decorateRequest("container", {
+      getter: () => container,
     });
+  };
 
-    // Gracefull shutdown
-    process.on("SIGTERM", () => {
-      console.log("SIGTERM signal received: closing HTTP server");
+  fastify.register(fastifyPlugin(decorates, { name: "container" }));
 
-      fastify.close(async () => {
-        console.log("HTTP server closed");
-        // close database
-        await dataSource.destroy();
-        console.log("Database connection closed");
-        process.exit(0);
-        // close third paty
-      });
+  fastify.register(
+    (instance, opts, done) => {
+      instance.register(authRoutes, { prefix: "/auth" });
+      instance.register(productRoutes, { prefix: "/products" });
+      instance.register(categoryRoutes, { prefix: "/categories" });
+      instance.register(cartRoutes, { prefix: "/cart" });
+      instance.register(orderRoutes, { prefix: "/orders" });
+      instance.register(adminOrderRoutes, { prefix: "/admin/orders" });
+      instance.register(checkoutRoutes, { prefix: "/checkout" });
+      instance.register(metricRoutes, { prefix: "/metrics" });
+
+      done();
+    },
+    { prefix: "/api/v1" },
+  );
+
+  // Run the server!
+  fastify.listen({ port: 8080 }, function (err, address) {
+    if (err) {
+      fastify.log.error(err);
+      process.exit(1);
+    }
+    console.info(`Server is now listening on ${address}`);
+  });
+
+  fastify.setErrorHandler(function (error: ApiError, _, reply) {
+    // Log error
+    this.log.error(error);
+
+    const statusCode = error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR;
+
+    // Send error response
+    reply.status(statusCode).send(error);
+  });
+
+  // Gracefull shutdown
+  process.on("SIGTERM", () => {
+    console.log("SIGTERM signal received: closing HTTP server");
+
+    fastify.close(async () => {
+      console.log("HTTP server closed");
+      // close database
+      await dataSource.destroy();
+      console.log("Database connection closed");
+      process.exit(0);
+      // close third paty
     });
-  })
+  });
+})
   .catch((error) => {
     console.log("Database connection failed", error);
     fastify.close(() => {

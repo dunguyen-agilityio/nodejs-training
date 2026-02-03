@@ -20,12 +20,14 @@ export interface Cart {
   status: string;
 }
 
+export type Category = { id: number; name: string };
+
 export type OrderStatus =
-  | "Pending"
-  | "Processing"
-  | "Shipped"
-  | "Delivered"
-  | "Cancelled";
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
 export interface OrderItem {
   productId: string;

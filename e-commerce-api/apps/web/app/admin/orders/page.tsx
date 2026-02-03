@@ -1,6 +1,7 @@
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
 import { PaginationControls } from "@/components/pagination-controls";
 import { getAllOrders } from "@/lib/orders";
+import Link from "next/link";
 
 interface AdminOrdersPageProps {
   searchParams: Promise<{ page?: string }>;
@@ -26,9 +27,6 @@ export default async function AdminOrdersPage({
               <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   Order ID
-                </th>
-                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  User ID
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   Date
@@ -60,11 +58,10 @@ export default async function AdminOrdersPage({
                     key={order.id}
                     className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                   >
-                    <td className="p-4 align-middle font-medium">{order.id}</td>
-                    <td className="p-4 align-middle">
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {order.userId}
-                      </span>
+                    <td className="p-4 align-middle font-medium">
+                      <Link href={`/admin/orders/${order.id}`} className="hover:underline cursor-pointer text-blue-600">
+                        #{order.id}
+                      </Link>
                     </td>
                     <td className="p-4 align-middle">
                       {new Date(order.date).toLocaleDateString()}

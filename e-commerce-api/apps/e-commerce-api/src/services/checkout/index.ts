@@ -505,7 +505,7 @@ export class CheckoutService implements ICheckoutService {
     );
 
     const order = await this.orderRepository.createOrder(queryRunner, userId, {
-      status: "paid",
+      status: "processing",
       totalAmount,
       invoiceId: invoice.id,
     });

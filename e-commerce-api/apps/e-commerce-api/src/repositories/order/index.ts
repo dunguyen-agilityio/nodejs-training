@@ -29,7 +29,7 @@ export class OrderRepository extends AbstractOrderRepository {
   async findOrders(params: Params): Promise<[number, Order[]]> {
     const { page, pageSize } = params;
     const [orders, count] = await this.findAndCount({
-      relations: { items: { product: true } },
+      relations: { items: { product: true }, },
       take: pageSize,
       skip: (page - 1) * pageSize,
     });

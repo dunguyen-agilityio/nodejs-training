@@ -89,7 +89,7 @@ export class Container {
   items: Map<string, any> = new Map();
   #dependencies = {} as Record<keyof Dependencies, any>;
 
-  private constructor() {}
+  private constructor() { }
 
   static get instance() {
     if (!this.#instance) {

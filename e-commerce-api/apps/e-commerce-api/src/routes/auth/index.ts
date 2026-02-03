@@ -3,7 +3,7 @@ import { loginBodySchema, registerBodySchema } from "#schemas/auth.schema";
 import { FastifyPluginCallback } from "fastify";
 
 export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const controller = instance.container.getItem("AuthController");
+  const controller = instance.container1.controllers.authController;
   instance.post(
     "/login",
     { schema: { body: loginBodySchema }, attachValidation: true },

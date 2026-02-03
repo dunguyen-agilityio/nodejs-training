@@ -68,7 +68,7 @@ export class SeedData1768297791711 implements MigrationInterface {
 
     const randomCategory = () =>
       categories[
-        faker.number.int({ max: categories.length - 1, min: 0 })
+      faker.number.int({ max: categories.length - 1, min: 0 })
       ] as string;
 
     await Promise.all(

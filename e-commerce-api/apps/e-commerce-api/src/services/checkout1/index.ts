@@ -11,12 +11,12 @@ import { NotFoundError, UnexpectedError } from "#types/error";
 import Stripe from "stripe";
 import { ICheckoutService } from "./type";
 import {
+  CartItemRepository,
   CartRepository,
   OrderRepository,
   UserRepository,
 } from "#repositories/types";
-import { StripePaymentGatewayProvider } from "#providers";
-import { Dependencies } from "#services/base";
+
 import { PaymentDetails, PaymentGateway, Response } from "#types/payment";
 import { IMailProvider } from "#providers/types";
 import {
@@ -47,7 +47,7 @@ export class CheckoutService implements ICheckoutService {
     private orderRepository: OrderRepository,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: IMailProvider,
-  ) {}
+  ) { }
 
   /**
    * @description Prepares the user's cart for checkout by reserving stock for each item.
@@ -72,10 +72,10 @@ export class CheckoutService implements ICheckoutService {
         throw new UnexpectedError("Cart not payable");
       }
 
-      const cartItems = await queryRuner.manager.find(CartItem, {
-        where: { cartId: cart.id },
-        relations: { product: true },
-      });
+      const cartItems = await queryRuner.manager.createQueryBuilder(CartItem, "cartItem")
+        .where("cartItem.cart_id = :cartId", { cartId: cart.id })
+        .leftJoinAndSelect("cartItem.product", "product")
+        .getMany();
 
       await this._reserveStock(queryRuner, cart.id, cartItems);
 
@@ -185,9 +185,8 @@ export class CheckoutService implements ICheckoutService {
       await queryRunner.manager.save(invoice);
 
       await queryRunner.commitTransaction();
-    } catch (error) {
+    } catch {
       await queryRunner.rollbackTransaction();
-      console.log("error: ", error);
       throw new UnexpectedError("Failed to create local invoice");
     } finally {
       await queryRunner.release();
@@ -208,29 +207,34 @@ export class CheckoutService implements ICheckoutService {
     cartItems: CartItem[],
     invoiceLineItems: InvoiceLineItem[],
   ) {
-    const itemMap: Record<string, InvoiceLineItem> = {};
-    for (const line of invoiceLineItems) {
-      const { product } = line.pricing?.price_details || {};
-      if (product) {
-        itemMap[product] = line;
+    try {
+      const itemMap: Record<string, InvoiceLineItem> = {};
+      for (const line of invoiceLineItems) {
+        const { product } = line.pricing?.price_details || {};
+        if (product) {
+          itemMap[product] = line;
+        }
       }
-    }
 
-    for (const item of cartItems) {
-      const line = itemMap[item.product.id];
-      const total = parseFloat((line?.subtotal || 0).toString());
+      for (const item of cartItems) {
+        const line = itemMap[item.product.id];
+        const total = parseFloat((line?.subtotal || 0).toString());
 
-      const invoiceItem = queryRunner.manager.create(InvoiceItem, {
-        invoiceId,
-        name: item.product.name,
-        productId: item.product.id,
-        quantity: item.quantity,
-        total,
-        unitPrice: total / item.quantity,
-        id: line?.id,
-      });
+        const invoiceItem = queryRunner.manager.create(InvoiceItem, {
+          invoiceId,
+          name: item.product.name,
+          productId: item.product.id,
+          quantity: item.quantity,
+          total,
+          unitPrice: total / item.quantity,
+          id: line?.id,
+        });
 
-      await queryRunner.manager.save(invoiceItem);
+        await queryRunner.manager.save(invoiceItem);
+      }
+    } catch (error) {
+      console.log(error);
+      throw new UnexpectedError("Failed to create local invoice items");
     }
   }
 
@@ -497,7 +501,7 @@ export class CheckoutService implements ICheckoutService {
     );
 
     const order = await this.orderRepository.createOrder(queryRunner, userId, {
-      status: "paid",
+      status: "processing",
       totalAmount,
       invoiceId: invoice.id,
     });

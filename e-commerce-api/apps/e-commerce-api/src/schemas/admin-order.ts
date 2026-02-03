@@ -3,7 +3,7 @@ export const updateOrderStatusSchema = {
   properties: {
     status: {
       type: "string",
-      enum: ["pending", "paid", "fulfilled", "completed"],
+      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
     },
   },
   required: ["status"],

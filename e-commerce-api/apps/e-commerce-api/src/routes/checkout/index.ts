@@ -13,7 +13,8 @@ const createPaymentIntentSchema = {
 };
 
 export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
-  const container = instance.container.getItem("CheckoutController");
+  const container = instance.container1.controllers.checkoutController
+  console.log("instance", container, !!instance.stripe);
   instance.post(
     "/payment-intents",
     { schema: createPaymentIntentSchema, preHandler: [authenticate] },

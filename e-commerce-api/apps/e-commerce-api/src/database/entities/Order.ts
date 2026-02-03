@@ -14,7 +14,7 @@ export class Order extends BaseWithCreatedAndUpdated {
   user?: User;
 
   @Column({ type: "varchar" })
-  status: "pending" | "paid" | "fulfilled" | "completed";
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
 
   @Column({ name: "total_amount", type: "decimal" })
   totalAmount: number;

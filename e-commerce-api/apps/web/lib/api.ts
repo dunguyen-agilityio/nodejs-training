@@ -32,6 +32,7 @@ export async function get<T>(
   headers: HeadersInit = {},
 ): Promise<T> {
   const url = buildUrl(path);
+  console.log("url", url);
   const response = await fetch(url, {
     headers: { ...defaultHeaders, ...headers },
   });
