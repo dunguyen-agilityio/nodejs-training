@@ -2,6 +2,7 @@ export type Params = {
   query: string;
   page: number;
   pageSize: number;
+  categories: string[];
 };
 
 export type Pagination = {

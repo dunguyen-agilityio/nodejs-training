@@ -30,10 +30,11 @@ const buildUrl = (url: string): string => {
 export async function get<T>(
   path: string,
   headers: HeadersInit = {},
+  options: Partial<RequestInit> = {},
 ): Promise<T> {
   const url = buildUrl(path);
-  console.log("url", url);
   const response = await fetch(url, {
+    ...options,
     headers: { ...defaultHeaders, ...headers },
   });
 
@@ -84,8 +85,6 @@ export async function patch<T>(
   headers: HeadersInit = {},
 ): Promise<T> {
   const url = buildUrl(path);
-  console.log("url", url);
-
   const response = await fetch(url, {
     method: "PATCH",
     headers: {

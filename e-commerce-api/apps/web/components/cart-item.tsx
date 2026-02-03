@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { CartItem as TCartItem } from "@/lib/types";
 import { useState } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 interface CartItemProps {
   item: TCartItem;
@@ -30,6 +30,8 @@ export function CartItem({
     updateQuantity(item.id, newQuantity);
   };
 
+  const isOutOfStock = item.quantity > item.product.stock;
+
   return (
     <div
       key={item.id}
@@ -43,7 +45,7 @@ export function CartItem({
           className="object-contain p-2"
         />
       </div>
-      <div className="flex-grow">
+      <div className="flex-grow gap-1">
         <h3 className="font-semibold text-foreground">{item.product.name}</h3>
         <p className="text-muted-foreground text-sm">
           {formatCurrency(item.product.price)}
@@ -71,7 +73,13 @@ export function CartItem({
             Remove
           </button>
         </div>
+        {isOutOfStock && (
+          <span className="text-destructive text-sm">
+            {`Out of stock: ${item.product.stock}`}
+          </span>
+        )}
       </div>
+
       <div className="text-right font-semibold text-foreground">
         {formatCurrency(item.product.price * item.quantity)}
       </div>

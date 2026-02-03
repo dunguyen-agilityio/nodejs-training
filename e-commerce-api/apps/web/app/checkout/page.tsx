@@ -10,17 +10,31 @@ import { getCartTotal, formatCurrency } from "@/lib/utils";
 export default async function CheckoutPage() {
   const { getToken } = await auth();
 
-  const getClientSecret = async () => {
-    const token = await getToken({
-      template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE,
-    });
-    return await post<{ clientSecret: string }>(
-      "/checkout/payment-intents",
-      { currency: "usd" },
-      {
-        Authorization: `Bearer ${token}`,
-      },
-    ).then((data) => data.clientSecret);
+  const getClientSecret = async (): Promise<{
+    error?: string;
+    clientSecret: string;
+  }> => {
+    try {
+      const token = await getToken({
+        template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE,
+      });
+      return await post<{ clientSecret: string }>(
+        "/checkout/payment-intents",
+        { currency: "usd" },
+        {
+          Authorization: `Bearer ${token}`,
+        },
+      );
+    } catch (error) {
+      console.error("Error: ", error);
+      let message = "Create Payment Intent failed";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
+
+      return { error: message, clientSecret: "" };
+    }
   };
   const clientSecret = await getClientSecret();
 
@@ -44,12 +58,29 @@ export default async function CheckoutPage() {
     );
   }
 
+  // Handle error from checkout service
+  if (clientSecret.error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16 gap-4 text-center">
+        <h1 className="text-xl font-bold mb-4 text-foreground">
+          {clientSecret.error}
+        </h1>
+        <Link
+          href="/cart"
+          className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90"
+        >
+          Review Cart
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div>
-          <Provider clientSecret={clientSecret}>
+          <Provider clientSecret={clientSecret.clientSecret}>
             <CheckoutForm cartTotal={cartTotal} />
           </Provider>
         </div>

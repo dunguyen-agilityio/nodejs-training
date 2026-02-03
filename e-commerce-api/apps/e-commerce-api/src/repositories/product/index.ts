@@ -2,24 +2,45 @@ import { Product } from "#entities";
 import { QueryRunner } from "typeorm";
 import { AbstractProductRepository } from "./type";
 import { ProductMetric } from "#types/metrics";
+import { Params } from "#types/query";
 
 export class ProductRepository extends AbstractProductRepository {
   async getById(id: string): Promise<Product | null> {
     return await this.findOne({ where: { id }, relations: { category: true } });
   }
 
-  async getProducts(params: {
-    query: string;
-    skip: number;
-    pageSize: number;
-  }): Promise<[Product[], number]> {
-    const { query, skip, pageSize } = params;
+  async getProducts(
+    params: Omit<Params, "page"> & { skip: number },
+  ): Promise<[Product[], number]> {
+    const { query, skip, categories, pageSize } = params;
 
-    return this.createQueryBuilder("product")
-      .where("product.name ILIKE :query OR product.description ILIKE :query", {
-        query: `%${query}%`,
-      })
-      .leftJoinAndSelect('product.category', 'category')
+    const queryBuilder = this.createQueryBuilder("product");
+
+    let where = "";
+
+    const queryParams = {} as Record<string, any>;
+
+    if (query) {
+      where += "product.name ILIKE :query OR product.description ILIKE :query";
+      queryParams.query = `%${query}%`;
+    }
+
+    if (categories.length >= 1) {
+      if (query) {
+        where += " AND ";
+      }
+      where += "LOWER(product.category) IN (:...categories)";
+      queryParams.categories = categories.map((c) => c.toLowerCase());
+    }
+
+    queryBuilder
+      .where(where, queryParams)
+      .andWhere("product.deleted IS NULL OR product.deleted = :deleted", {
+        deleted: false,
+      });
+
+    return queryBuilder
+      .leftJoinAndSelect("product.category", "category")
       .skip(skip)
       .take(pageSize)
       .getManyAndCount();

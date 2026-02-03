@@ -6,8 +6,15 @@ import { HttpStatus } from "#types/http-status";
 import { IProductService } from "#services/types";
 import { productToObject } from "../../dtos/product";
 
+type ProductQuery = {
+  page: string;
+  pageSize: string;
+  query: string;
+  category: string;
+};
+
 export class ProductController implements IProductController {
-  constructor(private service: IProductService) { }
+  constructor(private service: IProductService) {}
 
   updateProduct = async (
     request: FastifyRequest<{
@@ -40,20 +47,21 @@ export class ProductController implements IProductController {
 
   getProducts = async (
     request: FastifyRequest<{
-      Querystring: { page: string; pageSize: string; query: string };
+      Querystring: ProductQuery;
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const { page = "1", pageSize = "10", query = "" } = request.query;
+    const { page = "1", pageSize = "10", query = "", category } = request.query;
     const { data, meta } = await this.service.getProducts({
       page: parseInt(page),
       pageSize: parseInt(pageSize),
       query,
+      categories: category?.split(",") || [],
     });
     reply.send({
       success: true,
       data: data.map(productToObject),
-      meta
+      meta,
     });
   };
 

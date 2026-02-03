@@ -1,14 +1,14 @@
 "use client";
 
-import { post, put } from "@/lib/api";
 import { productSchema, type ProductFormInput } from "@/lib/schema";
 import { Product } from "@/lib/types";
-import { useAuth } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { faker } from "@faker-js/faker";
+import { post, put } from "@/lib/api";
+import Image from "next/image";
 
 type Category = { id: number; name: string };
 
@@ -20,7 +20,6 @@ interface ProductFormProps {
 export function ProductForm({ initialData, categories }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!initialData;
-  const { getToken } = useAuth();
 
   const { id } = initialData || {};
 
@@ -28,28 +27,29 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProductFormInput>({
     resolver: zodResolver(productSchema),
     defaultValues: initialData
       ? {
-        name: initialData.name,
-        description: initialData.description,
-        price: initialData.price,
-        stock: initialData.stock,
-        category: initialData.category,
-        image: initialData.images?.[0] || "/file-text.svg",
-      }
+          name: initialData.name,
+          description: initialData.description,
+          price: initialData.price,
+          stock: initialData.stock,
+          category: initialData.category,
+          image: initialData.images?.[0] || "/file-text.svg",
+        }
       : {
-        image: "/file-text.svg",
-      },
+          image: "/file-text.svg",
+        },
   });
 
   const generateMockData = () => {
     const randomCategory =
       categories.length > 0
         ? categories[Math.floor(Math.random() * categories.length)]?.name ||
-        "Electronics"
+          "Electronics"
         : "Electronics";
 
     setValue("name", faker.commerce.productName());
@@ -58,27 +58,20 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
     setValue("stock", faker.number.int({ min: 20, max: 200 }).toString());
     setValue("category", randomCategory);
     setValue("image", faker.image.url({ width: 800, height: 600 }));
-
-    toast.success("Mock data generated!");
   };
 
   const onSubmit = async ({ image, ...data }: ProductFormInput) => {
     try {
-      const token = await getToken({ leewayInSeconds: 3 });
-
       if (!id) {
-        await post(
-          "/products",
-          {
-            ...data,
-            images: image ? [image] : [],
-          },
-          { Authorization: `Bearer ${token}` },
-        );
-      } else {
-        await put(`/products/${id}`, data, {
-          Authorization: `Bearer ${token}`,
+        await post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+          ...data,
+          images: image ? [image] : [],
         });
+      } else {
+        await put(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
+          data,
+        );
       }
 
       toast.success(
@@ -90,115 +83,136 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
       router.refresh();
     } catch (error: any) {
       console.error("Product save error:", error);
-      toast.error(error?.message || "Failed to save product.");
+      toast.error(
+        error?.message || isEditing
+          ? "Failed to update product"
+          : "Failed to create product",
+      );
     }
   };
 
+  const previewImage = watch("image");
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-2xl">
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <label htmlFor="name" className="text-sm font-medium">
-            Name
-          </label>
-          <input
-            id="name"
-            {...register("name")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          {errors.name && (
-            <p className="text-sm text-destructive">{errors.name.message}</p>
-          )}
-        </div>
-
-        <div className="grid gap-2">
-          <label htmlFor="description" className="text-sm font-medium">
-            Description
-          </label>
-          <textarea
-            id="description"
-            {...register("description")}
-            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          {errors.description && (
-            <p className="text-sm text-destructive">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
-
-        <div className="grid gap-2">
-          <label htmlFor="image" className="text-sm font-medium">
-            Image URL
-          </label>
-          <input
-            id="image"
-            type="url"
-            placeholder="https://example.com/image.jpg"
-            {...register("image")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          {errors.image && (
-            <p className="text-sm text-destructive">{errors.image.message}</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div className="flex-1 gap-20 flex justify-between">
+        <div className="w-1/2 max-w-2xl grid gap-4">
           <div className="grid gap-2">
-            <label htmlFor="price" className="text-sm font-medium">
-              Price
+            <label htmlFor="name" className="text-sm font-medium">
+              Name
             </label>
             <input
-              id="price"
-              type="number"
-              step="0.01"
-              {...register("price")}
+              id="name"
+              {...register("name")}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
-            {errors.price && (
-              <p className="text-sm text-destructive">{errors.price.message}</p>
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
             )}
           </div>
+
           <div className="grid gap-2">
-            <label htmlFor="stock" className="text-sm font-medium">
-              Stock
+            <label htmlFor="description" className="text-sm font-medium">
+              Description
+            </label>
+            <textarea
+              id="description"
+              {...register("description")}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            {errors.description && (
+              <p className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="image" className="text-sm font-medium">
+              Image URL
             </label>
             <input
-              id="stock"
-              type="number"
-              {...register("stock")}
+              id="image"
+              type="url"
+              placeholder="https://example.com/image.jpg"
+              {...register("image")}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
-            {errors.stock && (
-              <p className="text-sm text-destructive">{errors.stock.message}</p>
+            {errors.image && (
+              <p className="text-sm text-destructive">{errors.image.message}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="price" className="text-sm font-medium">
+                Price
+              </label>
+              <input
+                id="price"
+                type="number"
+                step="0.01"
+                {...register("price")}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              {errors.price && (
+                <p className="text-sm text-destructive">
+                  {errors.price.message}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="stock" className="text-sm font-medium">
+                Stock
+              </label>
+              <input
+                id="stock"
+                type="number"
+                {...register("stock")}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              {errors.stock && (
+                <p className="text-sm text-destructive">
+                  {errors.stock.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="category" className="text-sm font-medium">
+              Category
+            </label>
+            <select
+              id="category"
+              {...register("category")}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Select a category</option>
+
+              {categories.map((category) => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+
+            {errors.category && (
+              <p className="text-sm text-destructive">
+                {errors.category.message}
+              </p>
             )}
           </div>
         </div>
-
-        <div className="grid gap-2">
-          <label htmlFor="category" className="text-sm font-medium">
-            Category
-          </label>
-          <select
-            id="category"
-            {...register("category")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">
-              Select a category
-            </option>
-
-            {categories.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-
-          {errors.category && (
-            <p className="text-sm text-destructive">
-              {errors.category.message}
-            </p>
+        <div className="relative h-96 flex-1">
+          {previewImage && (
+            <Image
+              src={previewImage}
+              alt="Preview"
+              fill
+              sizes="100%"
+              objectFit="contain"
+            />
           )}
         </div>
       </div>

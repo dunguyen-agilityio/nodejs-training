@@ -8,9 +8,11 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)", // Clerk auth pages
   "/sign-up(.*)",
   "/sign-out(.*)",
+  "/api/cart(.*)",
+  "/api/checkout(.*)",
 ]);
 
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/products(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
@@ -19,14 +21,13 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { sessionClaims } = await auth();
 
-  const isAdmin = sessionClaims?.org_role === "org:admin"
+  const isAdmin = sessionClaims?.org_role === "org:admin";
 
   if (isAdmin && !isAdminRoute(req)) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
   if (isAdminRoute(req) && !isAdmin) {
-
     return NextResponse.redirect(new URL("/", req.url));
   }
 });

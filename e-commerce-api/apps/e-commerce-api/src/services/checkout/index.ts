@@ -193,9 +193,8 @@ export class CheckoutService implements ICheckoutService {
       await queryRunner.manager.save(invoice);
 
       await queryRunner.commitTransaction();
-    } catch (error) {
+    } catch {
       await queryRunner.rollbackTransaction();
-      console.log("error: ", error);
       throw new UnexpectedError("Failed to create local invoice");
     } finally {
       await queryRunner.release();

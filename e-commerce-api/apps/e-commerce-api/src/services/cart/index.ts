@@ -1,6 +1,5 @@
 import { Cart, CartItem } from "#entities";
 import { CartPayLoad } from "#types/cart";
-import { QueryRunner } from "typeorm";
 import { ICartService } from "./type";
 import { BadRequestError, NotFoundError, UnexpectedError } from "#types/error";
 import {

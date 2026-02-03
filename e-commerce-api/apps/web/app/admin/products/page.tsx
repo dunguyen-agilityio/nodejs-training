@@ -6,6 +6,7 @@ import { CategoryFilter } from "@/components/category-filter";
 import { SortSelect } from "@/components/sort-select";
 import { PaginationControls } from "@/components/pagination-controls";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
+import Image from "next/image";
 
 interface AdminProductsPageProps {
   searchParams: Promise<{
@@ -93,8 +94,19 @@ export default async function AdminProductsPage({
                     key={product.id}
                     className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                   >
-                    <td className="p-4 align-middle font-medium">
-                      {product.name}
+                    <td className="p-4 align-middle">
+                      <div className="flex gap-4 items-center">
+                        <figure className="w-20 h-14 relative">
+                          <Image
+                            src={product.images[0] || "/file-text.svg"}
+                            alt={product.name}
+                            fill
+                            sizes="100%"
+                            objectFit="contain"
+                          />
+                        </figure>
+                        <span className="font-medium">{product.name}</span>
+                      </div>
                     </td>
                     <td className="p-4 align-middle">{product.category}</td>
                     <td className="p-4 align-middle">${product.price}</td>

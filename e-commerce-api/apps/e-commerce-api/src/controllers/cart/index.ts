@@ -16,7 +16,7 @@ export class CartController implements ICartController {
   };
 
   addProductToCart = async (
-    request: FastifyRequest<{ Body: { productId: number; quantity: number } }>,
+    request: FastifyRequest<{ Body: { productId: string; quantity: number } }>,
     reply: FastifyReply,
   ): Promise<void> => {
     const { productId, quantity } = request.body;

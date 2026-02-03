@@ -44,7 +44,8 @@ export class CartService implements ICartService {
 
     const product = await this.productRepository.getById(productId);
 
-    if (!product) throw new NotFoundError(`Product ${productId} not found`);
+    if (!product || product.deleted)
+      throw new NotFoundError(`Product ${productId} not found`);
     if (product.stock < quantity)
       throw new BadRequestError(`Insufficient stock for Product ${productId}`);
 

@@ -72,10 +72,27 @@ export class CheckoutService implements ICheckoutService {
         throw new UnexpectedError("Cart not payable");
       }
 
-      const cartItems = await queryRuner.manager.createQueryBuilder(CartItem, "cartItem")
+      const cartItems = await queryRuner.manager
+        .createQueryBuilder(CartItem, "cartItem")
         .where("cartItem.cart_id = :cartId", { cartId: cart.id })
         .leftJoinAndSelect("cartItem.product", "product")
         .getMany();
+
+      const deletedProduct = cartItems.find(
+        (item) => item.product.deleted,
+      );
+
+      if (deletedProduct) {
+        throw new UnexpectedError(`Product ${deletedProduct.product.name} is deleted`);
+      }
+
+      const outOfStockProduct = cartItems.find(
+        (item) => item.quantity > item.product.stock,
+      );
+
+      if (outOfStockProduct) {
+        throw new UnexpectedError(`Product ${outOfStockProduct.product.name} is out of stock`);
+      }
 
       await this._reserveStock(queryRuner, cart.id, cartItems);
 
@@ -232,21 +249,17 @@ export class CheckoutService implements ICheckoutService {
 
         await queryRunner.manager.save(invoiceItem);
       }
-    } catch (error) {
-      console.log(error);
+    } catch {
       throw new UnexpectedError("Failed to create local invoice items");
     }
   }
 
   /**
-   * @method generatePaymentIntent
    * @description Generates a Stripe Payment Intent for preview purposes.
    * This involves preparing the checkout (reserving stock) and creating a Stripe invoice.
    * @param payload Stripe PaymentIntent creation parameters (e.g., currency).
    * @param userId The ID of the user.
    * @param userStripeId The Stripe customer ID of the user.
-   * @returns A Promise that resolves to the Stripe Invoice object containing the client secret.
-   * @throws {NotFoundError} If the cart is not found.
    */
   async generatePaymentIntent(
     payload: Stripe.PaymentIntentCreateParams,
@@ -257,6 +270,22 @@ export class CheckoutService implements ICheckoutService {
 
     if (!cart) {
       throw new NotFoundError("Cart not found");
+    }
+
+    const deletedProduct = cart.items.find(
+      (item) => item.product.deleted,
+    );
+
+    if (deletedProduct) {
+      throw new UnexpectedError(`Product ${deletedProduct.product.name} is deleted`);
+    }
+
+    const outOfStockProduct = cart.items.find(
+      (item) => item.quantity > item.product.stock,
+    );
+
+    if (outOfStockProduct) {
+      throw new UnexpectedError(`Product ${outOfStockProduct.product.name} is out of stock`);
     }
 
     const { currency } = payload;
@@ -290,12 +319,10 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @method prepareOrderForPayment
    * @description Prepares the order for payment by preparing the checkout (reserving stock)
    * and creating a local invoice based on an existing opened Stripe invoice.
    * @param userId The ID of the user.
    * @param stripeId The Stripe customer ID of the user.
-   * @returns A Promise that resolves to the Stripe Invoice object.
    */
   async prepareOrderForPayment(
     userId: string,

@@ -19,10 +19,19 @@ export default async function EditProductPage({
     notFound();
   }
 
+  const { data: product } = response;
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Edit Product</h1>
-      <ProductForm initialData={response.data} categories={categories} />
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Edit Product</h1>
+        {product.deleted && (
+          <span className="text-red-600/50 leading-5 text-sm font-bold uppercase">
+            Deleted
+          </span>
+        )}
+      </div>
+      <ProductForm initialData={product} categories={categories} />
     </div>
   );
 }

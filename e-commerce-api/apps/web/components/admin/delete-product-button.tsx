@@ -14,19 +14,26 @@ import {
 import { Trash2 } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { deleteProductAction } from "@/app/actions";
+import { del } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface DeleteProductButtonProps {
   productId: string;
 }
 
+export const deleteProduct = async (productId: string) => {
+  await del(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${productId}`);
+};
+
 export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleDelete = () => {
     startTransition(async () => {
       try {
-        await deleteProductAction(productId);
+        await deleteProduct(productId);
+        router.refresh();
         toast.success("Product deleted successfully");
       } catch {
         toast.error("Failed to delete product");
@@ -48,8 +55,8 @@ export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the product
-            from your inventory.
+            This action cannot be undone. This will permanently delete the
+            product from your inventory.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

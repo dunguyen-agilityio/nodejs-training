@@ -11,12 +11,29 @@ export function CategoryFilter({ categories }: CategoryFilterProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const currentCategory = searchParams.get("category") || "All";
+  const currentCategory = searchParams.getAll("category") || ["All"];
 
   const handleCategoryChange = (category: string) => {
     const params = new URLSearchParams(searchParams);
+
     if (category && category !== "All") {
-      params.set("category", category);
+      if (!params.has("category")) {
+        params.set("category", category);
+      } else {
+        const categories = params.getAll("category");
+
+        params.delete("category");
+
+        categories.forEach((c) => {
+          if (c !== category) {
+            params.append("category", c);
+          }
+        });
+
+        if (!categories.includes(category)) {
+          params.append("category", category);
+        }
+      }
     } else {
       params.delete("category");
     }
@@ -26,13 +43,14 @@ export function CategoryFilter({ categories }: CategoryFilterProps) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex-1 flex flex-wrap gap-1">
       {categories.map((category) => (
         <button
           key={category}
           onClick={() => handleCategoryChange(category)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            currentCategory === category
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            currentCategory.includes(category) ||
+            (category === "All" && currentCategory.length < 1)
               ? "bg-primary text-primary-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           }`}

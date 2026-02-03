@@ -3,7 +3,7 @@ import { IPaymentGatewayProvider } from "#providers/types";
 import { ProductRepository } from "#repositories/types";
 import { NotFoundError } from "#types/error";
 import { PartialProduct } from "#types/product";
-import { Pagination } from "#types/query";
+import { Pagination, Params } from "#types/query";
 import { IProductService } from "./type";
 
 export class ProductService implements IProductService {
@@ -12,18 +12,17 @@ export class ProductService implements IProductService {
     private paymentGatewayProvider: IPaymentGatewayProvider,
   ) {}
 
-  async getProducts(params: {
-    query: string;
-    page: number;
-    pageSize: number;
-  }): Promise<{ data: Product[]; meta: { pagination: Pagination } }> {
-    const { query, page, pageSize } = params;
+  async getProducts(
+    params: Params,
+  ): Promise<{ data: Product[]; meta: { pagination: Pagination } }> {
+    const { query, page, pageSize, categories } = params;
     const skip = (page - 1) * pageSize;
 
     const [products, totalCount] = await this.productRepository.getProducts({
       pageSize,
       query,
       skip,
+      categories,
     });
 
     return {
@@ -79,6 +78,6 @@ export class ProductService implements IProductService {
   }
 
   async deleteProduct(id: string): Promise<void> {
-    await this.productRepository.delete(id);
+    await this.productRepository.update(id, { deleted: true });
   }
 }

@@ -45,6 +45,9 @@ export class Product extends CreatedAndUpdated {
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
 
+  @Column({ type: "boolean", nullable: true })
+  deleted?: boolean;
+
   constructor(product: Product) {
     super();
     if (product) {
