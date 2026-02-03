@@ -22,3 +22,7 @@ export class ResponseError extends Error {
     body: string;
   };
 }
+
+export interface EmailProvider {
+  sendWithTemplate(data: MailData): Promise<void>;
+}

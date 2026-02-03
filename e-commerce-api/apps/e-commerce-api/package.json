@@ -61,6 +61,7 @@
     "#controllers/*": "./src/controllers/*.ts",
     "#controllers": "./src/controllers/index.ts",
     "#repositories": "./src/repositories/index.ts",
+    "#adapters": "./src/adapters/index.ts",
     "#middlewares": "./src/middlewares/index.ts",
     "#repositories/*": "./src/repositories/*.ts",
     "#schemas/*": "./src/schemas/*.ts",

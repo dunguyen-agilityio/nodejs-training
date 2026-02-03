@@ -1,5 +1,5 @@
 export type CartPayLoad = {
-  productId: number;
+  productId: string;
   userId: string;
   quantity: number;
 };

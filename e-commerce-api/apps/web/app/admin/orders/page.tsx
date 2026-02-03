@@ -1,8 +1,19 @@
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
+import { PaginationControls } from "@/components/pagination-controls";
 import { getAllOrders } from "@/lib/orders";
 
-export default async function AdminOrdersPage() {
-  const orders = await getAllOrders();
+interface AdminOrdersPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: AdminOrdersPageProps) {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const response = await getAllOrders(page, 20);
+  const orders = response.data;
+  const pagination = response.meta.pagination;
 
   return (
     <div className="space-y-6">
@@ -36,7 +47,10 @@ export default async function AdminOrdersPage() {
             <tbody className="[&_tr:last-child]:border-0">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="p-4 text-center text-muted-foreground"
+                  >
                     No orders found.
                   </td>
                 </tr>
@@ -77,6 +91,13 @@ export default async function AdminOrdersPage() {
           </table>
         </div>
       </div>
+
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          totalPages={pagination.totalPages}
+          currentPage={pagination.currentPage}
+        />
+      )}
     </div>
   );
 }

@@ -1,16 +1,4 @@
-import Stripe from "stripe";
-import { IPaymentGatewayProvider } from "./type";
-import { convertToSubcurrency } from "#utils/convertToSubcurrency";
-import {
-  Charge,
-  Customer,
-  CustomerCreateParams,
-  InvoicePaymentExpand,
-  PaymentIntent,
-  PaymentIntentCreateParams,
-  Response,
-  TResponse,
-} from "#types/payment";
+import { NotFoundError } from "#types/error";
 import {
   ApiList,
   Invoice,
@@ -18,11 +6,22 @@ import {
   InvoiceItem,
   InvoiceItemCreateParams,
 } from "#types/invoice";
+import {
+  Charge,
+  Customer,
+  CustomerCreateParams,
+  InvoicePaymentExpand,
+  PaymentGateway,
+  PaymentIntent,
+  PaymentIntentCreateParams,
+  TResponse,
+} from "#types/payment";
 import { IProduct, ProductCreateParams } from "#types/product";
-import { NotFoundError } from "#types/error";
+import { convertToSubcurrency } from "#utils/convertToSubcurrency";
+import Stripe from "stripe";
 
-export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
-  constructor(private stripe = new Stripe(process.env.STRIPE_API_KEY!)) {}
+export class StripePaymentAdapter implements PaymentGateway {
+  constructor(private stripe: Stripe) {}
 
   async findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer> {
     const response = await this.stripe.customers.list({
@@ -44,14 +43,14 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
 
   async createProduct(
     params: ProductCreateParams,
-  ): Promise<Response<IProduct>> {
+  ): Promise<TResponse<IProduct>> {
     return await this.stripe.products.create(params);
   }
 
   async createPaymentIntents({
     amount,
     ...payload
-  }: PaymentIntentCreateParams): Promise<Response<PaymentIntent>> {
+  }: PaymentIntentCreateParams): Promise<TResponse<PaymentIntent>> {
     const paymentIntent = await this.stripe.paymentIntents.create({
       ...payload,
       amount: convertToSubcurrency(amount),
@@ -62,14 +61,14 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
 
   async getPaymentIntents(
     paymentIntentId: string,
-  ): Promise<Response<PaymentIntent>> {
+  ): Promise<TResponse<PaymentIntent>> {
     return await this.stripe.paymentIntents.retrieve(paymentIntentId);
   }
 
   async createInvoice({
     customer: customerId,
     ...params
-  }: InvoiceCreateParams): Promise<Response<Invoice>> {
+  }: InvoiceCreateParams): Promise<TResponse<Invoice>> {
     const drafts = await this.stripe.invoices.list({
       customer: customerId,
       status: "open",
@@ -88,35 +87,35 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
       ...params,
     });
 
-    return invoice as Response<Invoice>;
+    return invoice as TResponse<Invoice>;
   }
 
   async createInvoiceItem(
     params: InvoiceItemCreateParams,
-  ): Promise<Response<InvoiceItem>> {
+  ): Promise<TResponse<InvoiceItem>> {
     return (await this.stripe.invoiceItems.create(
       params,
-    )) as Response<InvoiceItem>;
+    )) as TResponse<InvoiceItem>;
   }
 
-  async finalizeInvoice(id: string): Promise<Response<Invoice>> {
+  async finalizeInvoice(id: string): Promise<TResponse<Invoice>> {
     return (await this.stripe.invoices.finalizeInvoice(id, {
       expand: ["confirmation_secret"],
-    })) as Response<Invoice>;
+    })) as TResponse<Invoice>;
   }
 
-  async getPaymentIntent(id: string): Promise<Response<PaymentIntent>> {
+  async getPaymentIntent(id: string): Promise<TResponse<PaymentIntent>> {
     return await this.stripe.paymentIntents.retrieve(id, {
       expand: ["payment_method.card"],
     });
   }
 
-  async getInvoice(id: string): Promise<Response<Invoice>> {
+  async getInvoice(id: string): Promise<TResponse<Invoice>> {
     try {
       const invoice = await this.stripe.invoices.retrieve(id, {
         expand: ["payments", "payment_intent.latest_charge"],
       });
-      return invoice as Response<Invoice>;
+      return invoice as TResponse<Invoice>;
     } catch (error) {
       console.error("Error - getInvoice: ", error);
       throw error;
@@ -127,13 +126,15 @@ export class StripePaymentGatewayProvider implements IPaymentGatewayProvider {
     return await this.stripe.charges.retrieve(id);
   }
 
-  async getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>> {
+  async getInvoicePayment(
+    id: string,
+  ): Promise<TResponse<InvoicePaymentExpand>> {
     return (await this.stripe.invoicePayments.retrieve(id, {
       expand: [
         "payment.payment_intent.payment_method",
         "payment.payment_intent.latest_charge",
       ],
-    })) as Response<InvoicePaymentExpand>;
+    })) as TResponse<InvoicePaymentExpand>;
   }
 
   async getProducts(): Promise<TResponse<ApiList<IProduct>>> {

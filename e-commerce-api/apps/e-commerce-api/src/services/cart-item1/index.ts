@@ -1,15 +1,10 @@
 import { CartItem } from "#entities";
 import { CartItemRepository } from "#repositories/types";
-import { Dependencies } from "#services/base";
 import { NotFoundError } from "#types/error";
 import { ICartItemService } from "./type";
 
 export class CartItemService implements ICartItemService {
-  private cartItemRepository: CartItemRepository;
-
-  constructor(dependencies: Dependencies) {
-    Object.assign(this, dependencies);
-  }
+  constructor(private cartItemRepository: CartItemRepository) {}
 
   async getCartItemByProduct(
     productId: string,

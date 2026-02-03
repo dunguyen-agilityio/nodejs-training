@@ -3,7 +3,7 @@ import { authenticate, authorizeAdmin, requiredId } from "#middlewares";
 import { PaginationSchema } from "#schemas/pagination";
 
 export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const controller = instance.container.getItem("ProductController");
+  const { productController } = instance.container1.controllers;
   instance.get(
     "/",
     {
@@ -17,11 +17,16 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    controller.getProducts,
+    productController.getProducts,
   );
-  instance.get("/:id", { preHandler: [requiredId] }, controller.getProduct);
+  instance.get(
+    "/:id",
+    { preHandler: [requiredId] },
+    productController.getProduct,
+  );
 
   instance.register(productAdminRoutes);
+  instance.register(productAdminRoutes, { prefix: "/admin" });
 
   done();
 };
@@ -30,7 +35,8 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.addHook("preHandler", authenticate);
   instance.addHook("preHandler", authorizeAdmin);
 
-  const controller = instance.container.getItem("ProductController");
+  const { productController } = instance.container1.controllers;
+
   instance.post(
     "/",
     {
@@ -45,7 +51,7 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    controller.addNewProduct,
+    productController.addNewProduct,
   );
 
   instance.put(
@@ -62,13 +68,13 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    controller.updateProduct,
+    productController.updateProduct,
   );
 
   instance.delete(
     "/:id",
     { preHandler: [requiredId] },
-    controller.deleteProduct,
+    productController.deleteProduct,
   );
 
   done();

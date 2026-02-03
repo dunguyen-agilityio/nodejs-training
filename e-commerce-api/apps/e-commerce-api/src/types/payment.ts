@@ -1,5 +1,13 @@
 import { MetadataParam } from "./common";
-import { InvoicePayment, PaymentMethod } from "./invoice";
+import {
+  Invoice,
+  InvoiceCreateParams,
+  InvoiceItem,
+  InvoiceItemCreateParams,
+  InvoicePayment,
+  PaymentMethod,
+} from "./invoice";
+import { IProduct, ProductCreateParams } from "./product";
 
 export interface CustomerCreateParams {
   description?: string;
@@ -10,6 +18,17 @@ export interface CustomerCreateParams {
 }
 
 export type Response<T> = T & {
+  lastResponse: {
+    headers: { [key: string]: string };
+    requestId: string;
+    statusCode: number;
+    apiVersion?: string;
+    idempotencyKey?: string;
+    stripeAccount?: string;
+  };
+};
+
+export type TResponse<T> = T & {
   lastResponse: {
     headers: { [key: string]: string };
     requestId: string;
@@ -124,3 +143,23 @@ export type PaymentDetails = {
   paymentIntentId: string;
   paid_at: number;
 };
+
+export interface PaymentGateway {
+  getPaymentIntents(id: string): Promise<Response<PaymentIntent>>;
+  createPaymentIntents(
+    payload: PaymentIntentCreateParams,
+  ): Promise<Response<PaymentIntent>>;
+  findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>;
+  createCustomer(params: CustomerCreateParams): Promise<Customer>;
+  createInvoice(params: InvoiceCreateParams): Promise<Response<Invoice>>;
+  createProduct(params: ProductCreateParams): Promise<Response<IProduct>>;
+  createInvoiceItem(
+    params: InvoiceItemCreateParams,
+  ): Promise<Response<InvoiceItem>>;
+  finalizeInvoice(id: string): Promise<Response<Invoice>>;
+  getInvoice(id: string): Promise<Response<Invoice>>;
+  getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>>;
+  getPaymentIntent(id: string): Promise<Response<PaymentIntent>>;
+  getCharge(id: string): Promise<Charge>;
+  getOpenedInvoiceByUser(id: string): Promise<Invoice>;
+}

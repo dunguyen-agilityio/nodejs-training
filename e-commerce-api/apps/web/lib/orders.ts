@@ -84,7 +84,7 @@ let orders: Order[] = [
   },
 ];
 
-export async function getUserOrders() {
+export async function getUserOrders(page: number = 1, pageSize: number = 10) {
   const { getToken } = await auth();
 
   const token = await getToken({
@@ -93,16 +93,16 @@ export async function getUserOrders() {
   });
 
   const response = await get<ApiResponse<Order[], { meta: { pagination: ApiPagination } }>>(
-    "/orders?page=1&pageSize=10",
+    `/orders?page=${page}&pageSize=${pageSize}`,
     {
       Authorization: `Bearer ${token}`,
     },
   );
 
-  return response.data;
+  return response;
 }
 
-export async function getAllOrders() {
+export async function getAllOrders(page: number = 1, pageSize: number = 20) {
   const { getToken } = await auth();
 
   const token = await getToken({
@@ -111,13 +111,13 @@ export async function getAllOrders() {
   });
 
   const response = await get<ApiResponse<Order[], { meta: { pagination: ApiPagination } }>>(
-    "/admin/orders?page=1&pageSize=100",
+    `/admin/orders?page=${page}&pageSize=${pageSize}`,
     {
       Authorization: `Bearer ${token}`,
     },
   );
 
-  return response.data;
+  return response;
 }
 
 export async function createOrder(order: Order) {

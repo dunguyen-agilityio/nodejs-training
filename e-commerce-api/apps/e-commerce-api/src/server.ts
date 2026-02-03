@@ -7,9 +7,9 @@ import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts
 import fastifyPlugin from "fastify-plugin";
 import cors from "@fastify/cors";
 
-import { authRoutes, cartRoutes, categoryRoutes, userRoutes } from "./routes";
+import { authRoutes, cartRoutes, categoryRoutes } from "./routes";
 
-import { Container } from "./utils/container";
+import { buildContainer, Container } from "./utils/container";
 import { productRoutes } from "./routes/product";
 import { ApiError } from "#types/error";
 import { HttpStatus } from "#types/http-status";
@@ -17,8 +17,10 @@ import { checkoutRoutes } from "./routes/checkout";
 import { AppDataSource } from "#data-source";
 
 import { orderRoutes } from "./routes/order";
-import { adminOrderRoutes } from "./routes/admin-order";
 import { metricRoutes } from "./routes/metric";
+import stripePlugin from "./plugins/stripe.plugin";
+import sendgridPlugin from "./plugins/sendgrid.plugin";
+import { adminOrderRoutes } from "./routes/admin-order";
 
 const fastify = Fastify({
   logger: true,
@@ -31,9 +33,13 @@ fastify.register(cors, {
 });
 
 fastify.register(clerkPlugin);
+fastify.register(stripePlugin);
+fastify.register(sendgridPlugin);
 
 AppDataSource.initialize()
   .then(async (dataSource) => {
+    const contai = buildContainer(fastify, dataSource);
+    console.log("contai", contai);
     const container = Container.instance
       .setDataSource(dataSource)
       .register("SendGridMailProvider")
@@ -57,6 +63,7 @@ AppDataSource.initialize()
       fastify.decorate("container", {
         getter: () => container,
       });
+
       fastify.decorateRequest("container", {
         getter: () => container,
       });
@@ -67,12 +74,11 @@ AppDataSource.initialize()
     fastify.register(
       (instance, opts, done) => {
         instance.register(authRoutes, { prefix: "/auth" });
-        instance.register(userRoutes, { prefix: "/users" });
         instance.register(productRoutes, { prefix: "/products" });
         instance.register(categoryRoutes, { prefix: "/categories" });
         instance.register(cartRoutes, { prefix: "/cart" });
         instance.register(orderRoutes, { prefix: "/orders" });
-        // instance.register(adminOrderRoutes, { prefix: "/admin/orders" });
+        instance.register(adminOrderRoutes, { prefix: "/admin/orders" });
         instance.register(checkoutRoutes, { prefix: "/checkout" });
         instance.register(metricRoutes, { prefix: "/metrics" });
 

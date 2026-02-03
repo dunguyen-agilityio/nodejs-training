@@ -83,6 +83,7 @@ export async function patch<T>(
   headers: HeadersInit = {},
 ): Promise<T> {
   const url = buildUrl(path);
+  console.log("url", url);
 
   const response = await fetch(url, {
     method: "PATCH",

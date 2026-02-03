@@ -11,21 +11,20 @@ export type TRepository = {
 };
 
 export type TService = {
-  authService: Services.AuthService;
-  cartItemService: Services.CartItemService;
-  cartService: Services.CartService;
-  categoryService: Services.CategoryService;
-  productService: Services.ProductService;
-  userService: Services.UserService;
-  checkoutService: Services.CheckoutService;
+  authService: Services.IAuthService;
+  cartItemService: Services.ICartItemService;
+  cartService: Services.ICartService;
+  categoryService: Services.ICategoryService;
+  productService: Services.IProductService;
+  userService: Services.IUserService;
+  checkoutService: Services.ICheckoutService;
 };
 
 export type TController = {
-  cartController: Controllers.CartController;
-  cartItemController: Controllers.CartItemController;
-  categoryController: Controllers.CategoryController;
-  productController: Controllers.ProductController;
-  userController: Controllers.UserController;
-  authController: Controllers.AuthController;
-  checkoutController: Controllers.CheckoutController;
+  cartController: Controllers.ICartController;
+  cartItemController: Controllers.ICartItemController;
+  categoryController: Controllers.ICategoryController;
+  productController: Controllers.IProductController;
+  authController: Controllers.IAuthController;
+  checkoutController: Controllers.ICheckoutController;
 };

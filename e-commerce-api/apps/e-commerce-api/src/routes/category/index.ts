@@ -1,7 +1,7 @@
 import { FastifyPluginCallback } from "fastify";
 
 export const categoryRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const controller = instance.container.getItem("CategoryController");
-  instance.get("/", controller.getAll);
+  const { categoryController } = instance.container1.controllers;
+  instance.get("/", categoryController.getAll);
   done();
 };

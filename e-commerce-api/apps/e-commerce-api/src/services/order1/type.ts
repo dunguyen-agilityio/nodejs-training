@@ -11,4 +11,6 @@ export interface IOrderService {
     userId: string,
     params: Omit<Params, "query">,
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>;
+
+  updateOrderStatus(orderId: number, status: Order["status"]): Promise<Order | null>;
 }

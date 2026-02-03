@@ -30,6 +30,7 @@ export type OrderStatus =
 export interface OrderItem {
   productId: string;
   name: string;
+  description?: string;
   price: number;
   quantity: number;
   image: string;

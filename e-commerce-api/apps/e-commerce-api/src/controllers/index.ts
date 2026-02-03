@@ -8,12 +8,10 @@ import {
   IMetricController,
   IOrderController,
   IProductController,
-  IUserController,
 } from "./types";
 
 export * from "./auth";
 export * from "./product";
-export * from "./user";
 export * from "./cart";
 export * from "./category";
 export * from "./cart-item";
@@ -26,11 +24,22 @@ export type Controllers = {
   AdminOrderController: IAdminOrderController;
   AuthController: IAuthController;
   ProductController: IProductController;
-  UserController: IUserController;
   CartController: ICartController;
   CategoryController: ICategoryController;
   CartItemController: ICartItemController;
   CheckoutController: ICheckoutController;
   OrderController: IOrderController;
   MetricController: IMetricController;
+};
+
+export type TControllers = {
+  adminOrderController: IAdminOrderController;
+  authController: IAuthController;
+  productController: IProductController;
+  cartController: ICartController;
+  categoryController: ICategoryController;
+  cartItemController: ICartItemController;
+  checkoutController: ICheckoutController;
+  orderController: IOrderController;
+  metricController: IMetricController;
 };

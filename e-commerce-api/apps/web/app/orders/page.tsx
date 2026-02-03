@@ -1,12 +1,21 @@
 import { getUserOrders } from "@/lib/orders";
+import { PaginationControls } from "@/components/pagination-controls";
 
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function OrdersPage() {
-  const orders = await getUserOrders();
+interface OrdersPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
 
-  if (orders.length === 0) {
+export default async function OrdersPage({ searchParams }: OrdersPageProps) {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const response = await getUserOrders(page, 10);
+  const orders = response.data;
+  const pagination = response.meta.pagination;
+
+  if (orders.length === 0 && page === 1) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -60,13 +69,12 @@ export default async function OrdersPage() {
                   Order # {order.id}
                 </p>
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    order.status === "Delivered"
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${order.status === "Delivered"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                       : order.status === "Cancelled"
                         ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                         : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                  }`}
+                    }`}
                 >
                   {order.status}
                 </span>
@@ -100,6 +108,13 @@ export default async function OrdersPage() {
           </div>
         ))}
       </div>
+
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          totalPages={pagination.totalPages}
+          currentPage={pagination.currentPage}
+        />
+      )}
     </main>
   );
 }
