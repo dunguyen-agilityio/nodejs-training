@@ -129,7 +129,7 @@ export class ProductService implements IProductService {
 
   async deleteProduct(id: string): Promise<void> {
     this.logger.info({ productId: id }, 'Deleting product (soft delete)')
-    await this.productRepository.update(id, { deleted: true })
+    await this.productRepository.softDeleteById(id)
     this.logger.info({ productId: id }, 'Product deleted successfully')
   }
 }

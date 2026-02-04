@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ICartService } from '#services/types'
 
-import { HttpStatus } from '#types'
+import { Response } from '#utils/response'
 
 import { ICartController } from './type'
 
@@ -15,7 +15,7 @@ export class CartController implements ICartController {
   ): Promise<void> => {
     const { userId } = request.auth
     const cart = await this.service.getCartByUserId(userId!)
-    reply.send({ data: cart, success: true })
+    Response.sendSuccess(reply, cart)
   }
 
   addProductToCart = async (
@@ -33,7 +33,7 @@ export class CartController implements ICartController {
       quantity,
     })
 
-    reply.send({ data: cartItem, success: true })
+    Response.sendSuccess(reply, cartItem)
   }
 
   removeProductFromCart = async (
@@ -42,6 +42,6 @@ export class CartController implements ICartController {
   ): Promise<void> => {
     const id = parseInt(request.params.id)
     await this.service.removeProductFromCart(id, request.auth.userId)
-    reply.status(HttpStatus.NO_CONTENT).send()
+    Response.sendNoContent(reply)
   }
 }

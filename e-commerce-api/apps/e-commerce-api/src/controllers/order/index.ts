@@ -3,6 +3,8 @@ import { FromSchema } from 'json-schema-to-ts'
 
 import { IOrderService } from '#services/types'
 
+import { Response } from '#utils/response'
+
 import { formatOrderDto } from '#dtos/order'
 
 import { getOrdersSchema } from '#schemas/order'
@@ -26,10 +28,19 @@ export class OrderController implements IOrderController {
       page,
       pageSize,
     })
-    reply.send({
-      success: true,
-      data: response.data.map((order) => formatOrderDto(order)),
-      meta: response.meta,
-    })
+
+    if (response.meta?.pagination) {
+      Response.sendPaginated(
+        reply,
+        response.data.map((order) => formatOrderDto(order)),
+        response.meta.pagination,
+      )
+    } else {
+      Response.sendSuccess(
+        reply,
+        response.data.map((order) => formatOrderDto(order)),
+        response.meta,
+      )
+    }
   }
 }

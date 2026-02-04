@@ -4,8 +4,9 @@ import type { FromSchema } from 'json-schema-to-ts'
 import type { IAuthService } from '#services/types'
 
 import { isClerkAPIResponseError } from '#utils/clerk'
+import { Response } from '#utils/response'
 
-import { BadRequestError, HttpStatus } from '#types'
+import { BadRequestError } from '#types'
 
 import { transformatFromClerk } from '#dtos/user'
 
@@ -26,9 +27,9 @@ export class AuthController implements IAuthController {
       const newUser = transformatFromClerk(request.body)
       const user = await this.service.register(newUser)
 
-      reply
-        .code(HttpStatus.CREATED)
-        .send({ message: 'User registered successfully.', user })
+      Response.sendCreated(reply, user, {
+        message: 'User registered successfully.',
+      })
     } catch (error) {
       request.log.error(`Error - register: ${error}`)
       if (isClerkAPIResponseError(error)) {

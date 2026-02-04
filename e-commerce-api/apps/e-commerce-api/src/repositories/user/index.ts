@@ -4,11 +4,9 @@ import { AbstractUserRepository } from './type'
 
 export class UserRepository extends AbstractUserRepository {
   async getById(id: string): Promise<User | null> {
-    const user = await this.findOne({
-      where: { id },
+    return await this.findById(id, {
       relations: { cart: true },
     })
-    return user
   }
 
   async getUserRelationsById(id: string): Promise<User | null> {

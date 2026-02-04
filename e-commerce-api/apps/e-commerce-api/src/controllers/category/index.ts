@@ -2,6 +2,8 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ICategoryService } from '#services/types'
 
+import { Response } from '#utils/response'
+
 import { ICategoryController } from './type'
 
 export class CategoryController implements ICategoryController {
@@ -9,6 +11,6 @@ export class CategoryController implements ICategoryController {
 
   getAll = async (_: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const categories = await this.service.getAll()
-    reply.send({ success: true, data: categories })
+    Response.sendSuccess(reply, categories)
   }
 }

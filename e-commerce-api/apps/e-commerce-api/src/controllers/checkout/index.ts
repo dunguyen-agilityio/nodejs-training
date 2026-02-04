@@ -3,6 +3,8 @@ import { FromSchema } from 'json-schema-to-ts'
 
 import { ICheckoutService } from '#services/types'
 
+import { Response } from '#utils/response'
+
 import { UnexpectedError } from '#types'
 
 import {
@@ -37,7 +39,7 @@ export class CheckoutController implements ICheckoutController {
     }
 
     const { client_secret } = confirmation_secret
-    reply.send({ clientSecret: client_secret })
+    Response.sendSuccess(reply, { clientSecret: client_secret })
   }
 
   /**
@@ -51,7 +53,7 @@ export class CheckoutController implements ICheckoutController {
   ): Promise<void> => {
     const { stripeId, userId } = request.auth
     await this.service.prepareOrderForPayment(userId, stripeId)
-    reply.status(204).send()
+    Response.sendNoContent(reply)
   }
 
   stripeWebhookHandler = async (
@@ -67,6 +69,6 @@ export class CheckoutController implements ICheckoutController {
       await this.service.handleSuccessfulPayment(customer, invoiceId)
     }
 
-    reply.send({ received: true })
+    Response.sendSuccess(reply, { received: true })
   }
 }

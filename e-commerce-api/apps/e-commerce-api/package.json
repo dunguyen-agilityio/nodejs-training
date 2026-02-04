@@ -71,6 +71,8 @@
     "#types/*": "./src/types/*.ts",
     "#types": "./src/types/index.ts",
     "#utils/*": "./src/utils/*.ts",
+    "#utils/response": "./src/utils/response.ts",
+    "#configs/*": "./src/configs/*.ts",
     "#data-source": "./src/database/data-source.ts",
     "#test-utils": "./src/test-utils.ts"
   }

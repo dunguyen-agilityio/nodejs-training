@@ -8,8 +8,7 @@ import { AbstractProductRepository } from './type'
 
 export class ProductRepository extends AbstractProductRepository {
   async getById(id: string): Promise<Product | null> {
-    return await this.findOne({
-      where: { id },
+    return await this.findById(id, {
       relations: { category: true },
     })
   }

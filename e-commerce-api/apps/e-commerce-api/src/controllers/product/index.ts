@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { IProductService } from '#services/types'
 
-import { HttpStatus } from '#types'
+import { Response } from '#utils/response'
 
 import { productToObject } from '#dtos/product'
 
@@ -37,7 +37,7 @@ export class ProductController implements IProductController {
 
     const product = await this.service.updateProduct(id, body)
 
-    reply.code(HttpStatus.OK).send(product)
+    Response.sendSuccess(reply, product)
   }
 
   addNewProduct = async (
@@ -46,7 +46,7 @@ export class ProductController implements IProductController {
   ): Promise<void> => {
     const productData = request.body
     const newProduct = await this.service.saveProduct(productData)
-    reply.status(HttpStatus.CREATED).send({ success: true, data: newProduct })
+    Response.sendCreated(reply, newProduct)
   }
 
   getProducts = async (
@@ -62,11 +62,12 @@ export class ProductController implements IProductController {
       query,
       categories: category?.split(',') || [],
     })
-    reply.send({
-      success: true,
-      data: data.map(productToObject),
-      meta,
-    })
+
+    if (meta?.pagination) {
+      Response.sendPaginated(reply, data.map(productToObject), meta.pagination)
+    } else {
+      Response.sendSuccess(reply, data.map(productToObject), meta)
+    }
   }
 
   getProduct = async (
@@ -78,12 +79,11 @@ export class ProductController implements IProductController {
     const product = await this.service.getProductById(id)
 
     if (!product) {
-      reply
-        .status(HttpStatus.NOT_FOUND)
-        .send({ success: false, error: 'Product not found' })
+      Response.sendNotFound(reply, 'Product not found')
       return
     }
-    reply.send({ success: true, data: productToObject(product) })
+
+    Response.sendSuccess(reply, productToObject(product))
   }
 
   deleteProduct = async (
@@ -92,6 +92,6 @@ export class ProductController implements IProductController {
   ): Promise<void> => {
     const id = request.params.id
     await this.service.deleteProduct(id)
-    reply.send({ success: true, message: 'Product deleted successfully' })
+    Response.sendNoContent(reply)
   }
 }

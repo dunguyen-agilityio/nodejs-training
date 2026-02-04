@@ -8,9 +8,9 @@ import Fastify from 'fastify'
 
 import { AppDataSource } from '#data-source'
 
-import { ApiError, HttpStatus } from '#types'
-
 import { env } from './configs/env'
+import { errorHandler } from './middlewares/error-handler'
+import { requestLogger, responseLogger } from './middlewares/request-logger'
 import sendgridPlugin from './plugins/sendgrid.plugin'
 import stripePlugin from './plugins/stripe.plugin'
 import { authRoutes, cartRoutes, categoryRoutes } from './routes'
@@ -61,6 +61,26 @@ AppDataSource.initialize()
 
     fastify.register(
       (instance, _opts, done) => {
+        // Register request logging middleware
+        instance.addHook(
+          'onRequest',
+          requestLogger({
+            logRequestBody: env.nodeEnv === 'development',
+            logResponseBody: false,
+            logQuery: true,
+            logHeaders: false,
+            excludePaths: ['/health', '/metrics'],
+          }),
+        )
+
+        // Register response logging middleware
+        instance.addHook(
+          'onSend',
+          responseLogger({
+            logResponseBody: false,
+          }),
+        )
+
         instance.register(authRoutes, { prefix: '/auth' })
         instance.register(productRoutes, { prefix: '/products' })
         instance.register(categoryRoutes, { prefix: '/categories' })
@@ -86,15 +106,8 @@ AppDataSource.initialize()
       fastify.log.info(`Server is now listening on ${address}`)
     })
 
-    fastify.setErrorHandler(function (error: ApiError, _, reply) {
-      // Log error
-      this.log.error(error)
-
-      const statusCode = error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
-
-      // Send error response
-      reply.status(statusCode).send(error)
-    })
+    // Register standardized error handler
+    fastify.setErrorHandler(errorHandler)
 
     // Gracefull shutdown
     process.on('SIGTERM', () => {
