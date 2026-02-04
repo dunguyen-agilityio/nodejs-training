@@ -12,7 +12,10 @@ export interface Price {
   unit_amount: number | null
 }
 
-interface DeletedProduct {
+/**
+ * Represents a deleted product in the system
+ */
+export interface DeletedProduct {
   id: string
   object: 'product'
   deleted: true

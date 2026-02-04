@@ -1,17 +1,14 @@
-import { EmailProvider, MailData } from '#types'
+import { FastifyBaseLogger } from 'fastify'
+
 import { MailService } from '@sendgrid/mail'
 
-export default class ResponseError extends Error {
-  code: number
-  message: string
-  response: {
-    headers: { [key: string]: string }
-    body: string
-  }
-}
+import { EmailProvider, MailData } from '#types'
 
 export class SendGridEmailAdapter implements EmailProvider {
-  constructor(private sendgrid: MailService) {}
+  constructor(
+    private sendgrid: MailService,
+    private logger: FastifyBaseLogger,
+  ) {}
 
   async sendWithTemplate({
     to,
@@ -23,8 +20,16 @@ export class SendGridEmailAdapter implements EmailProvider {
       { to, from, templateId, dynamicTemplateData },
       false,
       (error) => {
-        if (error instanceof ResponseError) {
-          console.error('Error - sendWithTemplate: ', error.response.body)
+        if (!error) {
+          this.logger.info('Email sent successfully')
+        } else {
+          if ('response' in error) {
+            this.logger.error(
+              `Error - sendWithTemplate: ${error.response.body}`,
+            )
+          } else {
+            this.logger.error(`Error - sendWithTemplate: ${error.message}`)
+          }
         }
       },
     )

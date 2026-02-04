@@ -1,13 +1,16 @@
-import { Product } from '#entities'
+import { FastifyBaseLogger } from 'fastify'
+
+import type { TProductRepository } from '#repositories'
+
 import {
   NotFoundError,
   Pagination,
-  Params,
   PartialProduct,
   PaymentGateway,
+  ProductQueryParams,
 } from '#types'
 
-import type { TProductRepository } from '#repositories'
+import { Product } from '#entities'
 
 import { IProductService } from './type'
 
@@ -15,11 +18,16 @@ export class ProductService implements IProductService {
   constructor(
     private productRepository: TProductRepository,
     private paymentGatewayProvider: PaymentGateway,
+    private logger: FastifyBaseLogger,
   ) {}
 
   async getProducts(
-    params: Params,
+    params: ProductQueryParams,
   ): Promise<{ data: Product[]; meta: { pagination: Pagination } }> {
+    this.logger.info(
+      { query: params.query, page: params.page, pageSize: params.pageSize },
+      'Fetching products',
+    )
     const { query, page, pageSize, categories } = params
     const skip = (page - 1) * pageSize
 
@@ -30,7 +38,7 @@ export class ProductService implements IProductService {
       categories,
     })
 
-    return {
+    const result = {
       data: products,
       meta: {
         pagination: {
@@ -42,15 +50,31 @@ export class ProductService implements IProductService {
         },
       },
     }
+
+    this.logger.info(
+      { totalCount, returnedCount: products.length, page },
+      'Products fetched successfully',
+    )
+    return result
   }
 
   async getProductById(id: string): Promise<Product | null> {
+    this.logger.debug({ productId: id }, 'Fetching product by ID')
     const product = await this.productRepository.getById(id)
 
+    if (product) {
+      this.logger.debug({ productId: id }, 'Product found')
+    } else {
+      this.logger.debug({ productId: id }, 'Product not found')
+    }
     return product
   }
 
   async saveProduct(payload: Omit<Product, 'id'>): Promise<Product> {
+    this.logger.info(
+      { name: payload.name, price: payload.price },
+      'Creating new product',
+    )
     try {
       const { price, name, images, description } = payload
 
@@ -65,27 +89,47 @@ export class ProductService implements IProductService {
         },
       })
 
+      this.logger.debug(
+        { productId: newProduct.id, name },
+        'Stripe product created',
+      )
+
       const product = await this.productRepository.save({
         ...payload,
         id: newProduct.id,
       })
 
+      this.logger.info(
+        { productId: product.id, name: product.name },
+        'Product created successfully',
+      )
       return product
     } catch (error) {
-      console.error('Error - saveProduct', error)
+      this.logger.error({ name: payload.name, error }, 'Error creating product')
       throw error
     }
   }
 
   async updateProduct(id: string, body: PartialProduct): Promise<Product> {
+    this.logger.info(
+      { productId: id, updates: Object.keys(body) },
+      'Updating product',
+    )
     const product = await this.getProductById(id)
 
-    if (!product) throw new NotFoundError(`Not found Product by ID: ${id}`)
+    if (!product) {
+      this.logger.error({ productId: id }, 'Product not found for update')
+      throw new NotFoundError(`Not found Product by ID: ${id}`)
+    }
 
-    return await this.productRepository.save({ ...product, ...body })
+    const updated = await this.productRepository.save({ ...product, ...body })
+    this.logger.info({ productId: id }, 'Product updated successfully')
+    return updated
   }
 
   async deleteProduct(id: string): Promise<void> {
+    this.logger.info({ productId: id }, 'Deleting product (soft delete)')
     await this.productRepository.update(id, { deleted: true })
+    this.logger.info({ productId: id }, 'Product deleted successfully')
   }
 }

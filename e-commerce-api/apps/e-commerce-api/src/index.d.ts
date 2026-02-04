@@ -1,9 +1,10 @@
 import { GetAuthFn } from '@clerk/backend/internal'
 import type { ClerkClient } from '@clerk/fastify'
 
-import type { USER_ROLES } from '#types'
 import type { MailService } from '@sendgrid/mail'
 import type { Stripe } from 'stripe'
+
+import type { USER_ROLES } from '#types'
 
 import type { TContainer } from './utils/container'
 

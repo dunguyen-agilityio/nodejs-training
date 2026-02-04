@@ -1,3 +1,12 @@
+import { FastifyBaseLogger } from 'fastify'
+
+import Stripe from 'stripe'
+
+import { convertToSubcurrency } from '#utils/convertToSubcurrency'
+
+import '#types/error'
+import { IProduct, ProductCreateParams } from '#types/product'
+
 import {
   ApiList,
   Charge,
@@ -8,32 +17,30 @@ import {
   InvoiceItem,
   InvoiceItemCreateParams,
   InvoicePaymentExpand,
+  NotFoundError,
   PaymentGateway,
   PaymentIntent,
   PaymentIntentCreateParams,
   TResponse,
 } from '#types'
-import Stripe from 'stripe'
-
-import { convertToSubcurrency } from '#utils/convertToSubcurrency'
-
-import '#types/error'
-import { IProduct, ProductCreateParams } from '#types/product'
 
 export class StripePaymentAdapter implements PaymentGateway {
-  constructor(private stripe: Stripe) {}
+  constructor(
+    private stripe: Stripe,
+    private logger: FastifyBaseLogger,
+  ) {}
 
   async findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer> {
     const response = await this.stripe.customers.list({
       email: params.email,
       limit: 1,
     })
-    let customer = response.data[0]
+    let customer: Customer | undefined = response.data[0]
     if (!customer) {
       customer = await this.createCustomer(params)
     }
 
-    return customer as Customer
+    return customer
   }
 
   async createCustomer(params: CustomerCreateParams): Promise<Customer> {
@@ -117,7 +124,7 @@ export class StripePaymentAdapter implements PaymentGateway {
       })
       return invoice as TResponse<Invoice>
     } catch (error) {
-      console.error('Error - getInvoice: ', error)
+      this.logger.error(`Error - getInvoice: ${error}`)
       throw error
     }
   }

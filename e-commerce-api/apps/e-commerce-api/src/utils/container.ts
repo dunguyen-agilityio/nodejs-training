@@ -2,6 +2,34 @@ import { FastifyInstance } from 'fastify'
 import { DataSource } from 'typeorm'
 
 import { SendGridEmailAdapter, StripePaymentAdapter } from '#adapters'
+
+import {
+  AuthService,
+  CartItemService,
+  CartService,
+  CategoryService,
+  CheckoutService,
+  MetricService,
+  OrderService,
+  ProductService,
+  type TServices,
+  UserService,
+} from '#services'
+
+import {
+  CartItemRepository,
+  CartRepository,
+  CategoryRepository,
+  InvoiceItemRepository,
+  InvoiceRepository,
+  OrderItemRepository,
+  OrderRepository,
+  ProductRepository,
+  StockReservationRepository,
+  TRepositories,
+  UserRepository,
+} from '#repositories'
+
 import {
   AdminOrderController,
   AuthController,
@@ -12,8 +40,11 @@ import {
   MetricController,
   OrderController,
   ProductController,
+  TControllers,
 } from '#controllers'
-import * as Controllers from '#controllers'
+
+import type { EmailProvider, PaymentGateway } from '#types'
+
 import {
   Cart,
   CartItem,
@@ -26,34 +57,10 @@ import {
   StockReservation,
   User,
 } from '#entities'
-import {
-  CartItemRepository,
-  CartRepository,
-  CategoryRepository,
-  InvoiceItemRepository,
-  InvoiceRepository,
-  OrderItemRepository,
-  OrderRepository,
-  ProductRepository,
-  StockReservationRepository,
-  UserRepository,
-} from '#repositories'
-import {
-  AuthService,
-  CartItemService,
-  CartService,
-  CategoryService,
-  CheckoutService,
-  MetricService,
-  OrderService,
-  ProductService,
-  UserService,
-} from '#services'
-import type { EmailProvider, PaymentGateway } from '#types'
 
 export function buildControllers(
   services: ReturnType<typeof buildServices>,
-): Controllers.TControllers {
+): TControllers {
   return {
     productController: new ProductController(services.productService),
     adminOrderController: new AdminOrderController(services.orderService),
@@ -62,7 +69,7 @@ export function buildControllers(
     cartItemController: new CartItemController(services.cartItemService),
     categoryController: new CategoryController(services.categoryService),
     checkoutController: new CheckoutController(services.checkoutService),
-    metricController: new MetricController(services.metricService),
+    metricController: new MetricController(services.adminService),
     orderController: new OrderController(services.orderService),
   }
 }
@@ -70,7 +77,8 @@ export function buildControllers(
 export function buildServices(
   repos: ReturnType<typeof buildRepositories>,
   adapters: { paymentGateway: PaymentGateway; emailProvider: EmailProvider },
-) {
+  fastify: FastifyInstance,
+): TServices {
   const {
     cartItemRepository,
     cartRepository,
@@ -82,19 +90,25 @@ export function buildServices(
   const { emailProvider, paymentGateway } = adapters
 
   return {
-    productService: new ProductService(productRepository, paymentGateway),
-    userService: new UserService(userRepository, paymentGateway),
+    productService: new ProductService(
+      productRepository,
+      paymentGateway,
+      fastify.log,
+    ),
+    userService: new UserService(userRepository, paymentGateway, fastify.log),
     cartService: new CartService(
       cartRepository,
       cartItemRepository,
       productRepository,
+      fastify.log,
     ),
-    cartItemService: new CartItemService(cartItemRepository),
-    categoryService: new CategoryService(categoryRepository),
+    cartItemService: new CartItemService(cartItemRepository, fastify.log),
+    categoryService: new CategoryService(categoryRepository, fastify.log),
     orderService: new OrderService(
       orderRepository,
       cartRepository,
       productRepository,
+      fastify.log,
     ),
     checkoutService: new CheckoutService(
       userRepository,
@@ -102,18 +116,20 @@ export function buildServices(
       orderRepository,
       paymentGateway,
       emailProvider,
+      fastify.log,
     ),
     authService: new AuthService(
       userRepository,
       cartRepository,
       paymentGateway,
       emailProvider,
+      fastify.log,
     ),
-    metricService: new MetricService(productRepository),
+    adminService: new MetricService(productRepository, fastify.log),
   }
 }
 
-export function buildRepositories(ds: DataSource) {
+export function buildRepositories(ds: DataSource): TRepositories {
   return {
     productRepository: new ProductRepository(ds.getRepository(Product)),
     userRepository: new UserRepository(ds.getRepository(User)),
@@ -135,10 +151,12 @@ export function buildRepositories(ds: DataSource) {
 export function buildAdapters(fastify: FastifyInstance) {
   const paymentGateway: PaymentGateway = new StripePaymentAdapter(
     fastify.stripe,
+    fastify.log,
   )
 
   const emailProvider: EmailProvider = new SendGridEmailAdapter(
     fastify.sendgrid,
+    fastify.log,
   )
 
   return { paymentGateway, emailProvider }
@@ -150,7 +168,7 @@ export function buildContainer(
 ) {
   const repositories = buildRepositories(dataSource)
   const adapters = buildAdapters(fastify)
-  const services = buildServices(repositories, adapters)
+  const services = buildServices(repositories, adapters, fastify)
   const controllers = buildControllers(services)
 
   const container = { repositories, services, controllers }

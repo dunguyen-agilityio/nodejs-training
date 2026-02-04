@@ -14,15 +14,31 @@ export interface MailData {
   dynamicTemplateData?: { [key: string]: any }
 }
 
-export class ResponseError extends Error {
+/**
+ * Error class for email service failures
+ */
+export class EmailResponseError extends Error {
   code: number
-  message: string
   response: {
     headers: { [key: string]: string }
     body: string
   }
+
+  constructor(
+    message: string,
+    code: number,
+    response: { headers: { [key: string]: string }; body: string },
+  ) {
+    super(message)
+    this.name = 'EmailResponseError'
+    this.code = code
+    this.response = response
+  }
 }
 
+/**
+ * Interface for email provider implementations
+ */
 export interface EmailProvider {
   sendWithTemplate(data: MailData): Promise<void>
 }

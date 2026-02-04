@@ -20,14 +20,14 @@ export * from './checkout'
 export * from './order'
 export * from './metric'
 
-export type Services = {
-  AuthService: IAuthService
-  CartItemService: ICartItemService
-  CartService: ICartService
-  CategoryService: ICategoryService
-  CheckoutService: ICheckoutService
-  OrderService: IOrderService
-  ProductService: IProductService
-  UserService: IUserService
-  AdminService: IMetricService
+export type TServices = {
+  authService: IAuthService
+  cartItemService: ICartItemService
+  cartService: ICartService
+  categoryService: ICategoryService
+  checkoutService: ICheckoutService
+  orderService: IOrderService
+  productService: IProductService
+  userService: IUserService
+  adminService: IMetricService
 }

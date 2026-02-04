@@ -29,13 +29,19 @@ export interface ApiList<T> {
   url: string
 }
 
-interface DeletedInvoice {
+/**
+ * Represents a deleted invoice in the system
+ */
+export interface DeletedInvoice {
   id: string
   object: 'invoice'
   deleted: true
 }
 
-export interface StatusTransitions {
+/**
+ * Tracks timing of different invoice status transitions
+ */
+export interface InvoiceStatusTransitions {
   finalized_at: number | null
   marked_uncollectible_at: number | null
   paid_at: number | null
@@ -103,13 +109,16 @@ export interface Invoice {
   total: number
   confirmation_secret?: InvoiceConfirmationSecret | null
   effective_at: number | null
-  status_transitions: StatusTransitions
+  status_transitions: InvoiceStatusTransitions
   hosted_invoice_url?: string | null
   invoice_pdf?: string | null
   receipt_number: string | null
 }
 
-type TInvoiceStatus = 'draft' | 'open' | 'paid' | 'failed' | 'void'
+/**
+ * The possible statuses for an invoice
+ */
+export type TInvoiceStatus = 'draft' | 'open' | 'paid' | 'failed' | 'void'
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -119,7 +128,10 @@ export enum InvoiceStatus {
   VOID = 'void',
 }
 
-interface InvoiceConfirmationSecret {
+/**
+ * Contains the client secret for invoice confirmation
+ */
+export interface InvoiceConfirmationSecret {
   client_secret: string
   type: string
 }
@@ -136,7 +148,10 @@ export interface InvoicePayment {
   payment?: Payment
 }
 
-interface PriceData {
+/**
+ * Price data for creating invoice items
+ */
+export interface PriceData {
   currency: string
   product: string
   unit_amount?: number

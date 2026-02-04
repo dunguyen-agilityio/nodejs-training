@@ -3,17 +3,19 @@
 import { useAuth } from '@clerk/nextjs'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { debounce, formatCurrency } from '@/lib/utils'
 
 import { useCart } from '@/context/CartContext'
 
+import Loading, { LoadingRef } from '@/components/Loading'
 import { CartItem } from '@/components/cart-item'
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart()
   const [localCart, setLocalCart] = useState(cart)
+  const loadingRef = useRef<LoadingRef | null>(null)
 
   const { isLoaded } = useAuth()
 
@@ -61,47 +63,52 @@ export default function CartPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-8 text-foreground">Shopping Cart</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-4">
-          {localCart.map((item) => (
-            <CartItem
-              key={item.id}
-              item={item}
-              updateQuantity={handleUpdateQuantity}
-              removeFromCart={handleRemoveFromCart}
-            />
-          ))}
-        </div>
-        <div className="bg-card p-6 rounded-lg h-fit border border-border">
-          <h2 className="text-xl font-bold mb-4 text-foreground">
-            Order Summary
-          </h2>
-          <div className="space-y-2 mb-4 text-sm text-muted-foreground">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span className="text-foreground">
-                {formatCurrency(cartTotal)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span className="text-green-600">Free</span>
-            </div>
+    <Loading ref={loadingRef}>
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <h1 className="text-3xl font-bold mb-8 text-foreground">
+          Shopping Cart
+        </h1>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-4">
+            {localCart.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                updateQuantity={handleUpdateQuantity}
+                removeFromCart={handleRemoveFromCart}
+              />
+            ))}
           </div>
-          <div className="border-t border-border pt-4 flex justify-between font-bold text-lg mb-6 text-foreground">
-            <span>Total</span>
-            <span>{formatCurrency(cartTotal)}</span>
+          <div className="bg-card p-6 rounded-lg h-fit border border-border">
+            <h2 className="text-xl font-bold mb-4 text-foreground">
+              Order Summary
+            </h2>
+            <div className="space-y-2 mb-4 text-sm text-muted-foreground">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span className="text-foreground">
+                  {formatCurrency(cartTotal)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span className="text-green-600">Free</span>
+              </div>
+            </div>
+            <div className="border-t border-border pt-4 flex justify-between font-bold text-lg mb-6 text-foreground">
+              <span>Total</span>
+              <span>{formatCurrency(cartTotal)}</span>
+            </div>
+            <Link
+              href="/checkout"
+              onClick={() => loadingRef.current?.showLoading()}
+              className="w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Proceed to Checkout
+            </Link>
           </div>
-          <Link
-            href="/checkout"
-            className="w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Proceed to Checkout
-          </Link>
         </div>
-      </div>
-    </main>
+      </main>
+    </Loading>
   )
 }

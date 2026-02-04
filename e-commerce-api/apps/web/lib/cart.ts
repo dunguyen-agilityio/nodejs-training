@@ -21,7 +21,6 @@ export const getCarts = async () => {
     return response.data.items
   } catch (error) {
     console.log('Failed to fetch cart on server:', error)
-    // Handle error gracefully, maybe show a toast on the client
     return []
   }
 }

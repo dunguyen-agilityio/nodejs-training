@@ -47,6 +47,7 @@ export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <button
+          title="Delete product"
           disabled={isPending}
           className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50"
         >

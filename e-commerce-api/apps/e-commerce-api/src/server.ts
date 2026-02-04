@@ -7,6 +7,7 @@ import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts
 import Fastify from 'fastify'
 
 import { AppDataSource } from '#data-source'
+
 import { ApiError, HttpStatus } from '#types'
 
 import { env } from './configs/env'
@@ -20,8 +21,22 @@ import { orderRoutes } from './routes/order'
 import { productRoutes } from './routes/product'
 import { buildContainer } from './utils/container'
 
+const envToLogger = {
+  development: {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    },
+  },
+  production: true,
+  test: false,
+}
+
 const fastify = Fastify({
-  logger: true,
+  logger: envToLogger[env.nodeEnv] ?? true,
 }).withTypeProvider<JsonSchemaToTsProvider>()
 
 fastify.register(cors, {
@@ -31,12 +46,13 @@ fastify.register(cors, {
 })
 
 await Promise.all([
-  AppDataSource.initialize(),
   fastify.register(clerkPlugin),
   fastify.register(stripePlugin),
   fastify.register(sendgridPlugin),
 ])
-  .then(([dataSource]) => {
+
+AppDataSource.initialize()
+  .then((dataSource) => {
     buildContainer(fastify, dataSource)
 
     fastify.decorateRequest('clerk', {
@@ -67,7 +83,7 @@ await Promise.all([
         fastify.log.error(err)
         process.exit(1)
       }
-      console.info(`Server is now listening on ${address}`)
+      fastify.log.info(`Server is now listening on ${address}`)
     })
 
     fastify.setErrorHandler(function (error: ApiError, _, reply) {
@@ -82,20 +98,21 @@ await Promise.all([
 
     // Gracefull shutdown
     process.on('SIGTERM', () => {
-      console.log('SIGTERM signal received: closing HTTP server')
+      fastify.log.info('SIGTERM signal received: closing HTTP server')
 
       fastify.close(async () => {
-        console.log('HTTP server closed')
+        fastify.log.info('HTTP server closed')
         // close database
         await dataSource.destroy()
-        console.log('Database connection closed')
+        fastify.log.info('Database connection closed')
         process.exit(0)
         // close third paty
       })
     })
   })
   .catch((error) => {
-    console.log('Database connection failed', error)
+    console.log(error)
+    fastify.log.error('Database connection failed', error)
     fastify.close(() => {
       process.exit(0)
     })

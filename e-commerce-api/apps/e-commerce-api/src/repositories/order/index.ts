@@ -1,7 +1,8 @@
 import { QueryRunner } from 'typeorm'
 
+import { ProductQueryParams } from '#types'
+
 import { Order } from '#entities'
-import { Params } from '#types'
 
 import { AbstractOrderRepository } from './type'
 
@@ -15,7 +16,7 @@ export class OrderRepository extends AbstractOrderRepository {
 
   async findOrdersByUserId(
     userId: string,
-    params: Params,
+    params: ProductQueryParams,
   ): Promise<[number, Order[]]> {
     const { page, pageSize } = params
     const [orders, count] = await this.findAndCount({
@@ -28,7 +29,7 @@ export class OrderRepository extends AbstractOrderRepository {
     return [count, orders]
   }
 
-  async findOrders(params: Params): Promise<[number, Order[]]> {
+  async findOrders(params: ProductQueryParams): Promise<[number, Order[]]> {
     const { page, pageSize } = params
     const [orders, count] = await this.findAndCount({
       relations: { items: { product: true } },

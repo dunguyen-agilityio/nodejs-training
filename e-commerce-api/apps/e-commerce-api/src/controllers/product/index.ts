@@ -1,11 +1,12 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-import { Product } from '#entities'
-import { HttpStatus } from '#types'
-
 import { IProductService } from '#services/types'
 
+import { HttpStatus } from '#types'
+
 import { productToObject } from '#dtos/product'
+
+import { Product } from '#entities'
 
 import { IProductController } from './type'
 

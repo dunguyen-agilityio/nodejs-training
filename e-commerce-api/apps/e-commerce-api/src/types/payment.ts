@@ -17,17 +17,6 @@ export interface CustomerCreateParams {
   phone?: string
 }
 
-export type Response<T> = T & {
-  lastResponse: {
-    headers: { [key: string]: string }
-    requestId: string
-    statusCode: number
-    apiVersion?: string
-    idempotencyKey?: string
-    stripeAccount?: string
-  }
-}
-
 export type TResponse<T> = T & {
   lastResponse: {
     headers: { [key: string]: string }
@@ -97,7 +86,10 @@ export interface Charge {
   receipt_url: string | null
 }
 
-interface StatusTransitions {
+/**
+ * Tracks timing of different payment status transitions
+ */
+export interface StatusTransitions {
   canceled_at: number | null
   paid_at: number | null
 }
@@ -145,21 +137,21 @@ export type PaymentDetails = {
 }
 
 export interface PaymentGateway {
-  getPaymentIntents(id: string): Promise<Response<PaymentIntent>>
+  getPaymentIntents(id: string): Promise<TResponse<PaymentIntent>>
   createPaymentIntents(
     payload: PaymentIntentCreateParams,
-  ): Promise<Response<PaymentIntent>>
+  ): Promise<TResponse<PaymentIntent>>
   findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>
   createCustomer(params: CustomerCreateParams): Promise<Customer>
-  createInvoice(params: InvoiceCreateParams): Promise<Response<Invoice>>
-  createProduct(params: ProductCreateParams): Promise<Response<IProduct>>
+  createInvoice(params: InvoiceCreateParams): Promise<TResponse<Invoice>>
+  createProduct(params: ProductCreateParams): Promise<TResponse<IProduct>>
   createInvoiceItem(
     params: InvoiceItemCreateParams,
-  ): Promise<Response<InvoiceItem>>
-  finalizeInvoice(id: string): Promise<Response<Invoice>>
-  getInvoice(id: string): Promise<Response<Invoice>>
-  getInvoicePayment(id: string): Promise<Response<InvoicePaymentExpand>>
-  getPaymentIntent(id: string): Promise<Response<PaymentIntent>>
+  ): Promise<TResponse<InvoiceItem>>
+  finalizeInvoice(id: string): Promise<TResponse<Invoice>>
+  getInvoice(id: string): Promise<TResponse<Invoice>>
+  getInvoicePayment(id: string): Promise<TResponse<InvoicePaymentExpand>>
+  getPaymentIntent(id: string): Promise<TResponse<PaymentIntent>>
   getCharge(id: string): Promise<Charge>
   getOpenedInvoiceByUser(id: string): Promise<Invoice>
 }

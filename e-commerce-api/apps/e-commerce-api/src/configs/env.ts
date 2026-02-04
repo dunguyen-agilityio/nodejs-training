@@ -38,6 +38,9 @@ export const env = {
     baseUrl: process.env.CLIENT_BASE_URL!,
     loginPath: process.env.CLIENT_LOGIN_PATH!,
   },
+
+  // Environment
+  nodeEnv: process.env.NODE_ENV as 'development' | 'production' | 'test',
 } as const
 
 export default env

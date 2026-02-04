@@ -12,7 +12,7 @@ export const withCart = <T,>(Comp: TChild<T>) => {
   const NewCompoent = ({ product, ...props }: { product: Product } & T) => {
     const { addToCart, cart } = useCart()
 
-    const [_, setQuantity] = useState(
+    const [quantity, setQuantity] = useState(
       () => cart.find((item) => item.product.id === product.id)?.quantity || 0,
     )
 
@@ -28,6 +28,7 @@ export const withCart = <T,>(Comp: TChild<T>) => {
         {...(props as JSX.IntrinsicAttributes & T)}
         product={product}
         addToCart={handleAddToCart}
+        outStock={quantity >= product.stock}
       />
     )
   }
@@ -37,4 +38,5 @@ export const withCart = <T,>(Comp: TChild<T>) => {
 
 export type TWithCart<T> = T & {
   addToCart: (product: Product) => void
+  outStock: boolean
 }

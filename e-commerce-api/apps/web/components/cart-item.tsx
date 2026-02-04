@@ -31,7 +31,7 @@ export function CartItem({
     updateQuantity(item.id, newQuantity)
   }
 
-  const isOutOfStock = item.quantity > item.product.stock
+  const isOutOfStock = quantity > item.product.stock
 
   return (
     <div
@@ -62,7 +62,8 @@ export function CartItem({
             <span className="px-3 py-1 border-x border-input">{quantity}</span>
             <button
               onClick={handleIncrease}
-              className="px-3 py-1 hover:bg-accent hover:text-accent-foreground"
+              disabled={quantity >= item.product.stock}
+              className="px-3 py-1 hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             >
               +
             </button>

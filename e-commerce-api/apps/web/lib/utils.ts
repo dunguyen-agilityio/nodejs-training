@@ -9,14 +9,21 @@ export function cn(...inputs: ClassValue[]) {
 
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  delay: number,
+  delay: number | ((...args: any[]) => number) = 800,
 ) {
   let timeout: NodeJS.Timeout
+  let prevArgs: any[] | null = null
 
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    const time =
+      typeof delay === 'function' ? delay(prevArgs || args, args) : delay
+
     const context = this
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func.apply(context, args), delay)
+
+    if (time > 0) clearTimeout(timeout)
+
+    timeout = setTimeout(() => func.apply(context, args), time)
+    prevArgs = args
   } as T
 }
 

@@ -1,14 +1,13 @@
-import { User } from '#entities'
-import {
-  EmailProvider,
-  LoginParams,
-  NotFoundError,
-  PaymentGateway,
-} from '#types'
+import { FastifyBaseLogger } from 'fastify'
+
+import env from '#env'
 
 import type { TCartRepository, TUserRepository } from '#repositories'
 
-import env from '#env'
+import { EmailProvider, PaymentGateway } from '#types'
+
+import { User } from '#entities'
+
 import { IAuthService } from './type'
 
 export class AuthService implements IAuthService {
@@ -17,6 +16,7 @@ export class AuthService implements IAuthService {
     private cartRepository: TCartRepository,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
+    private logger: FastifyBaseLogger,
   ) {}
 
   async register(body: User) {
@@ -32,58 +32,59 @@ export class AuthService implements IAuthService {
       role,
       id,
     } = body
-    const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
-      email,
-      name,
-    })
-    const user = await this.userRepository.save({
-      avatar,
-      firstName,
-      lastName,
-      username,
-      phone,
-      stripeId: customer.id,
-      age,
-      role,
-      id,
-      email,
-    })
-    await this.cartRepository.save({
-      user,
-      status: 'active',
-      items: [],
-    })
 
-    const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
+    this.logger.info({ email, name }, 'Registering new user')
 
-    await this.mailProvider.sendWithTemplate({
-      from: env.sendgrid.fromEmail,
-      templateId: env.sendgrid.templates.registerSuccess,
-      to: email,
-      dynamicTemplateData: {
-        name,
+    try {
+      const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
         email,
-        app_name: env.app.name,
-        logo_url: env.app.logoUrl,
-        login_url: loginPath,
-        support_email: env.sendgrid.supportEmail,
-        year: env.app.year,
-      },
-    })
-    return user
-  }
+        name,
+      })
+      const user = await this.userRepository.save({
+        avatar,
+        firstName,
+        lastName,
+        username,
+        phone,
+        stripeId: customer.id,
+        age,
+        role,
+        id,
+        email,
+      })
+      await this.cartRepository.save({
+        user,
+        status: 'active',
+        items: [],
+      })
 
-  async login({
-    identifier,
-  }: LoginParams): Promise<{ jwt: string; data: User }> {
-    const user = await this.userRepository.findOneBy({ email: identifier })
+      this.logger.debug({ userId: user.id }, 'Cart created for user')
 
-    if (!user) {
-      throw new NotFoundError('User not found')
+      const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
+
+      await this.mailProvider.sendWithTemplate({
+        from: env.sendgrid.fromEmail,
+        templateId: env.sendgrid.templates.registerSuccess,
+        to: email,
+        dynamicTemplateData: {
+          name,
+          email,
+          app_name: env.app.name,
+          logo_url: env.app.logoUrl,
+          login_url: loginPath,
+          support_email: env.sendgrid.supportEmail,
+          year: env.app.year,
+        },
+      })
+
+      this.logger.info(
+        { userId: user.id, email },
+        'User registered successfully, confirmation email sent',
+      )
+      return user
+    } catch (error) {
+      this.logger.error({ email, error }, 'Error during user registration')
+      throw error
     }
-
-    // const jwt = await this.authProvider.login(user.id, password);
-
-    return { jwt: 'jwt', data: user }
   }
 }

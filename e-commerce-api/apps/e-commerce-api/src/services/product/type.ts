@@ -1,5 +1,6 @@
+import { Pagination, ProductQueryParams } from '#types'
+
 import { Product } from '#entities'
-import { Pagination, Params } from '#types'
 
 type PartialProduct = Partial<
   Pick<
@@ -10,7 +11,7 @@ type PartialProduct = Partial<
 
 type ProductsResponse = { data: Product[]; meta: { pagination: Pagination } }
 export interface IProductService {
-  getProducts(params: Params): Promise<ProductsResponse>
+  getProducts(params: ProductQueryParams): Promise<ProductsResponse>
   getProductById(id: string): Promise<Product | null>
   saveProduct(product: Omit<Product, 'id'>): Promise<Product>
   updateProduct(id: string, product: PartialProduct): Promise<Product>

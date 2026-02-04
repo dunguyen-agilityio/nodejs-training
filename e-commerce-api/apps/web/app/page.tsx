@@ -21,7 +21,7 @@ export default async function Home({ searchParams }: HomeProps) {
     search,
     category,
     page: currentPage,
-    limit: 10,
+    limit: 8,
   })
 
   const categories = await getCategories()

@@ -47,38 +47,44 @@ export function CartProvider({
     }
   }
 
-  const addToCart = debounce(async (product: Product, quantity: number = 1) => {
-    try {
-      if (!isSignedIn) {
-        redirect('/sign-in')
-      }
-
-      const response = await post<CartAddResponse>(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/add`,
-        {
-          productId: product.id,
-          quantity,
-        },
-      )
-      setCart((prevCart) => {
-        const existingItem = prevCart.find(
-          (item) => item.product.id === product.id,
-        )
-        if (existingItem) {
-          return prevCart.map((item) =>
-            item.product.id === product.id
-              ? { ...item, quantity: quantity }
-              : item,
-          )
+  const addToCart = debounce(
+    async (product: Product, quantity: number = 1) => {
+      try {
+        if (!isSignedIn) {
+          redirect('/sign-in')
         }
 
-        return [...prevCart, { id: response.data.id, product, quantity }]
-      })
-      toast.success(`${product.name} added to cart`)
-    } catch (error) {
-      handleApiError(error)
-    }
-  }, 800)
+        const response = await post<CartAddResponse>(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/add`,
+          {
+            productId: product.id,
+            quantity,
+          },
+        )
+        setCart((prevCart) => {
+          const existingItem = prevCart.find(
+            (item) => item.product.id === product.id,
+          )
+          if (existingItem) {
+            return prevCart.map((item) =>
+              item.product.id === product.id
+                ? { ...item, quantity: quantity }
+                : item,
+            )
+          }
+
+          return [...prevCart, { id: response.data.id, product, quantity }]
+        })
+        toast.success(`${product.name} added to cart`)
+      } catch (error) {
+        handleApiError(error)
+      }
+    },
+    (prev: [Product], current: [Product]) => {
+      console.log(prev[0].id, current[0].id)
+      return prev[0].id === current[0].id ? 800 : 0
+    },
+  )
 
   const removeFromCart = async (cartItemId: string) => {
     try {

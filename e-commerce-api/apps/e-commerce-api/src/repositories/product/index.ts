@@ -1,7 +1,8 @@
 import { QueryRunner } from 'typeorm'
 
+import { ProductMetric, ProductQueryParams } from '#types'
+
 import { Product } from '#entities'
-import { Params, ProductMetric } from '#types'
 
 import { AbstractProductRepository } from './type'
 
@@ -14,7 +15,7 @@ export class ProductRepository extends AbstractProductRepository {
   }
 
   async getProducts(
-    params: Omit<Params, 'page'> & { skip: number },
+    params: Omit<ProductQueryParams, 'page'> & { skip: number },
   ): Promise<[Product[], number]> {
     const { query, skip, categories, pageSize } = params
 

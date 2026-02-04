@@ -1,27 +1,6 @@
+import { FastifyBaseLogger } from 'fastify'
 import { QueryRunner } from 'typeorm'
 
-import {
-  Cart,
-  CartItem,
-  Invoice as InvoiceEntity,
-  InvoiceItem,
-  OrderItem,
-  Product,
-  StockReservation,
-} from '#entities'
-import {
-  EmailProvider,
-  Invoice,
-  InvoiceLineItem,
-  InvoiceStatus,
-  NotFoundError,
-  PaymentDetails,
-  PaymentGateway,
-  PaymentMethodType,
-  Response,
-  StockReservationStatus,
-  UnexpectedError,
-} from '#types'
 import dayjs from 'dayjs'
 import Stripe from 'stripe'
 
@@ -39,6 +18,30 @@ import {
   formatStripeDate,
 } from '#utils/format'
 
+import {
+  EmailProvider,
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  NotFoundError,
+  PaymentDetails,
+  PaymentGateway,
+  PaymentMethodType,
+  StockReservationStatus,
+  TResponse,
+  UnexpectedError,
+} from '#types'
+
+import {
+  Cart,
+  CartItem,
+  Invoice as InvoiceEntity,
+  InvoiceItem,
+  OrderItem,
+  Product,
+  StockReservation,
+} from '#entities'
+
 import { ICheckoutService } from './type'
 
 export class CheckoutService implements ICheckoutService {
@@ -48,6 +51,7 @@ export class CheckoutService implements ICheckoutService {
     private orderRepository: TOrderRepository,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
+    private logger: FastifyBaseLogger,
   ) {}
 
   /**
@@ -56,12 +60,17 @@ export class CheckoutService implements ICheckoutService {
    * @param userId The ID of the user whose cart is being prepared.
    */
   private async _prepareCheckout(userId: string): Promise<Cart> {
+    this.logger.info({ userId }, 'Preparing checkout for user')
     const queryRuner =
       this.cartRepository.manager.connection.createQueryRunner()
 
     try {
       await queryRuner.connect()
       await queryRuner.startTransaction()
+      this.logger.debug(
+        { userId },
+        'Transaction started for checkout preparation',
+      )
 
       const cart = await queryRuner.manager
         .createQueryBuilder(Cart, 'cart')
@@ -70,8 +79,17 @@ export class CheckoutService implements ICheckoutService {
         .getOne()
 
       if (!cart || cart.status !== 'active') {
+        this.logger.warn(
+          { userId, cartStatus: cart?.status },
+          'Cart not payable',
+        )
         throw new UnexpectedError('Cart not payable')
       }
+
+      this.logger.debug(
+        { userId, cartId: cart.id },
+        'Cart found and locked for checkout',
+      )
 
       const cartItems = await queryRuner.manager
         .createQueryBuilder(CartItem, 'cartItem')
@@ -82,6 +100,14 @@ export class CheckoutService implements ICheckoutService {
       const deletedProduct = cartItems.find((item) => item.product.deleted)
 
       if (deletedProduct) {
+        this.logger.error(
+          {
+            userId,
+            productId: deletedProduct.product.id,
+            productName: deletedProduct.product.name,
+          },
+          'Deleted product found in cart',
+        )
         throw new UnexpectedError(
           `Product ${deletedProduct.product.name} is deleted`,
         )
@@ -92,6 +118,16 @@ export class CheckoutService implements ICheckoutService {
       )
 
       if (outOfStockProduct) {
+        this.logger.error(
+          {
+            userId,
+            productId: outOfStockProduct.product.id,
+            productName: outOfStockProduct.product.name,
+            requested: outOfStockProduct.quantity,
+            available: outOfStockProduct.product.stock,
+          },
+          'Product out of stock',
+        )
         throw new UnexpectedError(
           `Product ${outOfStockProduct.product.name} is out of stock`,
         )
@@ -100,9 +136,13 @@ export class CheckoutService implements ICheckoutService {
       await this._reserveStock(queryRuner, cart.id, cartItems)
 
       await queryRuner.commitTransaction()
+      this.logger.info(
+        { userId, cartId: cart.id, itemCount: cartItems.length },
+        'Checkout prepared successfully',
+      )
       return { ...cart, items: cartItems }
     } catch (error) {
-      console.error('Error: ', error)
+      this.logger.error({ userId, error }, 'Error preparing checkout')
       await queryRuner.rollbackTransaction()
       throw new UnexpectedError('Failed to prepare Checkout')
     } finally {
@@ -124,6 +164,10 @@ export class CheckoutService implements ICheckoutService {
     cartId: number,
     cartItems: CartItem[],
   ) {
+    this.logger.debug(
+      { cartId, itemCount: cartItems.length },
+      'Reserving stock for cart items',
+    )
     const productIds = cartItems.map((i) => i.product.id)
 
     const products = await queryRuner.manager
@@ -144,6 +188,10 @@ export class CheckoutService implements ICheckoutService {
       const available = product.stock - product.reservedStock
 
       if (available < need) {
+        this.logger.error(
+          { productId: product.id, productName: product.name, need, available },
+          'Insufficient stock for reservation',
+        )
         throw new Error('Out of stock')
       }
 
@@ -161,6 +209,10 @@ export class CheckoutService implements ICheckoutService {
     }
 
     await queryRuner.manager.save(products)
+    this.logger.info(
+      { cartId, productCount: products.length },
+      'Stock reserved successfully',
+    )
   }
 
   /**
@@ -176,6 +228,10 @@ export class CheckoutService implements ICheckoutService {
     cart: Cart,
     paymentInvoice: Invoice,
   ) {
+    this.logger.info(
+      { userId, cartId: cart.id, invoiceId: paymentInvoice.id },
+      'Creating local invoice',
+    )
     const { id: cartId, items } = cart
     const { lines, currency, total, id: invoiceId } = paymentInvoice
 
@@ -200,7 +256,15 @@ export class CheckoutService implements ICheckoutService {
       await queryRunner.manager.save(invoice)
 
       await queryRunner.commitTransaction()
-    } catch {
+      this.logger.info(
+        { userId, invoiceId },
+        'Local invoice created successfully',
+      )
+    } catch (error) {
+      this.logger.error(
+        { userId, invoiceId, error },
+        'Error creating local invoice',
+      )
       await queryRunner.rollbackTransaction()
       throw new UnexpectedError('Failed to create local invoice')
     } finally {
@@ -222,6 +286,10 @@ export class CheckoutService implements ICheckoutService {
     cartItems: CartItem[],
     invoiceLineItems: InvoiceLineItem[],
   ) {
+    this.logger.debug(
+      { invoiceId, itemCount: cartItems.length },
+      'Creating invoice items',
+    )
     try {
       const itemMap: Record<string, InvoiceLineItem> = {}
       for (const line of invoiceLineItems) {
@@ -247,7 +315,12 @@ export class CheckoutService implements ICheckoutService {
 
         await queryRunner.manager.save(invoiceItem)
       }
-    } catch {
+      this.logger.debug(
+        { invoiceId, itemCount: cartItems.length },
+        'Invoice items created successfully',
+      )
+    } catch (error) {
+      this.logger.error({ invoiceId, error }, 'Error creating invoice items')
       throw new UnexpectedError('Failed to create local invoice items')
     }
   }
@@ -263,16 +336,25 @@ export class CheckoutService implements ICheckoutService {
     payload: Stripe.PaymentIntentCreateParams,
     userId: string,
     userStripeId: string,
-  ): Promise<Response<Invoice>> {
+  ): Promise<TResponse<Invoice>> {
+    this.logger.info(
+      { userId, userStripeId, currency: payload.currency },
+      'Generating payment intent',
+    )
     const cart = await this.cartRepository.getCartByUserId(userId)
 
     if (!cart) {
+      this.logger.error({ userId }, 'Cart not found for payment intent')
       throw new NotFoundError('Cart not found')
     }
 
     const deletedProduct = cart.items.find((item) => item.product.deleted)
 
     if (deletedProduct) {
+      this.logger.error(
+        { userId, productId: deletedProduct.product.id },
+        'Deleted product in cart',
+      )
       throw new UnexpectedError(
         `Product ${deletedProduct.product.name} is deleted`,
       )
@@ -283,6 +365,10 @@ export class CheckoutService implements ICheckoutService {
     )
 
     if (outOfStockProduct) {
+      this.logger.error(
+        { userId, productId: outOfStockProduct.product.id },
+        'Out of stock product in cart',
+      )
       throw new UnexpectedError(
         `Product ${outOfStockProduct.product.name} is out of stock`,
       )
@@ -315,6 +401,10 @@ export class CheckoutService implements ICheckoutService {
       invoice.id,
     )
 
+    this.logger.info(
+      { userId, invoiceId: invoice.id },
+      'Payment intent generated successfully',
+    )
     return finalizeInvoice
   }
 
@@ -328,6 +418,7 @@ export class CheckoutService implements ICheckoutService {
     userId: string,
     stripeId: string,
   ): Promise<Invoice> {
+    this.logger.info({ userId, stripeId }, 'Preparing order for payment')
     const cart = await this._prepareCheckout(userId)
 
     const invoice =
@@ -335,6 +426,10 @@ export class CheckoutService implements ICheckoutService {
 
     await this._createLocalInvoice(userId, cart, invoice)
 
+    this.logger.info(
+      { userId, invoiceId: invoice.id },
+      'Order prepared for payment successfully',
+    )
     return invoice
   }
 
@@ -349,22 +444,45 @@ export class CheckoutService implements ICheckoutService {
     stripeId: string,
     invoiceId: string,
   ): Promise<void> {
+    this.logger.info({ stripeId, invoiceId }, 'Handling successful payment')
     const queryRunner =
       this.cartRepository.manager.connection.createQueryRunner()
     try {
       await queryRunner.connect()
       await queryRunner.startTransaction()
+      this.logger.debug(
+        { stripeId, invoiceId },
+        'Transaction started for payment handling',
+      )
 
       const user = await this.userRepository.getByStripeId(stripeId)
-      if (!user) throw new NotFoundError('User not found')
+      if (!user) {
+        this.logger.error({ stripeId }, 'User not found for successful payment')
+        throw new NotFoundError('User not found')
+      }
+
+      this.logger.debug(
+        { userId: user.id, stripeId },
+        'User found for payment processing',
+      )
 
       const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
       if (!invoice || invoice.status !== 'paid') {
+        this.logger.error(
+          { invoiceId, status: invoice?.status },
+          'Invoice not paid or not found',
+        )
         throw new UnexpectedError('Invoice not paid or not found')
       }
 
       const cart = await this._getCart(queryRunner, user.id)
-      if (!cart) return
+      if (!cart) {
+        this.logger.warn(
+          { userId: user.id },
+          'No active cart found for successful payment',
+        )
+        return
+      }
 
       const { paymentDetails, invoiceItems } =
         await this._getPaymentDetailsAndItems(invoiceId, invoice)
@@ -375,6 +493,10 @@ export class CheckoutService implements ICheckoutService {
       await queryRunner.manager.delete(CartItem, { cartId: cart.id })
 
       await queryRunner.commitTransaction()
+      this.logger.info(
+        { userId: user.id, invoiceId, cartId: cart.id },
+        'Payment handled successfully',
+      )
 
       const {
         currency,
@@ -404,6 +526,10 @@ export class CheckoutService implements ICheckoutService {
         total,
       })
     } catch (error) {
+      this.logger.error(
+        { stripeId, invoiceId, error },
+        'Error handling successful payment',
+      )
       await queryRunner.rollbackTransaction()
       throw error
     } finally {
@@ -417,6 +543,7 @@ export class CheckoutService implements ICheckoutService {
    * @param userId The ID of the user.
    */
   private async _getCart(queryRunner: QueryRunner, userId: string) {
+    this.logger.debug({ userId }, 'Fetching cart for payment processing')
     const cart = await queryRunner.manager
       .createQueryBuilder(Cart, 'cart')
       .setLock('pessimistic_write')
@@ -424,8 +551,13 @@ export class CheckoutService implements ICheckoutService {
       .getOne()
 
     if (!cart || cart.status !== 'active') {
+      this.logger.debug(
+        { userId, cartStatus: cart?.status },
+        'Cart not active or not found',
+      )
       return null
     }
+    this.logger.debug({ userId, cartId: cart.id }, 'Cart fetched successfully')
     return cart
   }
 
@@ -436,14 +568,21 @@ export class CheckoutService implements ICheckoutService {
    */
   private async _getPaymentDetailsAndItems(
     invoiceId: string,
-    invoice: Response<Invoice>,
+    invoice: TResponse<Invoice>,
   ): Promise<{
     paymentDetails: PaymentDetails
     invoiceItems: InvoiceItem[]
   }> {
+    this.logger.debug(
+      { invoiceId },
+      'Fetching payment details and invoice items',
+    )
     const { payments } = invoice
     const { id: invoicePaymentId } = payments?.data[0] || {}
-    if (!invoicePaymentId) throw new NotFoundError('Invoice Payment not found')
+    if (!invoicePaymentId) {
+      this.logger.error({ invoiceId }, 'Invoice payment not found')
+      throw new NotFoundError('Invoice Payment not found')
+    }
 
     const invoicePayment =
       await this.paymentGatewayProvider.getInvoicePayment(invoicePaymentId)
@@ -453,12 +592,22 @@ export class CheckoutService implements ICheckoutService {
       payment_method,
       id: paymentIntentId,
     } = payment.payment_intent || {}
-    if (!latest_charge) throw new UnexpectedError('Missing latest charge')
+    if (!latest_charge) {
+      this.logger.error(
+        { invoiceId },
+        'Missing latest charge in payment intent',
+      )
+      throw new UnexpectedError('Missing latest charge')
+    }
 
     const invoiceItems = await this.cartRepository.manager.find(InvoiceItem, {
       where: { invoiceId },
     })
 
+    this.logger.debug(
+      { invoiceId, itemCount: invoiceItems.length },
+      'Payment details and items fetched successfully',
+    )
     return {
       paymentDetails: {
         receipt_url: latest_charge.receipt_url!,
@@ -480,6 +629,7 @@ export class CheckoutService implements ICheckoutService {
     queryRunner: QueryRunner,
     cartId: number,
   ) {
+    this.logger.debug({ cartId }, 'Updating stock and reservations')
     const reservations = await queryRunner.manager
       .createQueryBuilder(StockReservation, 'sr')
       .setLock('pessimistic_write')
@@ -509,6 +659,14 @@ export class CheckoutService implements ICheckoutService {
 
     await queryRunner.manager.save(products)
     await queryRunner.manager.save(reservations)
+    this.logger.info(
+      {
+        cartId,
+        productCount: products.length,
+        reservationCount: reservations.length,
+      },
+      'Stock and reservations updated successfully',
+    )
   }
 
   /**
@@ -522,9 +680,13 @@ export class CheckoutService implements ICheckoutService {
   private async _createOrder(
     queryRunner: QueryRunner,
     userId: string,
-    invoice: Response<Invoice>,
+    invoice: TResponse<Invoice>,
     invoiceItems: InvoiceItem[],
   ) {
+    this.logger.debug(
+      { userId, invoiceId: invoice.id, itemCount: invoiceItems.length },
+      'Creating order',
+    )
     const totalAmount = invoiceItems.reduce(
       (prev, item) => prev + item.total,
       0,
@@ -563,11 +725,13 @@ export class CheckoutService implements ICheckoutService {
     invoiceId: string,
     paymentDetails: PaymentDetails,
   ) {
+    this.logger.debug({ invoiceId }, 'Updating local invoice')
     await queryRunner.manager.update(InvoiceEntity, invoiceId, {
       status: InvoiceStatus.PAID,
       paidAt: new Date((paymentDetails.paid_at || Date.now()) * 1000),
       paymentIntentId: paymentDetails.paymentIntentId,
     })
+    this.logger.debug({ invoiceId }, 'Local invoice updated successfully')
   }
 
   /**
@@ -601,6 +765,10 @@ export class CheckoutService implements ICheckoutService {
       total: number
     },
   ) {
+    this.logger.info(
+      { customer_email, invoice_number },
+      'Sending confirmation email',
+    )
     const message = {
       from: env.sendgrid.fromEmail,
       templateId: env.sendgrid.templates.orderSuccess,
@@ -627,5 +795,9 @@ export class CheckoutService implements ICheckoutService {
     }
 
     await this.mailProvider.sendWithTemplate(message)
+    this.logger.info(
+      { customer_email, invoice_number },
+      'Confirmation email sent successfully',
+    )
   }
 }

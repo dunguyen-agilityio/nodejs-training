@@ -1,17 +1,20 @@
 import { QueryRunner } from 'typeorm'
 
-import { Order } from '#entities'
-import { Params } from '#types'
-
 import { BaseRepository } from '#repositories/base'
+
+import { ProductQueryParams } from '#types'
+
+import { Order } from '#entities'
 
 export abstract class AbstractOrderRepository extends BaseRepository<Order> {
   abstract findOrdersByUserId(
     userId: string,
-    params: Omit<Params, 'query'>,
+    params: Omit<ProductQueryParams, 'query'>,
   ): Promise<[number, Order[]]>
   abstract findPendingOrder(userId: string): Promise<Order | null>
-  abstract findOrders(params: Omit<Params, 'query'>): Promise<[number, Order[]]>
+  abstract findOrders(
+    params: Omit<ProductQueryParams, 'query'>,
+  ): Promise<[number, Order[]]>
   abstract createOrder(
     queryRunner: QueryRunner,
     userId: string,

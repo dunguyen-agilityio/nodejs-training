@@ -1,6 +1,6 @@
-import { User } from '#entities'
-
 import { BaseRepository } from '#repositories/base'
+
+import { User } from '#entities'
 
 export abstract class AbstractUserRepository extends BaseRepository<User> {
   abstract getById(id: string): Promise<User | null>

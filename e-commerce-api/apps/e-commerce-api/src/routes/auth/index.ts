@@ -2,17 +2,13 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { validateRequest } from '#middlewares'
 
-import { loginBodySchema, registerBodySchema } from '#schemas/auth.schema'
+import { registerBodySchema } from '#schemas/auth.schema'
 
 export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.controllers.authController
+
   instance.post(
-    '/login',
-    { schema: { body: loginBodySchema }, attachValidation: true },
-    controller.login,
-  )
-  instance.post(
-    '/register',
+    '/webhooks',
     {
       schema: { body: registerBodySchema },
       attachValidation: true,
@@ -20,7 +16,6 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
     },
     controller.register,
   )
-  instance.post('/webhooks', controller.register)
 
   done()
 }

@@ -14,6 +14,7 @@ export interface ProductCardProps {
 export default function ProductCard({
   product,
   addToCart,
+  outStock,
 }: TWithCart<ProductCardProps>) {
   const handleAddToCart = () => {
     addToCart(product)
@@ -46,9 +47,10 @@ export default function ProductCard({
           <span className="font-bold text-xl">${product.price}</span>
           <button
             onClick={handleAddToCart}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
+            disabled={outStock}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Add to Cart
+            {outStock ? 'Out of Stock' : 'Add to Cart'}
           </button>
         </div>
       </div>

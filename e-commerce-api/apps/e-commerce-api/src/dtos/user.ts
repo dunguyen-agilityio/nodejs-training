@@ -1,9 +1,10 @@
 import { FromSchema } from 'json-schema-to-ts'
 
-import { User } from '#entities'
 import { USER_ROLES } from '#types'
 
 import { registerBodySchema } from '#schemas/auth.schema'
+
+import { User } from '#entities'
 
 export const transformatFromClerk = ({
   data,

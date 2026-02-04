@@ -5,7 +5,7 @@ import { ApiPagination, ApiResponse, CartItem, Product } from './types'
 
 export interface GetProductsParams {
   search?: string
-  category?: string
+  category?: string | string[]
   sort?: string
   page?: number
   limit?: number
@@ -20,7 +20,15 @@ export async function getProducts({
 }: GetProductsParams) {
   const params = new URLSearchParams()
   if (search) params.append('query', search)
-  if (category && category !== 'All') params.append('category', category)
+
+  // Handle multiple categories
+  if (category) {
+    const categories = Array.isArray(category) ? category : [category]
+    const filteredCategories = categories.filter((c) => c !== 'All')
+    if (filteredCategories.length > 0) {
+      params.append('category', filteredCategories.join(','))
+    }
+  }
   if (sort) params.append('sort', sort)
   if (page) params.append('page', page.toString())
   if (limit) params.append('pageSize', limit.toString())

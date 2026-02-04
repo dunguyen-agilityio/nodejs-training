@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getCategories, getProducts } from '@/lib/data'
 
 import { DeleteProductButton } from '@/components/admin/delete-product-button'
+import { DuplicateProductButton } from '@/components/admin/duplicate-product-button'
 import { CategoryFilter } from '@/components/category-filter'
 import { PaginationControls } from '@/components/pagination-controls'
 import { SearchInput } from '@/components/search-input'
@@ -118,9 +119,11 @@ export default async function AdminProductsPage({
                         <Link
                           href={`/admin/products/${product.id}`}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                          title="Edit product"
                         >
                           <Edit className="h-4 w-4" />
                         </Link>
+                        <DuplicateProductButton product={product} />
                         <DeleteProductButton productId={product.id} />
                       </div>
                     </td>

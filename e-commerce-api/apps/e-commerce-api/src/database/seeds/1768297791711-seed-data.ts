@@ -2,11 +2,12 @@ import { clerkClient } from '@clerk/fastify'
 import { MigrationInterface, QueryRunner } from 'typeorm'
 
 import { StripePaymentAdapter } from '#adapters'
-import { USER_ROLES } from '#types'
 import { faker } from '@faker-js/faker'
 import Stripe from 'stripe'
 
 import env from '#env'
+
+import { USER_ROLES } from '#types'
 
 export class SeedData1768297791711 implements MigrationInterface {
   stripe = new StripePaymentAdapter(new Stripe(env.stripe.secretKey))

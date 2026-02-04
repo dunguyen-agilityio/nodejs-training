@@ -1,7 +1,7 @@
 'use client'
 
 import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-import React, { FormEvent, useState } from 'react'
+import React, { FormEvent, Suspense, useState } from 'react'
 import { toast } from 'sonner'
 
 import { post } from '@/lib/api'
@@ -58,13 +58,22 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
     }
   }
 
+  const [isPaymentReady, setIsPaymentReady] = useState(false)
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement options={{ layout: 'accordion' }} />
+      <Suspense fallback={<div>Loading payment element...</div>}>
+        <PaymentElement
+          options={{ layout: 'accordion' }}
+          onChange={(e) => {
+            setIsPaymentReady(e.complete)
+          }}
+        />
+      </Suspense>
 
       <button
         type="submit"
-        disabled={isLoading || !stripe || !elements}
+        disabled={isLoading || !stripe || !elements || !isPaymentReady}
         className="w-full bg-primary text-primary-foreground py-4 rounded-md font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
         {isLoading ? 'Processing...' : `Pay ${formatCurrency(cartTotal)}`}

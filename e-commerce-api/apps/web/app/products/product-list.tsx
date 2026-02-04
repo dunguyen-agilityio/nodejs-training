@@ -18,7 +18,7 @@ export default function ProductList() {
 
   const { data, error, isLoading } = useQuery({
     queryKey: ['products', { search, sort, category, page }],
-    queryFn: () => getProducts({ search, sort, category, page, limit: 10 }),
+    queryFn: () => getProducts({ search, sort, category, page, limit: 8 }),
   })
 
   if (isLoading) {
