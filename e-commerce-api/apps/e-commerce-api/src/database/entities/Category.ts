@@ -1,14 +1,14 @@
-import { Column, Entity, OneToMany } from "typeorm";
+import { Column, Entity, OneToMany } from 'typeorm';
 
-import { Base, type BaseProps } from "./Base";
-import { Product } from "./Product";
+import { Base, type BaseProps } from './Base';
+import { Product } from './Product';
 
-@Entity({ name: "categories" })
+@Entity({ name: 'categories' })
 export class Category extends Base {
-  @Column({ unique: true, type: "varchar" })
+  @Column({ unique: true, type: 'varchar' })
   name: string;
 
-  @Column({ type: "varchar" })
+  @Column({ type: 'varchar' })
   description: string;
 
   @OneToMany(() => Product, (product) => product.category)
@@ -17,7 +17,10 @@ export class Category extends Base {
   constructor(category: BaseProps<Category>) {
     super();
     if (category) {
-      Object.assign(this, { ...category, products: category.products || [] });
+      Object.assign(this, {
+        ...category,
+        products: category.products || [],
+      });
     }
   }
 }

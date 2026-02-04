@@ -4,6 +4,8 @@
     "module": "es2022",
     "moduleResolution": "bundler",
     "lib": ["ES2024"],
+    "baseUrl": ".",
+    "rootDir": "./src",
     "outDir": "./build",
     "sourceMap": true,
 
@@ -44,10 +46,6 @@
 
     "declaration": true
   },
-  "include": [
-    "src/**/*",
-    "../../packages/typeorm-service/src/**/*",
-    "src/seeds/1768297791711-seed-data.ts"
-  ],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "dist"]
 }

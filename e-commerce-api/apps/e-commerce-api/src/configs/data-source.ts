@@ -1,18 +1,19 @@
-import "reflect-metadata";
-import { DataSource, DataSourceOptions } from "typeorm";
+import { DataSource, DataSourceOptions } from 'typeorm'
+
+import 'reflect-metadata'
 
 export const createDataSource = (
-  options?: Omit<DataSourceOptions, "type" | "database" | "poolSize">,
+  options?: Omit<DataSourceOptions, 'type' | 'database' | 'poolSize'>,
 ) =>
   new DataSource({
-    type: "better-sqlite3",
-    database: "database.sqlite",
+    type: 'better-sqlite3',
+    database: 'database.sqlite',
     synchronize: false,
     logging: false,
-    entities: ["../entities/*{.js,.ts}"],
-    migrations: ["../migrations/*{.js,.ts}"],
+    entities: ['../entities/*{.js,.ts}'],
+    migrations: ['../migrations/*{.js,.ts}'],
     subscribers: [],
     ...options,
-  });
+  })
 
-export const AppDataSource = createDataSource();
+export const AppDataSource = createDataSource()

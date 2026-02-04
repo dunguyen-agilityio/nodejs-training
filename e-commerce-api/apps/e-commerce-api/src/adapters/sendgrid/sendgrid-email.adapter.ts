@@ -1,13 +1,14 @@
-import { EmailProvider, MailData } from "#types/mail";
-import { MailService } from "@sendgrid/mail";
+import { MailService } from '@sendgrid/mail'
+
+import { EmailProvider, MailData } from '#types/mail'
 
 export default class ResponseError extends Error {
-  code: number;
-  message: string;
+  code: number
+  message: string
   response: {
-    headers: { [key: string]: string };
-    body: string;
-  };
+    headers: { [key: string]: string }
+    body: string
+  }
 }
 
 export class SendGridEmailAdapter implements EmailProvider {
@@ -18,15 +19,15 @@ export class SendGridEmailAdapter implements EmailProvider {
     from,
     templateId,
     dynamicTemplateData,
-  }: MailData & Required<Pick<MailData, "templateId">>): Promise<void> {
+  }: MailData & Required<Pick<MailData, 'templateId'>>): Promise<void> {
     await this.sendgrid.send(
       { to, from, templateId, dynamicTemplateData },
       false,
       (error) => {
         if (error instanceof ResponseError) {
-          console.error("Error - sendWithTemplate: ", error.response.body);
+          console.error('Error - sendWithTemplate: ', error.response.body)
         }
       },
-    );
+    )
   }
 }

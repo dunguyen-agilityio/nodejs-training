@@ -1,26 +1,26 @@
-"use client";
+'use client'
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 interface PaginationControlsProps {
-  totalPages: number;
-  currentPage: number;
+  totalPages: number
+  currentPage: number
 }
 
 export function PaginationControls({
   totalPages,
   currentPage,
 }: PaginationControlsProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", page.toString());
-    router.replace(`${pathname}?${params.toString()}`);
-  };
+    const params = new URLSearchParams(searchParams)
+    params.set('page', page.toString())
+    router.replace(`${pathname}?${params.toString()}`)
+  }
 
   return (
     <div className="flex items-center justify-center gap-2 mt-8">
@@ -44,5 +44,5 @@ export function PaginationControls({
         <ChevronRight className="h-4 w-4" />
       </button>
     </div>
-  );
+  )
 }

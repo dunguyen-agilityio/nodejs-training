@@ -1,26 +1,27 @@
-"use client";
+'use client'
 
-import { useCart } from "@/context/CartContext";
-import { Product } from "@/lib/types";
+import { JSX, useMemo } from 'react'
 
-import { JSX, useMemo } from "react";
+import { Product } from '@/lib/types'
 
-type TChild<T> = (props: TWithCart<T>) => React.ReactNode;
+import { useCart } from '@/context/CartContext'
+
+type TChild<T> = (props: TWithCart<T>) => React.ReactNode
 
 export const withCart = <T,>(Comp: TChild<T>) => {
   const NewCompoent = ({ product, ...props }: { product: Product } & T) => {
-    const { addToCart, cart } = useCart();
+    const { addToCart, cart } = useCart()
 
     const existingItem = useMemo(
       () => cart.find((item) => item.product.id === product.id),
-      [cart],
-    );
+      [cart, product.id],
+    )
 
-    const quantity = existingItem?.quantity || 0;
+    const quantity = existingItem?.quantity || 0
 
     const handleAddToCart = (product: Product) => {
-      addToCart(product, quantity + 1);
-    };
+      addToCart(product, quantity + 1)
+    }
 
     return (
       <Comp
@@ -28,12 +29,12 @@ export const withCart = <T,>(Comp: TChild<T>) => {
         product={product}
         addToCart={handleAddToCart}
       />
-    );
-  };
+    )
+  }
 
-  return NewCompoent;
-};
+  return NewCompoent
+}
 
 export type TWithCart<T> = T & {
-  addToCart: (product: Product) => void;
-};
+  addToCart: (product: Product) => void
+}

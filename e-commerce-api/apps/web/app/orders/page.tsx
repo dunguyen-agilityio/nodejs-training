@@ -1,19 +1,20 @@
-import { getUserOrders } from "@/lib/orders";
-import { PaginationControls } from "@/components/pagination-controls";
+import Image from 'next/image'
+import Link from 'next/link'
 
-import Image from "next/image";
-import Link from "next/link";
+import { getUserOrders } from '@/lib/orders'
+
+import { PaginationControls } from '@/components/pagination-controls'
 
 interface OrdersPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string }>
 }
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
-  const params = await searchParams;
-  const page = Number(params.page) || 1;
-  const response = await getUserOrders(page, 10);
-  const orders = response.data;
-  const pagination = response.meta.pagination;
+  const params = await searchParams
+  const page = Number(params.page) || 1
+  const response = await getUserOrders(page, 10)
+  const orders = response.data
+  const pagination = response.meta.pagination
 
   if (orders.length === 0 && page === 1) {
     return (
@@ -31,7 +32,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           Start Shopping
         </Link>
       </div>
-    );
+    )
   }
 
   return (
@@ -69,12 +70,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   Order # {order.id}
                 </p>
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${order.status === "Delivered"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                      : order.status === "Cancelled"
-                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                        : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                    }`}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    order.status === 'Delivered'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                      : order.status === 'Cancelled'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                  }`}
                 >
                   {order.status}
                 </span>
@@ -116,5 +118,5 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         />
       )}
     </main>
-  );
+  )
 }

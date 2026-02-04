@@ -1,14 +1,15 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import { CartItem as TCartItem } from "@/lib/types";
-import { useState } from "react";
-import { cn, formatCurrency } from "@/lib/utils";
+import Image from 'next/image'
+import { useState } from 'react'
+
+import { CartItem as TCartItem } from '@/lib/types'
+import { formatCurrency } from '@/lib/utils'
 
 interface CartItemProps {
-  item: TCartItem;
-  removeFromCart: (cartItemId: string) => void;
-  updateQuantity: (cartItemId: string, quantity: number) => void;
+  item: TCartItem
+  removeFromCart: (cartItemId: string) => void
+  updateQuantity: (cartItemId: string, quantity: number) => void
 }
 
 export function CartItem({
@@ -16,21 +17,21 @@ export function CartItem({
   updateQuantity,
   removeFromCart,
 }: CartItemProps) {
-  const [quantity, setQuantity] = useState(item.quantity);
+  const [quantity, setQuantity] = useState(item.quantity)
 
   const handleDecrease = () => {
-    const newQuantity = quantity - 1;
-    setQuantity(newQuantity);
-    updateQuantity(item.id, newQuantity);
-  };
+    const newQuantity = quantity - 1
+    setQuantity(newQuantity)
+    updateQuantity(item.id, newQuantity)
+  }
 
   const handleIncrease = () => {
-    const newQuantity = quantity + 1;
-    setQuantity(newQuantity);
-    updateQuantity(item.id, newQuantity);
-  };
+    const newQuantity = quantity + 1
+    setQuantity(newQuantity)
+    updateQuantity(item.id, newQuantity)
+  }
 
-  const isOutOfStock = item.quantity > item.product.stock;
+  const isOutOfStock = item.quantity > item.product.stock
 
   return (
     <div
@@ -39,7 +40,7 @@ export function CartItem({
     >
       <div className="relative h-24 w-24 bg-secondary rounded-md overflow-hidden flex-shrink-0">
         <Image
-          src={item.product.images[0] || "/file-text.svg"}
+          src={item.product.images[0] || '/file-text.svg'}
           alt={item.product.name}
           fill
           className="object-contain p-2"
@@ -84,5 +85,5 @@ export function CartItem({
         {formatCurrency(item.product.price * item.quantity)}
       </div>
     </div>
-  );
+  )
 }

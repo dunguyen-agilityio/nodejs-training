@@ -1,20 +1,22 @@
-import { get } from "@/lib/api";
-import { auth } from "@clerk/nextjs/server";
-import Link from "next/link";
+import { auth } from '@clerk/nextjs/server'
+
+import Link from 'next/link'
+
+import { get } from '@/lib/api'
 
 type ProductMetric = {
-  totalProducts: number;
-  totalStock: number;
-  totalValue: number;
-};
+  totalProducts: number
+  totalStock: number
+  totalValue: number
+}
 
 export default async function AdminDashboard() {
-  const { getToken } = await auth();
-  const token = await getToken();
-  const response = await get<ProductMetric>("/metrics/product", {
+  const { getToken } = await auth()
+  const token = await getToken()
+  const response = await get<ProductMetric>('/metrics/product', {
     Authorization: `Bearer ${token}`,
-  });
-  const { totalProducts, totalStock, totalValue } = response || {};
+  })
+  const { totalProducts, totalStock, totalValue } = response || {}
 
   return (
     <div className="space-y-6">
@@ -64,5 +66,5 @@ export default async function AdminDashboard() {
         </Link>
       </div>
     </div>
-  );
+  )
 }

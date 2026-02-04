@@ -1,7 +1,10 @@
-import { User } from "#entities";
-import { registerBodySchema } from "#schemas/auth.schema";
-import { USER_ROLES } from "#types/user";
-import { FromSchema } from "json-schema-to-ts";
+import { FromSchema } from 'json-schema-to-ts'
+
+import { User } from '#entities'
+
+import { USER_ROLES } from '#types/user'
+
+import { registerBodySchema } from '#schemas/auth.schema'
 
 export const transformatFromClerk = ({
   data,
@@ -17,7 +20,7 @@ export const transformatFromClerk = ({
     updated_at: updatedAt,
     phone_numbers,
     role,
-  } = data;
+  } = data
 
   const newUser = new User({
     avatar: image_url,
@@ -25,12 +28,12 @@ export const transformatFromClerk = ({
     id,
     username,
     firstName,
-    email: email_addresses[0]?.email_address || "",
+    email: email_addresses[0]?.email_address || '',
     createdAt: new Date(createdAt),
     updatedAt: new Date(updatedAt),
     phone: phone_numbers[0]?.phone_number,
     role: role as USER_ROLES,
-  } as User);
+  } as User)
 
-  return newUser;
-};
+  return newUser
+}

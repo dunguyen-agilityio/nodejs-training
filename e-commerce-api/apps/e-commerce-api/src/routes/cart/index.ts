@@ -1,24 +1,25 @@
-import { authenticate } from "#middlewares";
-import { FastifyPluginCallback } from "fastify";
+import { FastifyPluginCallback } from 'fastify'
+
+import { authenticate } from '#middlewares'
 
 export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const { cartController, cartItemController } = instance.container.controllers;
+  const { cartController, cartItemController } = instance.container.controllers
 
   instance.post(
-    "/add",
+    '/add',
     { preHandler: [authenticate] },
     cartController.addProductToCart,
-  );
-  instance.get("/", { preHandler: [authenticate] }, cartController.getCart);
+  )
+  instance.get('/', { preHandler: [authenticate] }, cartController.getCart)
   instance.delete(
-    "/items/:id",
+    '/items/:id',
     { preHandler: [authenticate] },
     cartItemController.deleteCartItem,
-  );
+  )
   instance.put(
-    "/items/:id",
+    '/items/:id',
     { preHandler: [authenticate] },
     cartItemController.updateCartItemQuantity,
-  );
-  done();
-};
+  )
+  done()
+}

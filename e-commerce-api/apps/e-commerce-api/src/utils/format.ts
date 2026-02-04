@@ -1,4 +1,4 @@
-import { PaymentMethod, PaymentMethodType } from "#types/invoice";
+import { PaymentMethod, PaymentMethodType } from '#types/invoice'
 
 /**
  * Format Stripe amount (in smallest unit) to currency string
@@ -7,23 +7,23 @@ import { PaymentMethod, PaymentMethodType } from "#types/invoice";
 export function formatStripeAmount(
   amount: number,
   currency: string,
-  locale = "en-US",
+  locale = 'en-US',
 ): string {
   return new Intl.NumberFormat(locale, {
-    style: "currency",
+    style: 'currency',
     currency: currency.toUpperCase(),
-  }).format(amount / 100);
+  }).format(amount / 100)
 }
 
 export function formatAmount(
   amount: number,
   currency: string,
-  locale = "en-US",
+  locale = 'en-US',
 ): string {
   return new Intl.NumberFormat(locale, {
-    style: "currency",
+    style: 'currency',
     currency: currency.toUpperCase(),
-  }).format(amount);
+  }).format(amount)
 }
 
 /**
@@ -32,29 +32,29 @@ export function formatAmount(
  */
 export function formatStripeDate(
   unixSeconds: number,
-  locale = "en-US",
+  locale = 'en-US',
 ): string {
   return new Intl.DateTimeFormat(locale, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(unixSeconds * 1000));
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(unixSeconds * 1000))
 }
 
 export const formatPaymentMethod = (
   type: PaymentMethodType,
   paymentMethod: PaymentMethod,
 ) => {
-  if (!paymentMethod[type]) return "";
+  if (!paymentMethod[type]) return ''
 
   switch (type) {
-    case "card":
-      return `${paymentMethod[type].brand.toUpperCase()} •••• ${paymentMethod[type].last4}`;
+    case 'card':
+      return `${paymentMethod[type].brand.toUpperCase()} •••• ${paymentMethod[type].last4}`
 
-    case "link":
-      return `Link ${paymentMethod[type].email}`;
+    case 'link':
+      return `Link ${paymentMethod[type].email}`
 
     default:
-      return "";
+      return ''
   }
-};
+}

@@ -2,7 +2,7 @@ import {
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
+} from 'typeorm';
 
 export abstract class Base {
   @PrimaryGeneratedColumn()
@@ -13,13 +13,13 @@ export abstract class Base {
   }
 }
 
-export type BaseProps<T extends Base> = Omit<T, "id"> & Partial<Pick<T, "id">>;
+export type BaseProps<T extends Base> = Omit<T, 'id'> & Partial<Pick<T, 'id'>>;
 
 export abstract class CreatedAndUpdated {
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   constructor(base?: Partial<CreatedAndUpdated>) {
@@ -28,10 +28,10 @@ export abstract class CreatedAndUpdated {
 }
 
 export abstract class BaseWithCreatedAndUpdated extends Base {
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   constructor(base?: Partial<BaseWithCreatedAndUpdated>) {
@@ -42,5 +42,5 @@ export abstract class BaseWithCreatedAndUpdated extends Base {
 
 export type BaseWithCreatedAndUpdatedProps<
   T extends BaseWithCreatedAndUpdated,
-> = Omit<T, "id" | "createdAt" | "updatedAt"> &
-  Partial<Pick<T, "id" | "createdAt" | "updatedAt">>;
+> = Omit<T, 'id' | 'createdAt' | 'updatedAt'> &
+  Partial<Pick<T, 'id' | 'createdAt' | 'updatedAt'>>;

@@ -1,28 +1,30 @@
-import { getCategories, getProducts } from "@/lib/data";
-import Link from "next/link";
-import { Edit, Plus } from "lucide-react";
-import { SearchInput } from "@/components/search-input";
-import { CategoryFilter } from "@/components/category-filter";
-import { SortSelect } from "@/components/sort-select";
-import { PaginationControls } from "@/components/pagination-controls";
-import { DeleteProductButton } from "@/components/admin/delete-product-button";
-import Image from "next/image";
+import { Edit, Plus } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+
+import { getCategories, getProducts } from '@/lib/data'
+
+import { DeleteProductButton } from '@/components/admin/delete-product-button'
+import { CategoryFilter } from '@/components/category-filter'
+import { PaginationControls } from '@/components/pagination-controls'
+import { SearchInput } from '@/components/search-input'
+import { SortSelect } from '@/components/sort-select'
 
 interface AdminProductsPageProps {
   searchParams: Promise<{
-    search?: string;
-    category?: string;
-    sort?: string;
-    page?: string;
-  }>;
+    search?: string
+    category?: string
+    sort?: string
+    page?: string
+  }>
 }
 
 export default async function AdminProductsPage({
   searchParams,
 }: AdminProductsPageProps) {
-  const { search, category, sort, page } = await searchParams;
-  const currentPage = Number(page) || 1;
-  const limit = 10;
+  const { search, category, sort, page } = await searchParams
+  const currentPage = Number(page) || 1
+  const limit = 10
 
   const { products, pagination } = await getProducts({
     search,
@@ -30,9 +32,9 @@ export default async function AdminProductsPage({
     sort,
     page: currentPage,
     limit,
-  });
+  })
 
-  const categories = await getCategories();
+  const categories = await getCategories()
 
   return (
     <div className="space-y-6">
@@ -98,7 +100,7 @@ export default async function AdminProductsPage({
                       <div className="flex gap-4 items-center">
                         <figure className="w-20 h-14 relative">
                           <Image
-                            src={product.images[0] || "/file-text.svg"}
+                            src={product.images[0] || '/file-text.svg'}
                             alt={product.name}
                             fill
                             sizes="100%"
@@ -137,5 +139,5 @@ export default async function AdminProductsPage({
         />
       )}
     </div>
-  );
+  )
 }

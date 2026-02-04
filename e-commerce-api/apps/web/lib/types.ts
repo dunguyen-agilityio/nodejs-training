@@ -1,69 +1,69 @@
 export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  images: string[];
-  category: string;
-  stock: number;
-  deleted: boolean;
+  id: string
+  name: string
+  description: string
+  price: number
+  images: string[]
+  category: string
+  stock: number
+  deleted?: boolean
 }
 
 export interface CartItem {
-  id: string;
-  quantity: number;
-  product: Product;
+  id: string
+  quantity: number
+  product: Product
 }
 
 export interface Cart {
-  id: number;
-  items: CartItem[];
-  status: string;
+  id: number
+  items: CartItem[]
+  status: string
 }
 
-export type Category = { id: number; name: string };
+export type Category = { id: number; name: string }
 
 export type OrderStatus =
-  | "pending"
-  | "processing"
-  | "shipped"
-  | "delivered"
-  | "cancelled";
+  | 'pending'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
 
 export interface OrderItem {
-  productId: string;
-  name: string;
-  description?: string;
-  price: number;
-  quantity: number;
-  image: string;
+  productId: string
+  name: string
+  description?: string
+  price: number
+  quantity: number
+  image: string
 }
 
 export interface Order {
-  id: string;
-  userId: string;
-  date: string;
-  status: OrderStatus;
-  total: number;
-  items: OrderItem[];
+  id: string
+  userId: string
+  date: string
+  status: OrderStatus
+  total: number
+  items: OrderItem[]
   shippingAddress: {
-    name: string;
-    address: string;
-    city: string;
-    zipCode: string;
-    country: string;
-  };
+    name: string
+    address: string
+    city: string
+    zipCode: string
+    country: string
+  }
 }
 
 export type ApiResponse<T, E = object> = {
-  success: boolean;
-  data: T;
-} & E;
+  success: boolean
+  data: T
+} & E
 
 export type ApiPagination = {
-  currentPage: number;
-  itemCount: number;
-  itemsPerPage: number;
-  totalItems: number;
-  totalPages: number;
-};
+  currentPage: number
+  itemCount: number
+  itemsPerPage: number
+  totalItems: number
+  totalPages: number
+}

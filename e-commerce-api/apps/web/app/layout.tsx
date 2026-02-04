@@ -1,4 +1,3 @@
-import { type Metadata } from "next";
 import {
   ClerkProvider,
   OrganizationSwitcher,
@@ -7,51 +6,55 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
-} from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { CartProvider } from "@/context/CartContext";
-import QueryProvider from "@/context/query-provider";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/mode-toggle";
-import Link from "next/link";
-import { Toaster } from "sonner";
-import { get } from "@/lib/api";
-import { auth } from "@clerk/nextjs/server";
+} from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
+
+import { type Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import Link from 'next/link'
+import { Toaster } from 'sonner'
+
+import { getCarts } from '@/lib/cart'
+import { CartItem } from '@/lib/types'
+
+import { CartProvider } from '@/context/CartContext'
+import QueryProvider from '@/context/query-provider'
+
+import { ModeToggle } from '@/components/mode-toggle'
+import { ThemeProvider } from '@/components/theme-provider'
+
+import './globals.css'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "E-Commerce Store",
-  description: "Built with Next.js and Clerk",
-};
-
-import { CartItem } from "@/lib/types";
-import { getCarts } from "@/lib/cart";
+  title: 'E-Commerce Store',
+  description: 'Built with Next.js and Clerk',
+}
 
 export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
-  const { isAuthenticated, sessionClaims } = await auth();
+  const { isAuthenticated, sessionClaims } = await auth()
 
-  const isAdmin = sessionClaims?.org_role === "org:admin"
+  const isAdmin = sessionClaims?.org_role === 'org:admin'
 
-  let cart: CartItem[] = [];
+  let cart: CartItem[] = []
   if (isAuthenticated && !isAdmin) {
     try {
-      cart = await getCarts();
+      cart = await getCarts()
     } catch (error) {
-      console.error("Failed to fetch cart on server:", error);
+      console.error('Failed to fetch cart on server:', error)
       // Handle error gracefully, maybe show a toast on the client
     }
   }
@@ -78,22 +81,24 @@ export default async function RootLayout({
                     <OrganizationSwitcher hidePersonal={isAdmin} />
                   </div>
                   <div className="flex items-center gap-4">
-                    {!isAdmin && <>
-                      <Link
-                        href="/cart"
-                        className="relative p-2 hover:bg-accent rounded-md"
-                      >
-                        🛒
-                      </Link>
-                      <SignedIn>
+                    {!isAdmin && (
+                      <>
                         <Link
-                          href="/orders"
-                          className="text-sm font-medium hover:underline"
+                          href="/cart"
+                          className="relative p-2 hover:bg-accent rounded-md"
                         >
-                          Orders
+                          🛒
                         </Link>
-                      </SignedIn>
-                    </>}
+                        <SignedIn>
+                          <Link
+                            href="/orders"
+                            className="text-sm font-medium hover:underline"
+                          >
+                            Orders
+                          </Link>
+                        </SignedIn>
+                      </>
+                    )}
 
                     <ModeToggle />
                     <SignedOut>
@@ -117,5 +122,5 @@ export default async function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-  );
+  )
 }

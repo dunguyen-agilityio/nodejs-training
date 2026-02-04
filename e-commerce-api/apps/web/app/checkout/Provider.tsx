@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!)
 
 const Provider = ({
   clientSecret,
@@ -13,14 +13,14 @@ const Provider = ({
     <Elements
       stripe={stripePromise}
       options={{
-        loader: "auto",
-        appearance: { theme: "stripe" },
+        loader: 'auto',
+        appearance: { theme: 'stripe' },
         clientSecret,
       }}
     >
       {children}
     </Elements>
-  );
-};
+  )
+}
 
-export default Provider;
+export default Provider

@@ -1,18 +1,19 @@
-"use client";
+'use client'
 
-import { useCart } from "@/context/CartContext";
-import { redirect } from "next/navigation";
-import { useEffect } from "react";
+import { redirect } from 'next/navigation'
+import { useEffect } from 'react'
+
+import { useCart } from '@/context/CartContext'
 
 function Redirect() {
-  const { clearCart } = useCart();
+  const { clearCart } = useCart()
 
   useEffect(() => {
-    clearCart();
-    setTimeout(() => redirect("/"), 3000);
-  }, [clearCart]);
+    clearCart()
+    setTimeout(() => redirect('/'), 3000)
+  }, [clearCart])
 
-  return null;
+  return null
 }
 
-export default Redirect;
+export default Redirect

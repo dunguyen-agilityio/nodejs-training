@@ -1,5 +1,6 @@
-import React from "react";
-import Redirect from "./Redirect";
+import React from 'react'
+
+import Redirect from './Redirect'
 
 async function SignOut() {
   return (
@@ -7,7 +8,7 @@ async function SignOut() {
       <span>Loading...</span>
       <Redirect />
     </div>
-  );
+  )
 }
 
-export default SignOut;
+export default SignOut

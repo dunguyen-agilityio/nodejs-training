@@ -1,28 +1,30 @@
-import { getProductById } from "@/lib/data";
-import Image from "next/image";
-import { notFound } from "next/navigation";
-import AddToCartButton from "./AddToCartButton";
+import Image from 'next/image'
+import { notFound } from 'next/navigation'
+
+import { getProductById } from '@/lib/data'
+
+import AddToCartButton from './AddToCartButton'
 
 interface ProductPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params;
-  const response = await getProductById(id);
+  const { id } = await params
+  const response = await getProductById(id)
 
   if (!response) {
-    notFound();
+    notFound()
   }
 
-  const product = response.data;
+  const product = response.data
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="relative bg-secondary rounded-lg overflow-hidden flex items-center justify-center h-[500px]">
           <Image
-            src={product.images[0] || "/file-text.svg"}
+            src={product.images[0] || '/file-text.svg'}
             alt={product.name}
             fill
             className="object-cover"
@@ -44,5 +46,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
     </main>
-  );
+  )
 }

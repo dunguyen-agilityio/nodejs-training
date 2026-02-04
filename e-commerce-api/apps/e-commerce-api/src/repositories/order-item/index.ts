@@ -1,3 +1,3 @@
-import { AbstractOrderItemRepository } from "./type";
+import { AbstractOrderItemRepository } from './type'
 
 export class OrderItemRepository extends AbstractOrderItemRepository {}

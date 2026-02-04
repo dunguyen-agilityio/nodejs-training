@@ -1,5 +1,19 @@
-import { DataSource } from "typeorm";
+import { FastifyInstance } from 'fastify'
+import { DataSource } from 'typeorm'
 
+import { SendGridEmailAdapter, StripePaymentAdapter } from '#adapters'
+import {
+  AdminOrderController,
+  AuthController,
+  CartController,
+  CartItemController,
+  CategoryController,
+  CheckoutController,
+  MetricController,
+  OrderController,
+  ProductController,
+} from '#controllers'
+import * as Controllers from '#controllers'
 import {
   Cart,
   CartItem,
@@ -11,8 +25,7 @@ import {
   Product,
   StockReservation,
   User,
-} from "#entities";
-
+} from '#entities'
 import {
   CartItemRepository,
   CartRepository,
@@ -24,36 +37,21 @@ import {
   ProductRepository,
   StockReservationRepository,
   UserRepository,
-} from "#repositories";
+} from '#repositories'
 import {
-  AdminOrderController,
-  AuthController,
-  CartController,
-  CartItemController,
-  CategoryController,
-  CheckoutController,
-  MetricController,
-  OrderController,
-  ProductController,
-} from "#controllers";
-
-import * as Controllers from "#controllers";
-
-import { FastifyInstance } from "fastify";
-import { PaymentGateway } from "#types/payment";
-import { SendGridEmailAdapter, StripePaymentAdapter } from "#adapters";
-import { EmailProvider } from "#types/mail";
-import {
-  MetricService,
   AuthService,
   CartItemService,
   CartService,
   CategoryService,
   CheckoutService,
+  MetricService,
   OrderService,
   ProductService,
   UserService,
-} from "#services";
+} from '#services'
+
+import { EmailProvider } from '#types/mail'
+import { PaymentGateway } from '#types/payment'
 
 export function buildControllers(
   services: ReturnType<typeof buildServices>,
@@ -68,7 +66,7 @@ export function buildControllers(
     checkoutController: new CheckoutController(services.checkoutService),
     metricController: new MetricController(services.metricService),
     orderController: new OrderController(services.orderService),
-  };
+  }
 }
 
 export function buildServices(
@@ -82,8 +80,8 @@ export function buildServices(
     orderRepository,
     productRepository,
     userRepository,
-  } = repos;
-  const { emailProvider, paymentGateway } = adapters;
+  } = repos
+  const { emailProvider, paymentGateway } = adapters
 
   return {
     productService: new ProductService(productRepository, paymentGateway),
@@ -114,7 +112,7 @@ export function buildServices(
       emailProvider,
     ),
     metricService: new MetricService(productRepository),
-  };
+  }
 }
 
 export function buildRepositories(ds: DataSource) {
@@ -133,34 +131,34 @@ export function buildRepositories(ds: DataSource) {
     stockReservationRepository: new StockReservationRepository(
       ds.getRepository(StockReservation),
     ),
-  };
+  }
 }
 
 export function buildAdapters(fastify: FastifyInstance) {
   const paymentGateway: PaymentGateway = new StripePaymentAdapter(
     fastify.stripe,
-  );
+  )
 
   const emailProvider: EmailProvider = new SendGridEmailAdapter(
     fastify.sendgrid,
-  );
+  )
 
-  return { paymentGateway, emailProvider };
+  return { paymentGateway, emailProvider }
 }
 
 export function buildContainer(
   fastify: FastifyInstance,
   dataSource: DataSource,
 ) {
-  const repositories = buildRepositories(dataSource);
-  const adapters = buildAdapters(fastify);
-  const services = buildServices(repositories, adapters);
-  const controllers = buildControllers(services);
+  const repositories = buildRepositories(dataSource)
+  const adapters = buildAdapters(fastify)
+  const services = buildServices(repositories, adapters)
+  const controllers = buildControllers(services)
 
-  const container = { repositories, services, controllers };
-  fastify.decorate("container", { getter: () => container });
-  fastify.decorateRequest("container", { getter: () => container });
-  return container;
+  const container = { repositories, services, controllers }
+  fastify.decorate('container', { getter: () => container })
+  fastify.decorateRequest('container', { getter: () => container })
+  return container
 }
 
-export type TContainer = ReturnType<typeof buildContainer>;
+export type TContainer = ReturnType<typeof buildContainer>

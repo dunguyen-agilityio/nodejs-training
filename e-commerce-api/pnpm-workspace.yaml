@@ -3,7 +3,7 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - '@clerk/shared'
+  - "@clerk/shared"
   - better-sqlite3
   - esbuild
   - sharp

@@ -1,25 +1,27 @@
-import { ProductForm } from "@/components/admin/product-form";
-import { fetchCategories } from "@/lib/category";
-import { getProductById } from "@/lib/data";
-import { notFound } from "next/navigation";
+import { notFound } from 'next/navigation'
+
+import { fetchCategories } from '@/lib/category'
+import { getProductById } from '@/lib/data'
+
+import { ProductForm } from '@/components/admin/product-form'
 
 interface EditProductPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }
 
 export default async function EditProductPage({
   params,
 }: EditProductPageProps) {
-  const { id } = await params;
+  const { id } = await params
 
-  const response = await getProductById(id);
-  const categories = await fetchCategories();
+  const response = await getProductById(id)
+  const categories = await fetchCategories()
 
   if (!response) {
-    notFound();
+    notFound()
   }
 
-  const { data: product } = response;
+  const { data: product } = response
 
   return (
     <div className="space-y-6">
@@ -33,5 +35,5 @@ export default async function EditProductPage({
       </div>
       <ProductForm initialData={product} categories={categories} />
     </div>
-  );
+  )
 }

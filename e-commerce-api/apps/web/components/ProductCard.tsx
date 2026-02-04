@@ -1,12 +1,14 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import { Product } from "@/lib/types";
-import Link from "next/link";
-import { TWithCart, withCart } from "@/context/withCart";
+import Image from 'next/image'
+import Link from 'next/link'
+
+import { Product } from '@/lib/types'
+
+import { TWithCart, withCart } from '@/context/withCart'
 
 export interface ProductCardProps {
-  product: Product;
+  product: Product
 }
 
 export default function ProductCard({
@@ -14,15 +16,15 @@ export default function ProductCard({
   addToCart,
 }: TWithCart<ProductCardProps>) {
   const handleAddToCart = () => {
-    addToCart(product);
-  };
+    addToCart(product)
+  }
 
   return (
     <div className="border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-card text-card-foreground">
       <Link href={`/products/${product.id}`}>
         <div className="relative h-48 w-full bg-secondary flex items-center justify-center">
           <Image
-            src={product.images[0] || "/file-text.svg"}
+            src={product.images[0] || '/file-text.svg'}
             alt={product.name}
             fill
             className="object-cover"
@@ -51,7 +53,7 @@ export default function ProductCard({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export const ProductCardWithCart = withCart<ProductCardProps>(ProductCard);
+export const ProductCardWithCart = withCart<ProductCardProps>(ProductCard)

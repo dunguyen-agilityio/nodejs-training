@@ -1,7 +1,5 @@
-import { FromSchema } from "json-schema-to-ts";
+import { FromSchema } from 'json-schema-to-ts'
 
-import { UserCreatedMinimalJsonSchema } from "#schemas/user-created";
+import { UserCreatedMinimalJsonSchema } from '#schemas/user-created'
 
-export type UserCreatedMinimal = FromSchema<
-  typeof UserCreatedMinimalJsonSchema
->;
+export type UserCreatedMinimal = FromSchema<typeof UserCreatedMinimalJsonSchema>

@@ -1,5 +1,5 @@
-import { Category } from "#entities";
+import { Category } from '#entities'
 
 export interface ICategoryService {
-  getAll(): Promise<Category[]>;
+  getAll(): Promise<Category[]>
 }

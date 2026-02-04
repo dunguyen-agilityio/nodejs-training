@@ -1,15 +1,15 @@
-import { ClerkAPIResponseError } from "#types/error";
+import { ClerkAPIResponseError } from '#types/error'
 
 export const isClerkAPIResponseError = (
   error: unknown,
 ): error is ClerkAPIResponseError => {
   return !!(
-    typeof error === "object" &&
+    typeof error === 'object' &&
     error &&
-    "clerkError" in error &&
+    'clerkError' in error &&
     error.clerkError &&
-    "errors" in error &&
+    'errors' in error &&
     Array.isArray(error.errors) &&
     error.errors.length
-  );
-};
+  )
+}

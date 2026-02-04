@@ -1,27 +1,28 @@
-"use client";
+'use client'
 
-import { productSchema, type ProductFormInput } from "@/lib/schema";
-import { Product } from "@/lib/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { faker } from "@faker-js/faker";
-import { post, put } from "@/lib/api";
-import Image from "next/image";
+import { faker } from '@faker-js/faker'
+import { zodResolver } from '@hookform/resolvers/zod'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
-type Category = { id: number; name: string };
+import { post, put } from '@/lib/api'
+import { type ProductFormInput, productSchema } from '@/lib/schema'
+import { Product } from '@/lib/types'
+
+type Category = { id: number; name: string }
 
 interface ProductFormProps {
-  initialData?: Product;
-  categories: Category[];
+  initialData?: Product
+  categories: Category[]
 }
 
 export function ProductForm({ initialData, categories }: ProductFormProps) {
-  const router = useRouter();
-  const isEditing = !!initialData;
+  const router = useRouter()
+  const isEditing = !!initialData
 
-  const { id } = initialData || {};
+  const { id } = initialData || {}
 
   const {
     register,
@@ -38,27 +39,27 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
           price: initialData.price,
           stock: initialData.stock,
           category: initialData.category,
-          image: initialData.images?.[0] || "/file-text.svg",
+          image: initialData.images?.[0] || '/file-text.svg',
         }
       : {
-          image: "/file-text.svg",
+          image: '/file-text.svg',
         },
-  });
+  })
 
   const generateMockData = () => {
     const randomCategory =
       categories.length > 0
         ? categories[Math.floor(Math.random() * categories.length)]?.name ||
-          "Electronics"
-        : "Electronics";
+          'Electronics'
+        : 'Electronics'
 
-    setValue("name", faker.commerce.productName());
-    setValue("description", faker.commerce.productDescription());
-    setValue("price", faker.commerce.price({ min: 10, max: 500 }));
-    setValue("stock", faker.number.int({ min: 20, max: 200 }).toString());
-    setValue("category", randomCategory);
-    setValue("image", faker.image.url({ width: 800, height: 600 }));
-  };
+    setValue('name', faker.commerce.productName())
+    setValue('description', faker.commerce.productDescription())
+    setValue('price', faker.commerce.price({ min: 10, max: 500 }))
+    setValue('stock', faker.number.int({ min: 20, max: 200 }).toString())
+    setValue('category', randomCategory)
+    setValue('image', faker.image.url({ width: 800, height: 600 }))
+  }
 
   const onSubmit = async ({ image, ...data }: ProductFormInput) => {
     try {
@@ -66,32 +67,36 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
         await post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
           ...data,
           images: image ? [image] : [],
-        });
+        })
       } else {
         await put(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
           data,
-        );
+        )
       }
 
       toast.success(
         isEditing
-          ? "Product updated successfully."
-          : "Product created successfully.",
-      );
-      router.push("/admin/products");
-      router.refresh();
-    } catch (error: any) {
-      console.error("Product save error:", error);
-      toast.error(
-        error?.message || isEditing
-          ? "Failed to update product"
-          : "Failed to create product",
-      );
-    }
-  };
+          ? 'Product updated successfully.'
+          : 'Product created successfully.',
+      )
+      router.push('/admin/products')
+      router.refresh()
+    } catch (error) {
+      let message = ''
+      if (error instanceof Error) {
+        message = error.message
+      }
 
-  const previewImage = watch("image");
+      toast.error(
+        message || isEditing
+          ? 'Failed to update product'
+          : 'Failed to create product',
+      )
+    }
+  }
+
+  const previewImage = watch('image')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -103,7 +108,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
             </label>
             <input
               id="name"
-              {...register("name")}
+              {...register('name')}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
             {errors.name && (
@@ -117,7 +122,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
             </label>
             <textarea
               id="description"
-              {...register("description")}
+              {...register('description')}
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
             {errors.description && (
@@ -135,7 +140,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
               id="image"
               type="url"
               placeholder="https://example.com/image.jpg"
-              {...register("image")}
+              {...register('image')}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
             {errors.image && (
@@ -152,7 +157,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
                 id="price"
                 type="number"
                 step="0.01"
-                {...register("price")}
+                {...register('price')}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               {errors.price && (
@@ -168,7 +173,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
               <input
                 id="stock"
                 type="number"
-                {...register("stock")}
+                {...register('stock')}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               {errors.stock && (
@@ -185,7 +190,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
             </label>
             <select
               id="category"
-              {...register("category")}
+              {...register('category')}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Select a category</option>
@@ -218,7 +223,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
       </div>
 
       <div className="flex gap-4">
-        {process.env.NODE_ENV === "development" && !isEditing && (
+        {process.env.NODE_ENV === 'development' && !isEditing && (
           <button
             type="button"
             onClick={generateMockData}
@@ -233,12 +238,12 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
           className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50"
         >
           {isSubmitting
-            ? "Saving..."
+            ? 'Saving...'
             : isEditing
-              ? "Update Product"
-              : "Create Product"}
+              ? 'Update Product'
+              : 'Create Product'}
         </button>
       </div>
     </form>
-  );
+  )
 }

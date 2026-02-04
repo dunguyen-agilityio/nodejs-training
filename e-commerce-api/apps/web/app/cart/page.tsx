@@ -1,40 +1,44 @@
-"use client";
+'use client'
 
-import { useCart } from "@/context/CartContext";
-import Link from "next/link";
-import { debounce, formatCurrency } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { CartItem } from "@/components/cart-item";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from '@clerk/nextjs'
+
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+
+import { debounce, formatCurrency } from '@/lib/utils'
+
+import { useCart } from '@/context/CartContext'
+
+import { CartItem } from '@/components/cart-item'
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
-  const [localCart, setLocalCart] = useState(cart);
+  const { cart, removeFromCart, updateQuantity, cartTotal } = useCart()
+  const [localCart, setLocalCart] = useState(cart)
 
-  const { isLoaded } = useAuth();
+  const { isLoaded } = useAuth()
 
   useEffect(() => {
-    setLocalCart(cart);
-  }, [cart]);
+    setLocalCart(cart)
+  }, [cart])
 
   const handleUpdateQuantity = debounce(
     (itemId: string, newQuantity: number) => {
       if (newQuantity <= 0) {
-        handleRemoveFromCart(itemId);
-        return;
+        handleRemoveFromCart(itemId)
+        return
       }
-      updateQuantity(itemId, newQuantity);
+      updateQuantity(itemId, newQuantity)
     },
     500,
-  );
+  )
 
   const handleRemoveFromCart = (itemId: string) => {
-    setLocalCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
-    removeFromCart(itemId);
-  };
+    setLocalCart((prevCart) => prevCart.filter((item) => item.id !== itemId))
+    removeFromCart(itemId)
+  }
 
   if (!isLoaded) {
-    return <p>Please waiting...</p>;
+    return <p>Please waiting...</p>
   }
 
   if (localCart.length === 0) {
@@ -53,7 +57,7 @@ export default function CartPage() {
           Continue Shopping
         </Link>
       </div>
-    );
+    )
   }
 
   return (
@@ -77,7 +81,9 @@ export default function CartPage() {
           <div className="space-y-2 mb-4 text-sm text-muted-foreground">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="text-foreground">{formatCurrency(cartTotal)}</span>
+              <span className="text-foreground">
+                {formatCurrency(cartTotal)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
@@ -97,5 +103,5 @@ export default function CartPage() {
         </div>
       </div>
     </main>
-  );
+  )
 }

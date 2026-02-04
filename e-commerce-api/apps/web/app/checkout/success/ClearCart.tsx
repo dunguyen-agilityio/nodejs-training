@@ -1,15 +1,16 @@
-"use client";
+'use client'
 
-import { useCart } from "@/context/CartContext";
-import { useEffect } from "react";
+import { useEffect } from 'react'
+
+import { useCart } from '@/context/CartContext'
 
 function ClearCart() {
-  const { clearCart } = useCart();
+  const { clearCart } = useCart()
 
   useEffect(() => {
-    clearCart();
-  }, [clearCart]);
-  return null;
+    clearCart()
+  }, [clearCart])
+  return null
 }
 
-export default ClearCart;
+export default ClearCart

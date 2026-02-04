@@ -1,10 +1,13 @@
-import { User } from "#entities";
-import { CartRepository, UserRepository } from "#repositories/types";
-import { LoginParams } from "#types/auth";
-import { NotFoundError } from "#types/error";
-import { IAuthService } from "./type";
-import { EmailProvider } from "#types/mail";
-import { PaymentGateway } from "#types/payment";
+import { User } from '#entities'
+
+import { CartRepository, UserRepository } from '#repositories/types'
+
+import { LoginParams } from '#types/auth'
+import { NotFoundError } from '#types/error'
+import { EmailProvider } from '#types/mail'
+import { PaymentGateway } from '#types/payment'
+
+import { IAuthService } from './type'
 
 export class AuthService implements IAuthService {
   constructor(
@@ -26,11 +29,11 @@ export class AuthService implements IAuthService {
       age,
       role,
       id,
-    } = body;
+    } = body
     const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
       email,
       name,
-    });
+    })
     const user = await this.userRepository.save({
       avatar,
       firstName,
@@ -42,14 +45,14 @@ export class AuthService implements IAuthService {
       role,
       id,
       email,
-    });
+    })
     await this.cartRepository.save({
       user,
-      status: "active",
+      status: 'active',
       items: [],
-    });
+    })
 
-    const loginPath = `${process.env.CLIENT_BASE_URL}${process.env.CLIENT_LOGIN_PATH}`;
+    const loginPath = `${process.env.CLIENT_BASE_URL}${process.env.CLIENT_LOGIN_PATH}`
 
     await this.mailProvider.sendWithTemplate({
       from: process.env.SENDGRID_FROM_EMAIL!,
@@ -64,22 +67,21 @@ export class AuthService implements IAuthService {
         support_email: process.env.SENDGRID_SUPPORT_EMAIL,
         year: process.env.APP_YEAR,
       },
-    });
-    return user;
+    })
+    return user
   }
 
   async login({
     identifier,
-    password,
   }: LoginParams): Promise<{ jwt: string; data: User }> {
-    const user = await this.userRepository.findOneBy({ email: identifier });
+    const user = await this.userRepository.findOneBy({ email: identifier })
 
     if (!user) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError('User not found')
     }
 
     // const jwt = await this.authProvider.login(user.id, password);
 
-    return { jwt: "jwt", data: user };
+    return { jwt: 'jwt', data: user }
   }
 }

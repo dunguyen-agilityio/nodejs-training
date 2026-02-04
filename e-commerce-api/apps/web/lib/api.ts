@@ -1,44 +1,42 @@
-import { auth } from "@clerk/nextjs/server";
-import { API_ENPOINT } from "./constants";
+import { API_ENPOINT } from './constants'
+import { UnauthorizedError } from './errors'
 
-import { UnauthorizedError } from "./errors";
-
-const defaultHeaders = {};
+const defaultHeaders = {}
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = (await response.json()) as {
-      message: string;
-      status: number;
-    };
+      message: string
+      status: number
+    }
     if (response.status === 401) {
-      throw new UnauthorizedError(error.message);
+      throw new UnauthorizedError(error.message)
     }
 
-    throw new Error(error.message || "Something went wrong");
+    throw new Error(error.message || 'Something went wrong')
   }
   if (response.status === 204) {
-    return true as T;
+    return true as T
   }
-  return response.json();
+  return response.json()
 }
 
 const buildUrl = (url: string): string => {
-  return url.startsWith("/") ? `${API_ENPOINT}${url}` : url;
-};
+  return url.startsWith('/') ? `${API_ENPOINT}${url}` : url
+}
 
 export async function get<T>(
   path: string,
   headers: HeadersInit = {},
   options: Partial<RequestInit> = {},
 ): Promise<T> {
-  const url = buildUrl(path);
+  const url = buildUrl(path)
   const response = await fetch(url, {
     ...options,
     headers: { ...defaultHeaders, ...headers },
-  });
+  })
 
-  return handleResponse<T>(response);
+  return handleResponse<T>(response)
 }
 
 export async function post<T>(
@@ -46,18 +44,18 @@ export async function post<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path);
+  const url = buildUrl(path)
 
   const response = await fetch(url, {
-    method: "POST",
+    method: 'POST',
     headers: {
       ...defaultHeaders,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...headers,
     },
     body: JSON.stringify(data),
-  });
-  return handleResponse<T>(response);
+  })
+  return handleResponse<T>(response)
 }
 
 export async function put<T>(
@@ -65,18 +63,18 @@ export async function put<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path);
+  const url = buildUrl(path)
 
   const response = await fetch(url, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
       ...defaultHeaders,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...headers,
     },
     body: JSON.stringify(data),
-  });
-  return handleResponse<T>(response);
+  })
+  return handleResponse<T>(response)
 }
 
 export async function patch<T>(
@@ -84,27 +82,27 @@ export async function patch<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path);
+  const url = buildUrl(path)
   const response = await fetch(url, {
-    method: "PATCH",
+    method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...headers,
     },
     body: JSON.stringify(data),
-  });
-  return handleResponse<T>(response);
+  })
+  return handleResponse<T>(response)
 }
 
 export async function del<T>(
   path: string,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path);
+  const url = buildUrl(path)
   const response = await fetch(url, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: { ...defaultHeaders, ...headers },
-  });
-  return handleResponse<T>(response);
+  })
+  return handleResponse<T>(response)
 }

@@ -8,38 +8,38 @@ import {
   IMetricController,
   IOrderController,
   IProductController,
-} from "./types";
+} from './types'
 
-export * from "./auth";
-export * from "./product";
-export * from "./cart";
-export * from "./category";
-export * from "./cart-item";
-export * from "./checkout";
-export * from "./order";
-export * from "./admin-order";
-export * from "./metric";
+export * from './auth'
+export * from './product'
+export * from './cart'
+export * from './category'
+export * from './cart-item'
+export * from './checkout'
+export * from './order'
+export * from './admin-order'
+export * from './metric'
 
 export type Controllers = {
-  AdminOrderController: IAdminOrderController;
-  AuthController: IAuthController;
-  ProductController: IProductController;
-  CartController: ICartController;
-  CategoryController: ICategoryController;
-  CartItemController: ICartItemController;
-  CheckoutController: ICheckoutController;
-  OrderController: IOrderController;
-  MetricController: IMetricController;
-};
+  AdminOrderController: IAdminOrderController
+  AuthController: IAuthController
+  ProductController: IProductController
+  CartController: ICartController
+  CategoryController: ICategoryController
+  CartItemController: ICartItemController
+  CheckoutController: ICheckoutController
+  OrderController: IOrderController
+  MetricController: IMetricController
+}
 
 export type TControllers = {
-  adminOrderController: IAdminOrderController;
-  authController: IAuthController;
-  productController: IProductController;
-  cartController: ICartController;
-  categoryController: ICategoryController;
-  cartItemController: ICartItemController;
-  checkoutController: ICheckoutController;
-  orderController: IOrderController;
-  metricController: IMetricController;
-};
+  adminOrderController: IAdminOrderController
+  authController: IAuthController
+  productController: IProductController
+  cartController: ICartController
+  categoryController: ICategoryController
+  cartItemController: ICartItemController
+  checkoutController: ICheckoutController
+  orderController: IOrderController
+  metricController: IMetricController
+}

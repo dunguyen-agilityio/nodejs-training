@@ -1,34 +1,35 @@
-"use client";
+'use client'
 
-import { updateOrderStatusAction } from "@/app/actions";
-import { OrderStatus } from "@/lib/types";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { updateOrderStatusAction } from '@/app/actions'
+import { useState, useTransition } from 'react'
+import { toast } from 'sonner'
+
+import { OrderStatus } from '@/lib/types'
 
 interface OrderStatusSelectProps {
-  orderId: string;
-  currentStatus: OrderStatus;
+  orderId: string
+  currentStatus: OrderStatus
 }
 
 export function OrderStatusSelect({
   orderId,
   currentStatus,
 }: OrderStatusSelectProps) {
-  const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState(currentStatus);
+  const [isPending, startTransition] = useTransition()
+  const [status, setStatus] = useState(currentStatus)
 
   const handleChange = (newStatus: OrderStatus) => {
-    setStatus(newStatus);
+    setStatus(newStatus)
     startTransition(async () => {
       try {
-        await updateOrderStatusAction(orderId, newStatus);
-        toast.success(`Order ${orderId} updated to ${newStatus}`);
+        await updateOrderStatusAction(orderId, newStatus)
+        toast.success(`Order ${orderId} updated to ${newStatus}`)
       } catch {
-        toast.error("Failed to update order status");
-        setStatus(status); // Revert on error
+        toast.error('Failed to update order status')
+        setStatus(status) // Revert on error
       }
-    });
-  };
+    })
+  }
 
   return (
     <select
@@ -43,5 +44,5 @@ export function OrderStatusSelect({
       <option value="delivered">Delivered</option>
       <option value="cancelled">Cancelled</option>
     </select>
-  );
+  )
 }

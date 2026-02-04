@@ -3,11 +3,13 @@
   "ui": "tui",
   "globalEnv": [
     "DATABASE_TYPE",
+    "NODE_ENV",
     "DATABASE_CONNECTOR_PACKAGE",
     "DATABASE_PORT",
     "DATABASE_USERNAME",
     "DATABASE_PASSWORD",
     "DATABASE_NAME",
+    "DATABASE_URL",
     "DATABASE_HOST",
     "CLERK_PUBLISHABLE_KEY",
     "CLERK_SECRET_KEY",
@@ -21,7 +23,10 @@
     "SENDGRID_SUPPORT_EMAIL",
     "SENDGRID_FROM_EMAIL",
     "CLIENT_BASE_URL",
-    "CLIENT_LOGIN_PATH"
+    "CLIENT_LOGIN_PATH",
+    "APP_NAME",
+    "APP_LOGO_URL",
+    "APP_YEAR"
   ],
   "tasks": {
     "build": {

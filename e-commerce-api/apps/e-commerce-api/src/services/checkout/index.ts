@@ -1,3 +1,5 @@
+import { QueryRunner } from 'typeorm'
+
 import {
   Cart,
   CartItem,
@@ -6,40 +8,35 @@ import {
   OrderItem,
   Product,
   StockReservation,
-} from "#entities";
-import { NotFoundError, UnexpectedError } from "#types/error";
-import Stripe from "stripe";
-import { ICheckoutService } from "./type";
+} from '#entities'
+import dayjs from 'dayjs'
+import Stripe from 'stripe'
+
 import {
-  CartItemRepository,
   CartRepository,
   OrderRepository,
   UserRepository,
-} from "#repositories/types";
-
-import { PaymentDetails, PaymentGateway, Response } from "#types/payment";
-import {
-  Invoice,
-  InvoiceLineItem,
-  InvoiceStatus,
-  PaymentMethodType,
-} from "#types/invoice";
+} from '#repositories/types'
 
 import {
   formatPaymentMethod,
   formatStripeAmount,
   formatStripeDate,
-} from "#utils/format";
-import dayjs from "dayjs";
-import { StockReservationStatus } from "#types/checkout";
-import { QueryRunner } from "typeorm";
-import { EmailProvider } from "#types/mail";
+} from '#utils/format'
 
-/**
- * @description Service responsible for handling all checkout-related operations,
- * including stock reservation, payment intent creation, local invoice management,
- * and order fulfillment after successful payment.
- */
+import { StockReservationStatus } from '#types/checkout'
+import { NotFoundError, UnexpectedError } from '#types/error'
+import {
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  PaymentMethodType,
+} from '#types/invoice'
+import { EmailProvider } from '#types/mail'
+import { PaymentDetails, PaymentGateway, Response } from '#types/payment'
+
+import { ICheckoutService } from './type'
+
 export class CheckoutService implements ICheckoutService {
   constructor(
     private userRepository: UserRepository,
@@ -56,56 +53,56 @@ export class CheckoutService implements ICheckoutService {
    */
   private async _prepareCheckout(userId: string): Promise<Cart> {
     const queryRuner =
-      this.cartRepository.manager.connection.createQueryRunner();
+      this.cartRepository.manager.connection.createQueryRunner()
 
     try {
-      await queryRuner.connect();
-      await queryRuner.startTransaction();
+      await queryRuner.connect()
+      await queryRuner.startTransaction()
 
       const cart = await queryRuner.manager
-        .createQueryBuilder(Cart, "cart")
-        .setLock("pessimistic_write")
-        .where("cart.user_id = :userId", { userId: userId })
-        .getOne();
+        .createQueryBuilder(Cart, 'cart')
+        .setLock('pessimistic_write')
+        .where('cart.user_id = :userId', { userId: userId })
+        .getOne()
 
-      if (!cart || cart.status !== "active") {
-        throw new UnexpectedError("Cart not payable");
+      if (!cart || cart.status !== 'active') {
+        throw new UnexpectedError('Cart not payable')
       }
 
       const cartItems = await queryRuner.manager
-        .createQueryBuilder(CartItem, "cartItem")
-        .where("cartItem.cart_id = :cartId", { cartId: cart.id })
-        .leftJoinAndSelect("cartItem.product", "product")
-        .getMany();
+        .createQueryBuilder(CartItem, 'cartItem')
+        .where('cartItem.cart_id = :cartId', { cartId: cart.id })
+        .leftJoinAndSelect('cartItem.product', 'product')
+        .getMany()
 
-      const deletedProduct = cartItems.find((item) => item.product.deleted);
+      const deletedProduct = cartItems.find((item) => item.product.deleted)
 
       if (deletedProduct) {
         throw new UnexpectedError(
           `Product ${deletedProduct.product.name} is deleted`,
-        );
+        )
       }
 
       const outOfStockProduct = cartItems.find(
         (item) => item.quantity > item.product.stock,
-      );
+      )
 
       if (outOfStockProduct) {
         throw new UnexpectedError(
           `Product ${outOfStockProduct.product.name} is out of stock`,
-        );
+        )
       }
 
-      await this._reserveStock(queryRuner, cart.id, cartItems);
+      await this._reserveStock(queryRuner, cart.id, cartItems)
 
-      await queryRuner.commitTransaction();
-      return { ...cart, items: cartItems };
+      await queryRuner.commitTransaction()
+      return { ...cart, items: cartItems }
     } catch (error) {
-      console.error("Error: ", error);
-      await queryRuner.rollbackTransaction();
-      throw new UnexpectedError("Failed to prepare Checkout");
+      console.error('Error: ', error)
+      await queryRuner.rollbackTransaction()
+      throw new UnexpectedError('Failed to prepare Checkout')
     } finally {
-      await queryRuner.release();
+      await queryRuner.release()
     }
   }
 
@@ -123,43 +120,43 @@ export class CheckoutService implements ICheckoutService {
     cartId: number,
     cartItems: CartItem[],
   ) {
-    const productIds = cartItems.map((i) => i.product.id);
+    const productIds = cartItems.map((i) => i.product.id)
 
     const products = await queryRuner.manager
-      .createQueryBuilder(Product, "product")
-      .setLock("pessimistic_write")
-      .where("product.id IN (:...ids)", { ids: productIds })
-      .getMany();
+      .createQueryBuilder(Product, 'product')
+      .setLock('pessimistic_write')
+      .where('product.id IN (:...ids)', { ids: productIds })
+      .getMany()
 
-    const quantityMap: Record<string, number> = {};
+    const quantityMap: Record<string, number> = {}
 
     for (const item of cartItems) {
-      const productId = item.product.id;
-      quantityMap[productId] = (quantityMap[productId] ?? 0) + item.quantity;
+      const productId = item.product.id
+      quantityMap[productId] = (quantityMap[productId] ?? 0) + item.quantity
     }
 
     for (const product of products) {
-      const need = quantityMap[product.id]!;
-      const available = product.stock - product.reservedStock;
+      const need = quantityMap[product.id]!
+      const available = product.stock - product.reservedStock
 
       if (available < need) {
-        throw new Error("Out of stock");
+        throw new Error('Out of stock')
       }
 
-      product.reservedStock += need;
+      product.reservedStock += need
 
       const reservation = queryRuner.manager.create(StockReservation, {
         cartId,
         productId: product.id,
         quantity: need,
         status: StockReservationStatus.RESERVED,
-        expiresAt: dayjs().add(15, "minute").toDate(),
-      });
+        expiresAt: dayjs().add(15, 'minute').toDate(),
+      })
 
-      await queryRuner.manager.save(reservation);
+      await queryRuner.manager.save(reservation)
     }
 
-    await queryRuner.manager.save(products);
+    await queryRuner.manager.save(products)
   }
 
   /**
@@ -175,15 +172,15 @@ export class CheckoutService implements ICheckoutService {
     cart: Cart,
     paymentInvoice: Invoice,
   ) {
-    const { id: cartId, items } = cart;
-    const { lines, currency, total, id: invoiceId } = paymentInvoice;
+    const { id: cartId, items } = cart
+    const { lines, currency, total, id: invoiceId } = paymentInvoice
 
     const queryRunner =
-      this.cartRepository.manager.connection.createQueryRunner();
+      this.cartRepository.manager.connection.createQueryRunner()
 
     try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
 
       const invoice = queryRunner.manager.create(InvoiceEntity, {
         cartId,
@@ -192,23 +189,18 @@ export class CheckoutService implements ICheckoutService {
         totalAmount: total,
         userId,
         id: invoiceId,
-      });
+      })
 
-      await this._createInvoiceItems(
-        queryRunner,
-        invoice.id,
-        items,
-        lines.data,
-      );
+      await this._createInvoiceItems(queryRunner, invoice.id, items, lines.data)
 
-      await queryRunner.manager.save(invoice);
+      await queryRunner.manager.save(invoice)
 
-      await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction()
     } catch {
-      await queryRunner.rollbackTransaction();
-      throw new UnexpectedError("Failed to create local invoice");
+      await queryRunner.rollbackTransaction()
+      throw new UnexpectedError('Failed to create local invoice')
     } finally {
-      await queryRunner.release();
+      await queryRunner.release()
     }
   }
 
@@ -227,17 +219,17 @@ export class CheckoutService implements ICheckoutService {
     invoiceLineItems: InvoiceLineItem[],
   ) {
     try {
-      const itemMap: Record<string, InvoiceLineItem> = {};
+      const itemMap: Record<string, InvoiceLineItem> = {}
       for (const line of invoiceLineItems) {
-        const { product } = line.pricing?.price_details || {};
+        const { product } = line.pricing?.price_details || {}
         if (product) {
-          itemMap[product] = line;
+          itemMap[product] = line
         }
       }
 
       for (const item of cartItems) {
-        const line = itemMap[item.product.id];
-        const total = parseFloat((line?.subtotal || 0).toString());
+        const line = itemMap[item.product.id]
+        const total = parseFloat((line?.subtotal || 0).toString())
 
         const invoiceItem = queryRunner.manager.create(InvoiceItem, {
           invoiceId,
@@ -247,12 +239,12 @@ export class CheckoutService implements ICheckoutService {
           total,
           unitPrice: total / item.quantity,
           id: line?.id,
-        });
+        })
 
-        await queryRunner.manager.save(invoiceItem);
+        await queryRunner.manager.save(invoiceItem)
       }
     } catch {
-      throw new UnexpectedError("Failed to create local invoice items");
+      throw new UnexpectedError('Failed to create local invoice items')
     }
   }
 
@@ -268,36 +260,36 @@ export class CheckoutService implements ICheckoutService {
     userId: string,
     userStripeId: string,
   ): Promise<Response<Invoice>> {
-    const cart = await this.cartRepository.getCartByUserId(userId);
+    const cart = await this.cartRepository.getCartByUserId(userId)
 
     if (!cart) {
-      throw new NotFoundError("Cart not found");
+      throw new NotFoundError('Cart not found')
     }
 
-    const deletedProduct = cart.items.find((item) => item.product.deleted);
+    const deletedProduct = cart.items.find((item) => item.product.deleted)
 
     if (deletedProduct) {
       throw new UnexpectedError(
         `Product ${deletedProduct.product.name} is deleted`,
-      );
+      )
     }
 
     const outOfStockProduct = cart.items.find(
       (item) => item.quantity > item.product.stock,
-    );
+    )
 
     if (outOfStockProduct) {
       throw new UnexpectedError(
         `Product ${outOfStockProduct.product.name} is out of stock`,
-      );
+      )
     }
 
-    const { currency } = payload;
+    const { currency } = payload
 
     const invoice = await this.paymentGatewayProvider.createInvoice({
       currency,
       customer: userStripeId,
-    });
+    })
 
     await Promise.all(
       cart.items.map(({ quantity, product: { price, name, id: productId } }) =>
@@ -313,13 +305,13 @@ export class CheckoutService implements ICheckoutService {
           },
         }),
       ),
-    );
+    )
 
     const finalizeInvoice = await this.paymentGatewayProvider.finalizeInvoice(
       invoice.id,
-    );
+    )
 
-    return finalizeInvoice;
+    return finalizeInvoice
   }
 
   /**
@@ -332,14 +324,14 @@ export class CheckoutService implements ICheckoutService {
     userId: string,
     stripeId: string,
   ): Promise<Invoice> {
-    const cart = await this._prepareCheckout(userId);
+    const cart = await this._prepareCheckout(userId)
 
     const invoice =
-      await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId);
+      await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId)
 
-    await this._createLocalInvoice(userId, cart, invoice);
+    await this._createLocalInvoice(userId, cart, invoice)
 
-    return invoice;
+    return invoice
   }
 
   /**
@@ -354,31 +346,31 @@ export class CheckoutService implements ICheckoutService {
     invoiceId: string,
   ): Promise<void> {
     const queryRunner =
-      this.cartRepository.manager.connection.createQueryRunner();
+      this.cartRepository.manager.connection.createQueryRunner()
     try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
 
-      const user = await this.userRepository.getByStripeId(stripeId);
-      if (!user) throw new NotFoundError("User not found");
+      const user = await this.userRepository.getByStripeId(stripeId)
+      if (!user) throw new NotFoundError('User not found')
 
-      const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId);
-      if (!invoice || invoice.status !== "paid") {
-        throw new UnexpectedError("Invoice not paid or not found");
+      const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
+      if (!invoice || invoice.status !== 'paid') {
+        throw new UnexpectedError('Invoice not paid or not found')
       }
 
-      const cart = await this._getCart(queryRunner, user.id);
-      if (!cart) return;
+      const cart = await this._getCart(queryRunner, user.id)
+      if (!cart) return
 
       const { paymentDetails, invoiceItems } =
-        await this._getPaymentDetailsAndItems(invoiceId, invoice);
+        await this._getPaymentDetailsAndItems(invoiceId, invoice)
 
-      await this._updateStockAndReservations(queryRunner, cart.id);
-      await this._createOrder(queryRunner, user.id, invoice, invoiceItems);
-      await this._updateLocalInvoice(queryRunner, invoice.id, paymentDetails);
-      await queryRunner.manager.delete(CartItem, { cartId: cart.id });
+      await this._updateStockAndReservations(queryRunner, cart.id)
+      await this._createOrder(queryRunner, user.id, invoice, invoiceItems)
+      await this._updateLocalInvoice(queryRunner, invoice.id, paymentDetails)
+      await queryRunner.manager.delete(CartItem, { cartId: cart.id })
 
-      await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction()
 
       const {
         currency,
@@ -386,14 +378,14 @@ export class CheckoutService implements ICheckoutService {
         number: invoice_number,
         receipt_number,
         invoice_pdf,
-      } = invoice;
-      const { email, name } = user;
-      const { paid_at, payment_method, receipt_url } = paymentDetails;
+      } = invoice
+      const { email, name } = user
+      const { paid_at, payment_method, receipt_url } = paymentDetails
 
       const formattedPaymenMethod = formatPaymentMethod(
         payment_method.type as PaymentMethodType,
         payment_method,
-      );
+      )
 
       await this._sendConfirmationEmail(invoiceItems, {
         currency,
@@ -406,12 +398,12 @@ export class CheckoutService implements ICheckoutService {
         receipt_number: receipt_number!,
         receipt_url,
         total,
-      });
+      })
     } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
+      await queryRunner.rollbackTransaction()
+      throw error
     } finally {
-      await queryRunner.release();
+      await queryRunner.release()
     }
   }
 
@@ -422,15 +414,15 @@ export class CheckoutService implements ICheckoutService {
    */
   private async _getCart(queryRunner: QueryRunner, userId: string) {
     const cart = await queryRunner.manager
-      .createQueryBuilder(Cart, "cart")
-      .setLock("pessimistic_write")
-      .where("cart.user_id = :userId", { userId })
-      .getOne();
+      .createQueryBuilder(Cart, 'cart')
+      .setLock('pessimistic_write')
+      .where('cart.user_id = :userId', { userId })
+      .getOne()
 
-    if (!cart || cart.status !== "active") {
-      return null;
+    if (!cart || cart.status !== 'active') {
+      return null
     }
-    return cart;
+    return cart
   }
 
   /**
@@ -441,24 +433,27 @@ export class CheckoutService implements ICheckoutService {
   private async _getPaymentDetailsAndItems(
     invoiceId: string,
     invoice: Response<Invoice>,
-  ): Promise<{ paymentDetails: PaymentDetails; invoiceItems: InvoiceItem[] }> {
-    const { payments } = invoice;
-    const { id: invoicePaymentId } = payments?.data[0] || {};
-    if (!invoicePaymentId) throw new NotFoundError("Invoice Payment not found");
+  ): Promise<{
+    paymentDetails: PaymentDetails
+    invoiceItems: InvoiceItem[]
+  }> {
+    const { payments } = invoice
+    const { id: invoicePaymentId } = payments?.data[0] || {}
+    if (!invoicePaymentId) throw new NotFoundError('Invoice Payment not found')
 
     const invoicePayment =
-      await this.paymentGatewayProvider.getInvoicePayment(invoicePaymentId);
-    const { payment, status_transitions } = invoicePayment || {};
+      await this.paymentGatewayProvider.getInvoicePayment(invoicePaymentId)
+    const { payment, status_transitions } = invoicePayment || {}
     const {
       latest_charge,
       payment_method,
       id: paymentIntentId,
-    } = payment.payment_intent || {};
-    if (!latest_charge) throw new UnexpectedError("Missing latest charge");
+    } = payment.payment_intent || {}
+    if (!latest_charge) throw new UnexpectedError('Missing latest charge')
 
     const invoiceItems = await this.cartRepository.manager.find(InvoiceItem, {
       where: { invoiceId },
-    });
+    })
 
     return {
       paymentDetails: {
@@ -468,7 +463,7 @@ export class CheckoutService implements ICheckoutService {
         paid_at: status_transitions.paid_at!,
       },
       invoiceItems,
-    };
+    }
   }
 
   /**
@@ -482,34 +477,34 @@ export class CheckoutService implements ICheckoutService {
     cartId: number,
   ) {
     const reservations = await queryRunner.manager
-      .createQueryBuilder(StockReservation, "sr")
-      .setLock("pessimistic_write")
-      .where("sr.cart_id = :cartId", { cartId })
+      .createQueryBuilder(StockReservation, 'sr')
+      .setLock('pessimistic_write')
+      .where('sr.cart_id = :cartId', { cartId })
       .andWhere("sr.status = 'reserved'")
-      .getMany();
+      .getMany()
 
-    const productIds = reservations.map((r: StockReservation) => r.productId);
+    const productIds = reservations.map((r: StockReservation) => r.productId)
 
     const products = await queryRunner.manager
-      .createQueryBuilder(Product, "product")
-      .setLock("pessimistic_write")
-      .where("product.id IN (:...ids)", { ids: productIds })
-      .getMany();
+      .createQueryBuilder(Product, 'product')
+      .setLock('pessimistic_write')
+      .where('product.id IN (:...ids)', { ids: productIds })
+      .getMany()
 
-    const productMap: Record<string, Product> = {};
+    const productMap: Record<string, Product> = {}
     for (const p of products) {
-      productMap[p.id] = p;
+      productMap[p.id] = p
     }
 
     for (const r of reservations) {
-      const product = productMap[r.productId]!;
-      product.stock -= r.quantity;
-      product.reservedStock -= r.quantity;
-      r.status = StockReservationStatus.CONVERTED;
+      const product = productMap[r.productId]!
+      product.stock -= r.quantity
+      product.reservedStock -= r.quantity
+      r.status = StockReservationStatus.CONVERTED
     }
 
-    await queryRunner.manager.save(products);
-    await queryRunner.manager.save(reservations);
+    await queryRunner.manager.save(products)
+    await queryRunner.manager.save(reservations)
   }
 
   /**
@@ -529,13 +524,13 @@ export class CheckoutService implements ICheckoutService {
     const totalAmount = invoiceItems.reduce(
       (prev, item) => prev + item.total,
       0,
-    );
+    )
 
     const order = await this.orderRepository.createOrder(queryRunner, userId, {
-      status: "processing",
+      status: 'processing',
       totalAmount,
       invoiceId: invoice.id,
-    });
+    })
 
     const orderItems = await Promise.all(
       invoiceItems.map(async ({ unitPrice, quantity, productId }) => {
@@ -544,12 +539,12 @@ export class CheckoutService implements ICheckoutService {
           priceAtPurchase: unitPrice,
           product: { id: productId },
           quantity,
-        });
+        })
       }),
-    );
+    )
 
-    await queryRunner.manager.save(orderItems);
-    return order;
+    await queryRunner.manager.save(orderItems)
+    return order
   }
 
   /**
@@ -568,7 +563,7 @@ export class CheckoutService implements ICheckoutService {
       status: InvoiceStatus.PAID,
       paidAt: new Date((paymentDetails.paid_at || Date.now()) * 1000),
       paymentIntentId: paymentDetails.paymentIntentId,
-    });
+    })
   }
 
   /**
@@ -590,16 +585,16 @@ export class CheckoutService implements ICheckoutService {
       currency,
       total,
     }: {
-      paid_at: number;
-      receipt_url: string;
-      payment_method: string;
-      receipt_number: string;
-      invoice_url: string;
-      customer_name: string;
-      customer_email: string;
-      invoice_number: string;
-      currency: string;
-      total: number;
+      paid_at: number
+      receipt_url: string
+      payment_method: string
+      receipt_number: string
+      invoice_url: string
+      customer_name: string
+      customer_email: string
+      invoice_number: string
+      currency: string
+      total: number
     },
   ) {
     const message = {
@@ -625,8 +620,8 @@ export class CheckoutService implements ICheckoutService {
           name,
         })),
       },
-    };
+    }
 
-    await this.mailProvider.sendWithTemplate(message);
+    await this.mailProvider.sendWithTemplate(message)
   }
 }

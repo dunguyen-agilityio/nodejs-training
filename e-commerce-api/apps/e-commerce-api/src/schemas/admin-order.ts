@@ -1,10 +1,10 @@
 export const updateOrderStatusSchema = {
-  type: "object",
+  type: 'object',
   properties: {
     status: {
-      type: "string",
-      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      type: 'string',
+      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
     },
   },
-  required: ["status"],
-} as const;
+  required: ['status'],
+} as const

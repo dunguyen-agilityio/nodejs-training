@@ -1,29 +1,30 @@
-import { getCategories, getProducts } from "@/lib/data";
-import { ProductCardWithCart } from "@/components/ProductCard";
-import { SearchInput } from "@/components/search-input";
-import { CategoryFilter } from "@/components/category-filter";
-import { PaginationControls } from "@/components/pagination-controls";
+import { getCategories, getProducts } from '@/lib/data'
+
+import { ProductCardWithCart } from '@/components/ProductCard'
+import { CategoryFilter } from '@/components/category-filter'
+import { PaginationControls } from '@/components/pagination-controls'
+import { SearchInput } from '@/components/search-input'
 
 interface HomeProps {
   searchParams: Promise<{
-    search?: string;
-    category?: string;
-    page?: string;
-  }>;
+    search?: string
+    category?: string
+    page?: string
+  }>
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  const { search, category, page } = await searchParams;
-  const currentPage = Number(page) || 1;
+  const { search, category, page } = await searchParams
+  const currentPage = Number(page) || 1
 
   const { products, pagination } = await getProducts({
     search,
     category,
     page: currentPage,
     limit: 10,
-  });
+  })
 
-  const categories = await getCategories();
+  const categories = await getCategories()
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -67,5 +68,5 @@ export default async function Home({ searchParams }: HomeProps) {
         )}
       </div>
     </main>
-  );
+  )
 }

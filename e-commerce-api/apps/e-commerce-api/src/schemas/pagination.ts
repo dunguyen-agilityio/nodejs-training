@@ -1,19 +1,19 @@
 export const PaginationSchema = {
-  $id: "pagination",
-  type: "object",
+  $id: 'pagination',
+  type: 'object',
   properties: {
     page: {
-      type: "integer",
+      type: 'integer',
       minimum: 1,
       default: 1,
-      description: "The page number to retrieve",
+      description: 'The page number to retrieve',
     },
     pageSize: {
-      type: "integer",
+      type: 'integer',
       minimum: 1,
       maximum: 50,
       default: 10,
-      description: "Number of items per page",
+      description: 'Number of items per page',
     },
   },
-} as const;
+} as const

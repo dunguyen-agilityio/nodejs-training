@@ -1,0 +1,56 @@
+{
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "printWidth": 80,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "singleQuote": true,
+  "endOfLine": "auto",
+  "semi": false,
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrder": [
+    "^@core/(.*)$",
+    "typeorm|fastify|@fastify/|@clerk/|@prisma/|@nestjs/|json-schema-to-ts",
+    "<THIRD_PARTY_MODULES>",
+    "^@server/(.*)$",
+    "^@ui/(.*)$",
+    "^@/lib/(.*)$",
+    "^@/context/(.*)$",
+    "^@/components/(.*)$",
+    "^#services/(.*)$",
+    "^#repositories/(.*)$",
+    "^#utils/(.*)$",
+    "^#controllers/(.*)$",
+    "^#types/(.*)$",
+    "^#dtos/(.*)$",
+    "^#schemas/(.*)$",
+    "^#entities/(.*)$",
+    "^[./]"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
+      "files": ["**/*.md"],
+      "options": {
+        "parser": "markdown"
+      }
+    },
+    {
+      "files": ["**/*.json"],
+      "options": {
+        "parser": "json"
+      }
+    },
+    {
+      "files": ["**/*.html"],
+      "options": {
+        "parser": "html"
+      }
+    }
+  ]
+}

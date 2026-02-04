@@ -1,3 +1,3 @@
-import { AbstractInvoiceRepository } from "./type";
+import { AbstractInvoiceRepository } from './type'
 
 export class InvoiceRepository extends AbstractInvoiceRepository {}

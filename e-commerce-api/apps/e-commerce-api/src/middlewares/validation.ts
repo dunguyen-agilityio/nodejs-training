@@ -1,5 +1,6 @@
-import { HttpStatus } from "#types/http-status";
-import { FastifyReply, FastifyRequest } from "fastify";
+import { FastifyReply, FastifyRequest } from 'fastify'
+
+import { HttpStatus } from '#types/http-status'
 
 export const validateRequest = async (
   request: FastifyRequest,
@@ -8,6 +9,6 @@ export const validateRequest = async (
   if (request.validationError) {
     return reply
       .status(HttpStatus.BAD_REQUEST)
-      .send({ message: request.validationError.message });
+      .send({ message: request.validationError.message })
   }
-};
+}

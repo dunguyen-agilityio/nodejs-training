@@ -1,6 +1,7 @@
-import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
-import ClearCart from "./ClearCart";
+import { CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+
+import ClearCart from './ClearCart'
 
 export default function CheckoutSuccessPage() {
   return (
@@ -23,5 +24,5 @@ export default function CheckoutSuccessPage() {
       </Link>
       <ClearCart />
     </div>
-  );
+  )
 }

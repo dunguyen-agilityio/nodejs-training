@@ -1,4 +1,11 @@
-"use client";
+'use client'
+
+import { Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
+import { toast } from 'sonner'
+
+import { del } from '@/lib/api'
 
 import {
   AlertDialog,
@@ -10,36 +17,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
-import { useTransition } from "react";
-import { toast } from "sonner";
-import { del } from "@/lib/api";
-import { useRouter } from "next/navigation";
+} from '@/components/ui/alert-dialog'
 
 interface DeleteProductButtonProps {
-  productId: string;
+  productId: string
 }
 
 export const deleteProduct = async (productId: string) => {
-  await del(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${productId}`);
-};
+  await del(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${productId}`)
+}
 
 export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleDelete = () => {
     startTransition(async () => {
       try {
-        await deleteProduct(productId);
-        router.refresh();
-        toast.success("Product deleted successfully");
+        await deleteProduct(productId)
+        router.refresh()
+        toast.success('Product deleted successfully')
       } catch {
-        toast.error("Failed to delete product");
+        toast.error('Failed to delete product')
       }
-    });
-  };
+    })
+  }
 
   return (
     <AlertDialog>
@@ -65,10 +67,10 @@ export function DeleteProductButton({ productId }: DeleteProductButtonProps) {
             onClick={handleDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isPending ? "Deleting..." : "Delete"}
+            {isPending ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

@@ -1,4 +1,5 @@
-import "dotenv/config";
-import { createPostgresDataSource } from "./create-data-source";
+import 'dotenv/config'
 
-export const AppDataSource = createPostgresDataSource();
+import { createPostgresDataSource } from './create-data-source'
+
+export const AppDataSource = createPostgresDataSource()

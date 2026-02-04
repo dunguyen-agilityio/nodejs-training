@@ -1,46 +1,48 @@
-import Link from "next/link";
+import { auth } from '@clerk/nextjs/server'
 
-import { post } from "@/lib/api";
-import CheckoutForm from "./CheckoutForm";
-import { auth } from "@clerk/nextjs/server";
-import Provider from "./Provider";
-import { getCarts } from "@/lib/cart";
-import { getCartTotal, formatCurrency } from "@/lib/utils";
+import Link from 'next/link'
+
+import { post } from '@/lib/api'
+import { getCarts } from '@/lib/cart'
+import { formatCurrency, getCartTotal } from '@/lib/utils'
+
+import CheckoutForm from './CheckoutForm'
+import Provider from './Provider'
 
 export default async function CheckoutPage() {
-  const { getToken } = await auth();
+  const { getToken } = await auth()
 
   const getClientSecret = async (): Promise<{
-    error?: string;
-    clientSecret: string;
+    error?: string
+    clientSecret: string
   }> => {
     try {
       const token = await getToken({
         template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE,
-      });
+      })
       return await post<{ clientSecret: string }>(
-        "/checkout/payment-intents",
-        { currency: "usd" },
+        '/checkout/payment-intents',
+        { currency: 'usd' },
         {
           Authorization: `Bearer ${token}`,
         },
-      );
+      )
     } catch (error) {
-      console.error("Error: ", error);
-      let message = "Create Payment Intent failed";
+      console.error('Error: ', error)
+      let message = 'Create Payment Intent failed'
 
       if (error instanceof Error) {
-        message = error.message;
+        message = error.message
       }
 
-      return { error: message, clientSecret: "" };
+      return { error: message, clientSecret: '' }
     }
-  };
-  const clientSecret = await getClientSecret();
+  }
+  const clientSecret = await getClientSecret()
 
-  const cartItems = await getCarts();
+  const cartItems = await getCarts()
 
-  const cartTotal = getCartTotal(cartItems);
+  const cartTotal = getCartTotal(cartItems)
 
   if (cartItems.length === 0) {
     return (
@@ -55,7 +57,7 @@ export default async function CheckoutPage() {
           Continue Shopping
         </Link>
       </div>
-    );
+    )
   }
 
   // Handle error from checkout service
@@ -72,7 +74,7 @@ export default async function CheckoutPage() {
           Review Cart
         </Link>
       </div>
-    );
+    )
   }
 
   return (
@@ -111,5 +113,5 @@ export default async function CheckoutPage() {
         </div>
       </div>
     </main>
-  );
+  )
 }

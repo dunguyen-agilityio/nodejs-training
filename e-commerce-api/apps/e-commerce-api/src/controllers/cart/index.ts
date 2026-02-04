@@ -1,7 +1,10 @@
-import { FastifyRequest, FastifyReply } from "fastify";
-import { ICartController } from "./type";
-import { HttpStatus } from "#types/http-status";
-import { ICartService } from "#services/types";
+import { FastifyReply, FastifyRequest } from 'fastify'
+
+import { ICartService } from '#services/types'
+
+import { HttpStatus } from '#types/http-status'
+
+import { ICartController } from './type'
 
 export class CartController implements ICartController {
   constructor(private service: ICartService) {}
@@ -10,33 +13,35 @@ export class CartController implements ICartController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<void> => {
-    const { userId } = request.auth;
-    const cart = await this.service.getCartByUserId(userId!);
-    reply.send({ data: cart, success: true });
-  };
+    const { userId } = request.auth
+    const cart = await this.service.getCartByUserId(userId!)
+    reply.send({ data: cart, success: true })
+  }
 
   addProductToCart = async (
-    request: FastifyRequest<{ Body: { productId: string; quantity: number } }>,
+    request: FastifyRequest<{
+      Body: { productId: string; quantity: number }
+    }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const { productId, quantity } = request.body;
-    const { userId } = request.auth;
+    const { productId, quantity } = request.body
+    const { userId } = request.auth
 
     const cartItem = await this.service.addProductToCart({
-      userId: userId ?? "",
+      userId: userId ?? '',
       productId,
       quantity,
-    });
+    })
 
-    reply.send({ data: cartItem, success: true });
-  };
+    reply.send({ data: cartItem, success: true })
+  }
 
   removeProductFromCart = async (
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const id = parseInt(request.params.id);
-    await this.service.removeProductFromCart(id, request.auth.userId);
-    reply.status(HttpStatus.NO_CONTENT).send();
-  };
+    const id = parseInt(request.params.id)
+    await this.service.removeProductFromCart(id, request.auth.userId)
+    reply.status(HttpStatus.NO_CONTENT).send()
+  }
 }

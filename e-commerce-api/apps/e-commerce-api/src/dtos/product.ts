@@ -1,5 +1,5 @@
-import { Product } from "#entities";
+import { Product } from '#entities'
 
 export const productToObject = ({ category, ...product }: Product) => {
-  return { ...product, category: category.name };
-};
+  return { ...product, category: category.name }
+}

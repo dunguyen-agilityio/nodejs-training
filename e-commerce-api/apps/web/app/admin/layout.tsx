@@ -1,9 +1,9 @@
-import Link from "next/link";
+import Link from 'next/link'
 
 export default async function AdminLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <div className="flex min-h-screen bg-muted/40">
@@ -36,5 +36,5 @@ export default async function AdminLayout({
       </aside>
       <main className="flex-1 p-6 lg:p-10">{children}</main>
     </div>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import { ProductMetric } from "#types/metrics";
+import { ProductMetric } from '#types/metrics'
 
 export interface IMetricService {
-  getDashboardStats(): Promise<ProductMetric & { updatedAt: string }>;
+  getDashboardStats(): Promise<ProductMetric & { updatedAt: string }>
 }
