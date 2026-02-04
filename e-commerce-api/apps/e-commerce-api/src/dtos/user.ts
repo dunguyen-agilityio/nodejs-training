@@ -1,8 +1,7 @@
 import { FromSchema } from 'json-schema-to-ts'
 
 import { User } from '#entities'
-
-import { USER_ROLES } from '#types/user'
+import { USER_ROLES } from '#types'
 
 import { registerBodySchema } from '#schemas/auth.schema'
 

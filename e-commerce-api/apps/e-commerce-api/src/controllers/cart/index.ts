@@ -1,8 +1,8 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-import { ICartService } from '#services/types'
+import { HttpStatus } from '#types'
 
-import { HttpStatus } from '#types/http-status'
+import { ICartService } from '#services/types'
 
 import { ICartController } from './type'
 

@@ -9,14 +9,16 @@
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,
   "importOrder": [
+    "dotenv/config|reflect-metadata",
     "^@core/(.*)$",
-    "typeorm|fastify|@fastify/|@clerk/|@prisma/|@nestjs/|json-schema-to-ts",
+    "typeorm|fastify|@fastify/|@clerk/|@prisma/|@nestjs/|json-schema-to-ts|typeorm",
     "<THIRD_PARTY_MODULES>",
     "^@server/(.*)$",
     "^@ui/(.*)$",
     "^@/lib/(.*)$",
     "^@/context/(.*)$",
     "^@/components/(.*)$",
+    "^#env",
     "^#services/(.*)$",
     "^#repositories/(.*)$",
     "^#utils/(.*)$",
@@ -31,7 +33,7 @@
     {
       "files": ["**/*.ts", "**/*.tsx"],
       "options": {
-        "parser": "typescript"
+        "parser": "babel-ts"
       }
     },
     {

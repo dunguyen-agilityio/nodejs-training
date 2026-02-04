@@ -1,18 +1,20 @@
 import { User } from '#entities'
+import {
+  EmailProvider,
+  LoginParams,
+  NotFoundError,
+  PaymentGateway,
+} from '#types'
 
-import { CartRepository, UserRepository } from '#repositories/types'
+import type { TCartRepository, TUserRepository } from '#repositories'
 
-import { LoginParams } from '#types/auth'
-import { NotFoundError } from '#types/error'
-import { EmailProvider } from '#types/mail'
-import { PaymentGateway } from '#types/payment'
-
+import env from '#env'
 import { IAuthService } from './type'
 
 export class AuthService implements IAuthService {
   constructor(
-    private userRepository: UserRepository,
-    private cartRepository: CartRepository,
+    private userRepository: TUserRepository,
+    private cartRepository: TCartRepository,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
   ) {}
@@ -52,20 +54,20 @@ export class AuthService implements IAuthService {
       items: [],
     })
 
-    const loginPath = `${process.env.CLIENT_BASE_URL}${process.env.CLIENT_LOGIN_PATH}`
+    const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
 
     await this.mailProvider.sendWithTemplate({
-      from: process.env.SENDGRID_FROM_EMAIL!,
-      templateId: process.env.SENDGRID_TEMPLATE_REGISTER_SUCCESS!,
+      from: env.sendgrid.fromEmail,
+      templateId: env.sendgrid.templates.registerSuccess,
       to: email,
       dynamicTemplateData: {
         name,
         email,
-        app_name: process.env.APP_NAME,
-        logo_url: process.env.APP_LOGO_URL,
+        app_name: env.app.name,
+        logo_url: env.app.logoUrl,
         login_url: loginPath,
-        support_email: process.env.SENDGRID_SUPPORT_EMAIL,
-        year: process.env.APP_YEAR,
+        support_email: env.sendgrid.supportEmail,
+        year: env.app.year,
       },
     })
     return user

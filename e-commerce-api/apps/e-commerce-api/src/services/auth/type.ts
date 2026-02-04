@@ -1,6 +1,5 @@
 import { User } from '#entities'
-
-import { LoginParams } from '#types/auth'
+import { LoginParams } from '#types'
 
 export interface IAuthService {
   register(body: User): Promise<User>

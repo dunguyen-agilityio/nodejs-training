@@ -1,15 +1,18 @@
 import { User } from '#entities'
+import {
+  Customer,
+  CustomerCreateParams,
+  PaymentGateway,
+  USER_ROLES,
+} from '#types'
 
-import { UserRepository } from '#repositories/types'
-
-import { Customer, CustomerCreateParams, PaymentGateway } from '#types/payment'
-import { USER_ROLES } from '#types/user'
+import type { TUserRepository } from '#repositories'
 
 import { IUserService } from './type'
 
 export class UserService implements IUserService {
   constructor(
-    private userRepository: UserRepository,
+    private userRepository: TUserRepository,
     private paymentGateway: PaymentGateway,
   ) {}
 

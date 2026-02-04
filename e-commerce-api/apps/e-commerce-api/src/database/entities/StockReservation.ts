@@ -1,31 +1,31 @@
-import { StockReservationStatus } from '#types/checkout';
+import { StockReservationStatus } from '#types'
 import {
   Column,
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-} from 'typeorm';
+} from 'typeorm'
 
 @Entity({ name: 'stock_reservation' })
 export class StockReservation {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
 
   @Column({ name: 'cart_id', type: 'int' })
-  cartId: number;
+  cartId: number
 
   @Column({ name: 'product_id', type: 'varchar' })
-  productId: string;
+  productId: string
 
   @Column({ type: 'int' })
-  quantity: number;
+  quantity: number
 
   @Column({ name: 'expires_at', type: 'timestamptz' })
-  expiresAt: Date;
+  expiresAt: Date
 
   @Column({ default: 'reserved', type: 'enum', enum: StockReservationStatus })
-  status: StockReservationStatus;
+  status: StockReservationStatus
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: Date
 }

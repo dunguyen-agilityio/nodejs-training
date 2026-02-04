@@ -1,9 +1,7 @@
 import { QueryRunner } from 'typeorm'
 
 import { Product } from '#entities'
-
-import { ProductMetric } from '#types/metrics'
-import { Params } from '#types/query'
+import { Params, ProductMetric } from '#types'
 
 import { AbstractProductRepository } from './type'
 

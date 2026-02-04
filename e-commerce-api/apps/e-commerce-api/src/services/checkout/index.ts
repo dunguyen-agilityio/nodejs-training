@@ -9,14 +9,29 @@ import {
   Product,
   StockReservation,
 } from '#entities'
+import {
+  EmailProvider,
+  Invoice,
+  InvoiceLineItem,
+  InvoiceStatus,
+  NotFoundError,
+  PaymentDetails,
+  PaymentGateway,
+  PaymentMethodType,
+  Response,
+  StockReservationStatus,
+  UnexpectedError,
+} from '#types'
 import dayjs from 'dayjs'
 import Stripe from 'stripe'
 
-import {
-  CartRepository,
-  OrderRepository,
-  UserRepository,
-} from '#repositories/types'
+import env from '#env'
+
+import type {
+  TCartRepository,
+  TOrderRepository,
+  TUserRepository,
+} from '#repositories'
 
 import {
   formatPaymentMethod,
@@ -24,24 +39,13 @@ import {
   formatStripeDate,
 } from '#utils/format'
 
-import { StockReservationStatus } from '#types/checkout'
-import { NotFoundError, UnexpectedError } from '#types/error'
-import {
-  Invoice,
-  InvoiceLineItem,
-  InvoiceStatus,
-  PaymentMethodType,
-} from '#types/invoice'
-import { EmailProvider } from '#types/mail'
-import { PaymentDetails, PaymentGateway, Response } from '#types/payment'
-
 import { ICheckoutService } from './type'
 
 export class CheckoutService implements ICheckoutService {
   constructor(
-    private userRepository: UserRepository,
-    private cartRepository: CartRepository,
-    private orderRepository: OrderRepository,
+    private userRepository: TUserRepository,
+    private cartRepository: TCartRepository,
+    private orderRepository: TOrderRepository,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
   ) {}
@@ -598,14 +602,14 @@ export class CheckoutService implements ICheckoutService {
     },
   ) {
     const message = {
-      from: process.env.SENDGRID_FROM_EMAIL!,
-      templateId: process.env.SENDGRID_TEMPLATE_ORDER_SUCCESS!,
+      from: env.sendgrid.fromEmail,
+      templateId: env.sendgrid.templates.orderSuccess,
       to: customer_email,
       dynamicTemplateData: {
         name: customer_name,
         email: customer_email,
-        company_name: process.env.APP_NAME,
-        support_email: process.env.SENDGRID_SUPPORT_EMAIL,
+        company_name: env.app.name,
+        support_email: env.sendgrid.supportEmail,
         amount_paid: formatStripeAmount(total, currency),
         paid_date: formatStripeDate(paid_at || Date.now()),
         receipt_number,

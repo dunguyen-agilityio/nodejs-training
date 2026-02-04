@@ -1,16 +1,16 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
-import { FromSchema } from 'json-schema-to-ts'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { FromSchema } from 'json-schema-to-ts'
 
-import { IAuthService } from '#services/types'
+import { BadRequestError, HttpStatus } from '#types'
+
+import type { IAuthService } from '#services/types'
 
 import { isClerkAPIResponseError } from '#utils/clerk'
 
-import { BadRequestError } from '#types/error'
-import { HttpStatus } from '#types/http-status'
+import { transformatFromClerk } from '#dtos/user'
 
 import { loginBodySchema, registerBodySchema } from '#schemas/auth.schema'
 
-import { transformatFromClerk } from '../../dtos/user'
 import { IAuthController } from './type'
 
 export class AuthController implements IAuthController {

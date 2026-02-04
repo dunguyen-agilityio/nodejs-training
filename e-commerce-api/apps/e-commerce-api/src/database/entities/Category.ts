@@ -1,26 +1,26 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm'
 
-import { Base, type BaseProps } from './Base';
-import { Product } from './Product';
+import { Base, type BaseProps } from './Base'
+import { Product } from './Product'
 
 @Entity({ name: 'categories' })
 export class Category extends Base {
   @Column({ unique: true, type: 'varchar' })
-  name: string;
+  name: string
 
   @Column({ type: 'varchar' })
-  description: string;
+  description: string
 
   @OneToMany(() => Product, (product) => product.category)
-  products?: Product[];
+  products?: Product[]
 
   constructor(category: BaseProps<Category>) {
-    super();
+    super()
     if (category) {
       Object.assign(this, {
         ...category,
         products: category.products || [],
-      });
+      })
     }
   }
 }

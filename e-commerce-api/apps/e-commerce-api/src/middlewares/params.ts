@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-import { HttpStatus } from '#types/http-status'
+import { HttpStatus } from '#types'
 
 export const requiredId = async (
   request: FastifyRequest<{ Params: { id: string } }>,

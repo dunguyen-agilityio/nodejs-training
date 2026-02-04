@@ -1,8 +1,8 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-import { ICartItemService } from '#services/types'
+import { HttpStatus } from '#types'
 
-import { HttpStatus } from '#types/http-status'
+import { ICartItemService } from '#services/types'
 
 export class CartItemController implements CartItemController {
   constructor(private service: ICartItemService) {}

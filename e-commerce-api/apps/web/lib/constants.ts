@@ -1,3 +1,0 @@
-export const API_ENPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT
-
-export const CLERK_TOKEN_TEMPLATE = process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE

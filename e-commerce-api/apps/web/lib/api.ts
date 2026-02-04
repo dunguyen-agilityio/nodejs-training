@@ -1,4 +1,3 @@
-import { API_ENPOINT } from './constants'
 import { UnauthorizedError } from './errors'
 
 const defaultHeaders = {}
@@ -21,17 +20,12 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json()
 }
 
-const buildUrl = (url: string): string => {
-  return url.startsWith('/') ? `${API_ENPOINT}${url}` : url
-}
-
 export async function get<T>(
   path: string,
   headers: HeadersInit = {},
   options: Partial<RequestInit> = {},
 ): Promise<T> {
-  const url = buildUrl(path)
-  const response = await fetch(url, {
+  const response = await fetch(path, {
     ...options,
     headers: { ...defaultHeaders, ...headers },
   })
@@ -44,9 +38,7 @@ export async function post<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path)
-
-  const response = await fetch(url, {
+  const response = await fetch(path, {
     method: 'POST',
     headers: {
       ...defaultHeaders,
@@ -63,9 +55,7 @@ export async function put<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path)
-
-  const response = await fetch(url, {
+  const response = await fetch(path, {
     method: 'PUT',
     headers: {
       ...defaultHeaders,
@@ -82,8 +72,7 @@ export async function patch<T>(
   data: unknown,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path)
-  const response = await fetch(url, {
+  const response = await fetch(path, {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
@@ -99,8 +88,7 @@ export async function del<T>(
   path: string,
   headers: HeadersInit = {},
 ): Promise<T> {
-  const url = buildUrl(path)
-  const response = await fetch(url, {
+  const response = await fetch(path, {
     method: 'DELETE',
     headers: { ...defaultHeaders, ...headers },
   })

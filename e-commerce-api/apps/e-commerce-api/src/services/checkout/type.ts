@@ -1,7 +1,5 @@
+import { Invoice, Response } from '#types'
 import Stripe from 'stripe'
-
-import { Invoice } from '#types/invoice'
-import { Response } from '#types/payment'
 
 export interface ICheckoutService {
   generatePaymentIntent(

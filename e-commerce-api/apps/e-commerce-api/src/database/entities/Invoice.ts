@@ -1,27 +1,27 @@
-import { InvoiceStatus } from '#types/invoice';
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm'
+
+import { InvoiceStatus } from '#types'
 
 @Entity()
 export class Invoice {
   @PrimaryColumn({ type: 'varchar' })
-  id: string;
+  id: string
 
-  // ownership
   @Column({ name: 'user_id', type: 'varchar' })
-  userId: string;
+  userId: string
 
   @Column({ name: 'cart_id', type: 'int' })
-  cartId: number;
+  cartId: number
 
   @Column({ nullable: true, name: 'payment_intent_id', type: 'varchar' })
-  paymentIntentId?: string;
+  paymentIntentId?: string
 
   // money
   @Column({ type: 'varchar' })
-  currency: string;
+  currency: string
 
   @Column({ type: 'int', name: 'total_amount' })
-  totalAmount: number; // cents
+  totalAmount: number // cents
 
   // state
   @Column({
@@ -29,18 +29,18 @@ export class Invoice {
     enum: InvoiceStatus,
     type: 'enum',
   })
-  status: InvoiceStatus;
+  status: InvoiceStatus
 
   // timestamps
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: Date
 
   @Column({ nullable: true, name: 'paid_at', type: 'timestamptz' })
-  paidAt?: Date;
+  paidAt?: Date
 
   constructor(invoice: Invoice) {
     if (invoice) {
-      Object.assign(this, invoice);
+      Object.assign(this, invoice)
     }
   }
 }

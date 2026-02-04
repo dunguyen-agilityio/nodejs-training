@@ -1,11 +1,11 @@
-import { ProductRepository } from '#repositories/types'
+import { ProductMetric } from '#types'
 
-import { ProductMetric } from '#types/metrics'
+import type { TProductRepository } from '#repositories'
 
 import { IMetricService } from './type'
 
 export class MetricService implements IMetricService {
-  constructor(private productRepository: ProductRepository) {}
+  constructor(private productRepository: TProductRepository) {}
 
   async getDashboardStats(): Promise<ProductMetric & { updatedAt: string }> {
     const rawData = await this.productRepository.getAdminMetrics()

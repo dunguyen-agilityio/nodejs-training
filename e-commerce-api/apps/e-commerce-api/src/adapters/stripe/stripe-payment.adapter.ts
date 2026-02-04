@@ -1,25 +1,23 @@
-import Stripe from 'stripe'
-
-import { convertToSubcurrency } from '#utils/convertToSubcurrency'
-
-import { NotFoundError } from '#types/error'
 import {
   ApiList,
+  Charge,
+  Customer,
+  CustomerCreateParams,
   Invoice,
   InvoiceCreateParams,
   InvoiceItem,
   InvoiceItemCreateParams,
-} from '#types/invoice'
-import {
-  Charge,
-  Customer,
-  CustomerCreateParams,
   InvoicePaymentExpand,
   PaymentGateway,
   PaymentIntent,
   PaymentIntentCreateParams,
   TResponse,
-} from '#types/payment'
+} from '#types'
+import Stripe from 'stripe'
+
+import { convertToSubcurrency } from '#utils/convertToSubcurrency'
+
+import '#types/error'
 import { IProduct, ProductCreateParams } from '#types/product'
 
 export class StripePaymentAdapter implements PaymentGateway {

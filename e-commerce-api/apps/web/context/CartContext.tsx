@@ -78,7 +78,7 @@ export function CartProvider({
     } catch (error) {
       handleApiError(error)
     }
-  }, 300)
+  }, 800)
 
   const removeFromCart = async (cartItemId: string) => {
     try {
@@ -100,7 +100,9 @@ export function CartProvider({
     try {
       await put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/items/${cartItemId}`,
-        { quantity },
+        {
+          quantity,
+        },
       )
       setCart((prevCart) =>
         prevCart.map((item) =>

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { del, put } from '@/lib/api'
-import { CLERK_TOKEN_TEMPLATE } from '@/lib/constants'
+import { config } from '@/lib/config'
 
 export async function PUT(
   req: NextRequest,
@@ -12,7 +12,7 @@ export async function PUT(
 ) {
   const { getToken } = await auth()
   const token = await getToken({
-    template: CLERK_TOKEN_TEMPLATE,
+    template: config.clerk.tokenTemplate,
     expiresInSeconds: 3,
   })
 
@@ -24,7 +24,7 @@ export async function PUT(
   const body = await req.json()
 
   try {
-    const data = await put(`/products/${id}`, body, {
+    const data = await put(`${config.api.endpoint}/products/${id}`, body, {
       Authorization: `Bearer ${token}`,
     })
     return NextResponse.json(data)
@@ -42,7 +42,7 @@ export async function DELETE(
 ) {
   const { getToken } = await auth()
   const token = await getToken({
-    template: CLERK_TOKEN_TEMPLATE,
+    template: config.clerk.tokenTemplate,
     expiresInSeconds: 3,
   })
 
@@ -53,7 +53,7 @@ export async function DELETE(
   const { id } = await params
 
   try {
-    await del(`/products/${id}`, {
+    await del(`${config.api.endpoint}/products/${id}`, {
       Authorization: `Bearer ${token}`,
     })
 

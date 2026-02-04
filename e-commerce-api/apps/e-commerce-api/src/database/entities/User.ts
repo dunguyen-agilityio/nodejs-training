@@ -6,41 +6,41 @@ import {
   OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
-} from 'typeorm';
+} from 'typeorm'
 
-import { Cart } from './Cart';
-import { Order } from './Order';
+import { Cart } from './Cart'
+import { Order } from './Order'
 
-import { USER_ROLES } from '#types/user';
+import { USER_ROLES } from '#types'
 
 @Entity({ name: 'users' })
 export class User {
   @PrimaryColumn({ type: 'varchar' })
-  id: string;
+  id: string
 
   @Column({ unique: true, type: 'varchar', nullable: true })
-  username: string;
+  username: string
 
   @Column({ name: 'first_name', type: 'varchar' })
-  firstName: string;
+  firstName: string
 
   @Column({ name: 'last_name', nullable: true, type: 'varchar' })
-  lastName: string;
+  lastName: string
 
   @Column({ nullable: true, type: 'int' })
-  age?: number;
+  age?: number
 
   @Column({ unique: true, type: 'varchar' })
-  email: string;
+  email: string
 
   @Column({ unique: true, type: 'varchar', nullable: true })
-  phone?: string;
+  phone?: string
 
   @Column({ nullable: true, type: 'varchar' })
-  avatar: string;
+  avatar: string
 
   @Column({ type: 'varchar', nullable: true })
-  password?: string;
+  password?: string
 
   @Column({
     type: 'varchar',
@@ -48,31 +48,31 @@ export class User {
     nullable: true,
     name: 'stripe_id',
   })
-  stripeId?: string;
+  stripeId?: string
 
   @OneToOne(() => Cart, (cart) => cart.user)
-  cart?: Cart;
+  cart?: Cart
 
   @OneToMany(() => Order, (order) => order.user)
-  orders?: Order[];
+  orders?: Order[]
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: Date
 
   @Column({ type: 'varchar', nullable: true })
-  role: USER_ROLES;
+  role: USER_ROLES
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt: Date
 
   get name() {
-    return [this.firstName, this.lastName].filter(Boolean).join(' ');
+    return [this.firstName, this.lastName].filter(Boolean).join(' ')
   }
 
   constructor(user: User) {
     if (user) {
-      Object.assign(this, user);
-      this.role = user.role || USER_ROLES.USER;
+      Object.assign(this, user)
+      this.role = user.role || USER_ROLES.USER
     }
   }
 }

@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import Link from 'next/link'
 
 import { get } from '@/lib/api'
+import { config } from '@/lib/config'
 
 type ProductMetric = {
   totalProducts: number
@@ -13,9 +14,12 @@ type ProductMetric = {
 export default async function AdminDashboard() {
   const { getToken } = await auth()
   const token = await getToken()
-  const response = await get<ProductMetric>('/metrics/product', {
-    Authorization: `Bearer ${token}`,
-  })
+  const response = await get<ProductMetric>(
+    `${config.api.endpoint}/metrics/product`,
+    {
+      Authorization: `Bearer ${token}`,
+    },
+  )
   const { totalProducts, totalStock, totalValue } = response || {}
 
   return (

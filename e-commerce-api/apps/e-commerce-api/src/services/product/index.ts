@@ -1,17 +1,19 @@
 import { Product } from '#entities'
+import {
+  NotFoundError,
+  Pagination,
+  Params,
+  PartialProduct,
+  PaymentGateway,
+} from '#types'
 
-import { ProductRepository } from '#repositories/types'
-
-import { NotFoundError } from '#types/error'
-import { PaymentGateway } from '#types/payment'
-import { PartialProduct } from '#types/product'
-import { Pagination, Params } from '#types/query'
+import type { TProductRepository } from '#repositories'
 
 import { IProductService } from './type'
 
 export class ProductService implements IProductService {
   constructor(
-    private productRepository: ProductRepository,
+    private productRepository: TProductRepository,
     private paymentGatewayProvider: PaymentGateway,
   ) {}
 

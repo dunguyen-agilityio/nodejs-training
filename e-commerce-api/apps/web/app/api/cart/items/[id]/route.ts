@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { del, put } from '@/lib/api'
-import { CLERK_TOKEN_TEMPLATE } from '@/lib/constants'
+import { config } from '@/lib/config'
 
 export async function PUT(
   req: NextRequest,
@@ -12,7 +12,7 @@ export async function PUT(
   const { getToken } = await auth()
   const { id } = await params
   const token = await getToken({
-    template: CLERK_TOKEN_TEMPLATE,
+    template: config.clerk.tokenTemplate,
     expiresInSeconds: 3,
   })
 
@@ -23,7 +23,7 @@ export async function PUT(
   const body = await req.json()
 
   try {
-    const data = await put(`/cart/items/${id}`, body, {
+    const data = await put(`${config.api.endpoint}/cart/items/${id}`, body, {
       Authorization: `Bearer ${token}`,
     })
     return NextResponse.json(data)
@@ -42,7 +42,7 @@ export async function DELETE(
   const { id } = await params
   const { getToken } = await auth()
   const token = await getToken({
-    template: CLERK_TOKEN_TEMPLATE,
+    template: config.clerk.tokenTemplate,
     expiresInSeconds: 3,
   })
 
@@ -51,7 +51,7 @@ export async function DELETE(
   }
 
   try {
-    const data = await del(`/cart/items/${id}`, {
+    const data = await del(`${config.api.endpoint}/cart/items/${id}`, {
       Authorization: `Bearer ${token}`,
     })
     return NextResponse.json(data)

@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { post } from '@/lib/api'
 import { getCarts } from '@/lib/cart'
+import { config } from '@/lib/config'
 import { formatCurrency, getCartTotal } from '@/lib/utils'
 
 import CheckoutForm from './CheckoutForm'
@@ -18,10 +19,10 @@ export default async function CheckoutPage() {
   }> => {
     try {
       const token = await getToken({
-        template: process.env.NEXT_PUBLIC_CLERK_TOKEN_TEMPLATE,
+        template: config.clerk.tokenTemplate,
       })
       return await post<{ clientSecret: string }>(
-        '/checkout/payment-intents',
+        `${config.api.endpoint}/checkout/payment-intents`,
         { currency: 'usd' },
         {
           Authorization: `Bearer ${token}`,

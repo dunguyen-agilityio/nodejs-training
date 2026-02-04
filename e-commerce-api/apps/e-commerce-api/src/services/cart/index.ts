@@ -1,21 +1,24 @@
 import { Cart, CartItem } from '#entities'
-
 import {
-  CartItemRepository,
-  CartRepository,
-  ProductRepository,
-} from '#repositories/types'
+  BadRequestError,
+  CartPayLoad,
+  NotFoundError,
+  UnexpectedError,
+} from '#types'
 
-import { CartPayLoad } from '#types/cart'
-import { BadRequestError, NotFoundError, UnexpectedError } from '#types/error'
+import type {
+  TCartItemRepository,
+  TCartRepository,
+  TProductRepository,
+} from '#repositories'
 
 import { ICartService } from './type'
 
 export class CartService implements ICartService {
   constructor(
-    private cartRepository: CartRepository,
-    private cartItemRepository: CartItemRepository,
-    private productRepository: ProductRepository,
+    private cartRepository: TCartRepository,
+    private cartItemRepository: TCartItemRepository,
+    private productRepository: TProductRepository,
   ) {}
 
   async createCart(userId: string): Promise<Cart> {

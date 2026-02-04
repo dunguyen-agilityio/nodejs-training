@@ -1,6 +1,5 @@
 import { Cart, CartItem } from '#entities'
-
-import { CartPayLoad } from '#types/cart'
+import { CartPayLoad } from '#types'
 
 export interface ICartService {
   addProductToCart(payload: CartPayLoad): Promise<CartItem>

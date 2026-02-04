@@ -1,13 +1,15 @@
 import { clerkClient } from '@clerk/fastify'
 import { MigrationInterface, QueryRunner } from 'typeorm'
 
-import { StripePaymentGatewayProvider } from '#providers'
+import { StripePaymentAdapter } from '#adapters'
+import { USER_ROLES } from '#types'
 import { faker } from '@faker-js/faker'
+import Stripe from 'stripe'
 
-import { USER_ROLES } from '#types/user'
+import env from '#env'
 
 export class SeedData1768297791711 implements MigrationInterface {
-  stripe = new StripePaymentGatewayProvider()
+  stripe = new StripePaymentAdapter(new Stripe(env.stripe.secretKey))
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     const { data } = await clerkClient.users.getUserList()

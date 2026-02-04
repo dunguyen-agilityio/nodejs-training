@@ -1,10 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { Product } from '#entities'
+import { HttpStatus } from '#types'
 
 import { IProductService } from '#services/types'
-
-import { HttpStatus } from '#types/http-status'
 
 import { productToObject } from '#dtos/product'
 

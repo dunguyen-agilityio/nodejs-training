@@ -1,6 +1,6 @@
 'use client'
 
-import { JSX, useMemo } from 'react'
+import { JSX, useState } from 'react'
 
 import { Product } from '@/lib/types'
 
@@ -12,15 +12,15 @@ export const withCart = <T,>(Comp: TChild<T>) => {
   const NewCompoent = ({ product, ...props }: { product: Product } & T) => {
     const { addToCart, cart } = useCart()
 
-    const existingItem = useMemo(
-      () => cart.find((item) => item.product.id === product.id),
-      [cart, product.id],
+    const [_, setQuantity] = useState(
+      () => cart.find((item) => item.product.id === product.id)?.quantity || 0,
     )
 
-    const quantity = existingItem?.quantity || 0
-
     const handleAddToCart = (product: Product) => {
-      addToCart(product, quantity + 1)
+      setQuantity((prev) => {
+        addToCart(product, prev + 1)
+        return prev + 1
+      })
     }
 
     return (

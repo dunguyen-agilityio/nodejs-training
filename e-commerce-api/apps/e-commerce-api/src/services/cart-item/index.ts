@@ -1,13 +1,12 @@
 import { CartItem } from '#entities'
+import { NotFoundError } from '#types'
 
-import { CartItemRepository } from '#repositories/types'
-
-import { NotFoundError } from '#types/error'
+import type { TCartItemRepository } from '#repositories'
 
 import { ICartItemService } from './type'
 
 export class CartItemService implements ICartItemService {
-  constructor(private cartItemRepository: CartItemRepository) {}
+  constructor(private cartItemRepository: TCartItemRepository) {}
 
   async getCartItemByProduct(
     productId: string,

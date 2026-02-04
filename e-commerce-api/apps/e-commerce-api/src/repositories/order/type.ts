@@ -1,10 +1,9 @@
 import { QueryRunner } from 'typeorm'
 
 import { Order } from '#entities'
+import { Params } from '#types'
 
 import { BaseRepository } from '#repositories/base'
-
-import { Params } from '#types/query'
 
 export abstract class AbstractOrderRepository extends BaseRepository<Order> {
   abstract findOrdersByUserId(

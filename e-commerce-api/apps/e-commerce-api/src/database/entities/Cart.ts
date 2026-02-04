@@ -1,28 +1,28 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm'
 
 import {
   BaseWithCreatedAndUpdated,
   type BaseWithCreatedAndUpdatedProps,
-} from './Base';
-import { CartItem } from './CartItem';
-import { User } from './User';
+} from './Base'
+import { CartItem } from './CartItem'
+import { User } from './User'
 
 @Entity({ name: 'carts' })
 export class Cart extends BaseWithCreatedAndUpdated {
   @OneToOne(() => User, (user) => user.cart)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: User
 
   @Column({ type: 'varchar', default: 'active' })
-  status: 'active' | 'abandoned' | 'converted';
+  status: 'active' | 'abandoned' | 'converted'
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.cartId)
-  items: CartItem[];
+  items: CartItem[]
 
   constructor(cart: BaseWithCreatedAndUpdatedProps<Cart>) {
-    super();
+    super()
     if (cart) {
-      Object.assign(this, cart);
+      Object.assign(this, cart)
     }
   }
 }

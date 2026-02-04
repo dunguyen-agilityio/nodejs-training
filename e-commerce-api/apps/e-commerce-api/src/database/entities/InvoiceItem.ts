@@ -1,31 +1,31 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class InvoiceItem {
   @PrimaryColumn({ type: 'varchar' })
-  id: string;
+  id: string
 
   @Column({ name: 'invoice_id', type: 'varchar' })
-  invoiceId: string;
+  invoiceId: string
 
   @Column({ name: 'product_id', type: 'varchar' })
-  productId: string;
+  productId: string
 
   @Column({ type: 'varchar' })
-  name: string;
+  name: string
 
   @Column({ name: 'unit_price', type: 'int' })
-  unitPrice: number; // cents
+  unitPrice: number // cents
 
   @Column('int')
-  quantity: number;
+  quantity: number
 
   @Column('int')
-  total: number; // unitPrice * quantity
+  total: number // unitPrice * quantity
 
   constructor(invoice: InvoiceItem) {
     if (invoice) {
-      Object.assign(this, invoice);
+      Object.assign(this, invoice)
     }
   }
 }

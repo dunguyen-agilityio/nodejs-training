@@ -1,6 +1,5 @@
+import { EmailProvider, MailData } from '#types'
 import { MailService } from '@sendgrid/mail'
-
-import { EmailProvider, MailData } from '#types/mail'
 
 export default class ResponseError extends Error {
   code: number

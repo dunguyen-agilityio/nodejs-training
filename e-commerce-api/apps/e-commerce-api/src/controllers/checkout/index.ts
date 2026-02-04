@@ -1,9 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { FromSchema } from 'json-schema-to-ts'
 
-import { ICheckoutService } from '#services/types'
+import { UnexpectedError } from '#types'
 
-import { UnexpectedError } from '#types/error'
+import { ICheckoutService } from '#services/types'
 
 import {
   createPaymentIntentSchema,

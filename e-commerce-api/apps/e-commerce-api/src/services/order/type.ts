@@ -1,6 +1,5 @@
 import { Order } from '#entities'
-
-import { Pagination, Params } from '#types/query'
+import { Pagination, Params } from '#types'
 
 export interface IOrderService {
   getOrders(

@@ -1,6 +1,5 @@
 import { Product } from '#entities'
-
-import { Pagination, Params } from '#types/query'
+import { Pagination, Params } from '#types'
 
 type PartialProduct = Partial<
   Pick<

@@ -1,8 +1,7 @@
 import { QueryRunner } from 'typeorm'
 
 import { Order } from '#entities'
-
-import { Params } from '#types/query'
+import { Params } from '#types'
 
 import { AbstractOrderRepository } from './type'
 

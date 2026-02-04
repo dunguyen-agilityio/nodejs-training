@@ -3,12 +3,12 @@ import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { post } from '@/lib/api'
-import { CLERK_TOKEN_TEMPLATE } from '@/lib/constants'
+import { config } from '@/lib/config'
 
 export async function POST(req: NextRequest) {
   const { getToken } = await auth()
   const token = await getToken({
-    template: CLERK_TOKEN_TEMPLATE,
+    template: config.clerk.tokenTemplate,
     expiresInSeconds: 3,
   })
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
 
   try {
-    const data = await post(`/products`, body, {
+    const data = await post(`${config.api.endpoint}/products`, body, {
       Authorization: `Bearer ${token}`,
     })
 

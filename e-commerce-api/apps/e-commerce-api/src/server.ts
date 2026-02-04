@@ -1,15 +1,15 @@
-import { clerkPlugin } from '@clerk/fastify'
+import 'dotenv/config'
+import 'reflect-metadata'
+
+import { clerkClient, clerkPlugin, getAuth } from '@clerk/fastify'
 import cors from '@fastify/cors'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import Fastify from 'fastify'
 
 import { AppDataSource } from '#data-source'
-import 'dotenv/config'
-import 'reflect-metadata'
+import { ApiError, HttpStatus } from '#types'
 
-import { ApiError } from '#types/error'
-import { HttpStatus } from '#types/http-status'
-
+import { env } from './configs/env'
 import sendgridPlugin from './plugins/sendgrid.plugin'
 import stripePlugin from './plugins/stripe.plugin'
 import { authRoutes, cartRoutes, categoryRoutes } from './routes'
@@ -25,7 +25,7 @@ const fastify = Fastify({
 }).withTypeProvider<JsonSchemaToTsProvider>()
 
 fastify.register(cors, {
-  origin: process.env.CLIENT_BASE_URL,
+  origin: env.client.baseUrl,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 })
@@ -38,6 +38,10 @@ await Promise.all([
 ])
   .then(([dataSource]) => {
     buildContainer(fastify, dataSource)
+
+    fastify.decorateRequest('clerk', {
+      getter: () => ({ clerkClient, getAuth }),
+    })
 
     fastify.register(
       (instance, opts, done) => {

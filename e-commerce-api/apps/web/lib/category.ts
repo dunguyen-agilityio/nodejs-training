@@ -1,9 +1,10 @@
 import { get } from './api'
+import { config } from './config'
 import { ApiResponse, Category } from './types'
 
 export const fetchCategories = async () => {
   const response = await get<ApiResponse<Category[]>>(
-    '/categories',
+    `${config.api.endpoint}/categories`,
     {},
     { cache: 'force-cache' },
   )

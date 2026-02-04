@@ -1,4 +1,4 @@
-import { ClerkAPIResponseError } from '#types/error'
+import { ClerkAPIResponseError } from '#types'
 
 export const isClerkAPIResponseError = (
   error: unknown,

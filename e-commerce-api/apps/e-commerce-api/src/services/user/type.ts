@@ -1,6 +1,5 @@
 import { User } from '#entities'
-
-import { Customer, CustomerCreateParams } from '#types/payment'
+import { Customer, CustomerCreateParams } from '#types'
 
 export interface IUserService {
   addRoleForUser(userId: string, role: string): Promise<boolean>

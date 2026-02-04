@@ -1,6 +1,6 @@
-import { DataSource, DataSourceOptions } from 'typeorm'
-
 import 'reflect-metadata'
+
+import { DataSource, DataSourceOptions } from 'typeorm'
 
 export const createDataSource = (
   options?: Omit<DataSourceOptions, 'type' | 'database' | 'poolSize'>,

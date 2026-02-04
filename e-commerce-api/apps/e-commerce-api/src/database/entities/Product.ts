@@ -5,53 +5,53 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
-} from 'typeorm';
+} from 'typeorm'
 
-import { CreatedAndUpdated } from './Base';
-import { CartItem } from './CartItem';
-import { OrderItem } from './OrderItem';
-import { Category } from './Category';
+import { CreatedAndUpdated } from './Base'
+import { CartItem } from './CartItem'
+import { OrderItem } from './OrderItem'
+import { Category } from './Category'
 
 @Entity({ name: 'products' })
 export class Product extends CreatedAndUpdated {
   @PrimaryColumn({ type: 'varchar' })
-  id: string;
+  id: string
 
   @Column({ type: 'varchar' })
-  name: string;
+  name: string
 
   @Column({ type: 'varchar' })
-  description: string;
+  description: string
 
   @Column({ type: 'decimal' })
-  price: number;
+  price: number
 
   @Column({ type: 'int' })
-  stock: number;
+  stock: number
 
   @Column({ type: 'int', default: 0 })
-  reservedStock: number;
+  reservedStock: number
 
   @Column({ type: 'simple-array', nullable: true })
-  images: string[];
+  images: string[]
 
   @OneToMany(() => CartItem, (cartItem: CartItem) => cartItem.product)
-  cartItems?: CartItem[];
+  cartItems?: CartItem[]
 
   @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.product)
-  orderItems?: OrderItem[];
+  orderItems?: OrderItem[]
 
   @JoinColumn({ referencedColumnName: 'name', name: 'category' })
   @ManyToOne(() => Category, (category) => category.products)
-  category: Category;
+  category: Category
 
   @Column({ type: 'boolean', nullable: true })
-  deleted?: boolean;
+  deleted?: boolean
 
   constructor(product: Product) {
-    super();
+    super()
     if (product) {
-      Object.assign(this, product);
+      Object.assign(this, product)
     }
   }
 }

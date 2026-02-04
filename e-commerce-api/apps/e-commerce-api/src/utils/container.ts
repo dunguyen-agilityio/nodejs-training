@@ -49,9 +49,7 @@ import {
   ProductService,
   UserService,
 } from '#services'
-
-import { EmailProvider } from '#types/mail'
-import { PaymentGateway } from '#types/payment'
+import type { EmailProvider, PaymentGateway } from '#types'
 
 export function buildControllers(
   services: ReturnType<typeof buildServices>,

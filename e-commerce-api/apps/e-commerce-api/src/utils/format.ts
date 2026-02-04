@@ -1,4 +1,4 @@
-import { PaymentMethod, PaymentMethodType } from '#types/invoice'
+import { PaymentMethod, PaymentMethodType } from '#types'
 
 /**
  * Format Stripe amount (in smallest unit) to currency string

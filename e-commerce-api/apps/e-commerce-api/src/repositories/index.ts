@@ -8,3 +8,5 @@ export * from './order-item'
 export * from './invoice'
 export * from './invoice-item'
 export * from './stock-reservation'
+
+export * from './types'

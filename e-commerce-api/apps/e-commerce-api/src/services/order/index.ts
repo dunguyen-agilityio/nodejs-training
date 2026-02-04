@@ -1,21 +1,19 @@
 import { Order, OrderItem, Product } from '#entities'
+import { NotFoundError, Pagination, Params } from '#types'
 
-import {
-  CartRepository,
-  OrderRepository,
-  ProductRepository,
-} from '#repositories/types'
-
-import { NotFoundError } from '#types/error'
-import { Pagination, Params } from '#types/query'
+import type {
+  TCartRepository,
+  TOrderRepository,
+  TProductRepository,
+} from '#repositories'
 
 import { IOrderService } from './type'
 
 export class OrderService implements IOrderService {
   constructor(
-    private orderRepository: OrderRepository,
-    private cartRepository: CartRepository,
-    private productRepository: ProductRepository,
+    private orderRepository: TOrderRepository,
+    private cartRepository: TCartRepository,
+    private productRepository: TProductRepository,
   ) {}
 
   async createOrder(userId: string): Promise<Order> {
