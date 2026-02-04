@@ -1,5 +1,5 @@
 import type { USER_ROLES } from "#types/user";
-import type { Container, TContainer } from "./utils/container";
+import type { TContainer } from "./utils/container";
 import type { Stripe } from "stripe";
 import type { MailService } from "@sendgrid/mail";
 
@@ -7,14 +7,13 @@ import type { MailService } from "@sendgrid/mail";
 // if prop type is defined here, the value will be typechecked when you call decorate{,Request,Reply}
 declare module "fastify" {
   interface FastifyRequest {
-    container: Container;
+    container: TContainer;
     auth: { userId: string; orgRole: string; stripeId: string };
   }
   interface FastifyReply {}
 
   interface FastifyInstance {
-    container1: TContainer;
-    container: Container;
+    container: TContainer;
     stripe: Stripe;
     sendgrid: MailService;
   }

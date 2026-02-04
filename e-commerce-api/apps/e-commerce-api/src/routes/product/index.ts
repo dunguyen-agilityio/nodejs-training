@@ -3,7 +3,7 @@ import { authenticate, authorizeAdmin, requiredId } from "#middlewares";
 import { PaginationSchema } from "#schemas/pagination";
 
 export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const { productController } = instance.container1.controllers;
+  const { productController } = instance.container.controllers;
   instance.get(
     "/",
     {
@@ -35,7 +35,7 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.addHook("preHandler", authenticate);
   instance.addHook("preHandler", authorizeAdmin);
 
-  const { productController } = instance.container1.controllers;
+  const { productController } = instance.container.controllers;
 
   instance.post(
     "/",

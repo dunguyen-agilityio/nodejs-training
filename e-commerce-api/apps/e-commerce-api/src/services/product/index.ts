@@ -1,19 +1,16 @@
 import { Product } from "#entities";
-import { IPaymentGatewayProvider } from "#providers/types";
 import { ProductRepository } from "#repositories/types";
-import { Dependencies } from "#services/base";
 import { NotFoundError } from "#types/error";
+import { PaymentGateway } from "#types/payment";
 import { PartialProduct } from "#types/product";
 import { Pagination, Params } from "#types/query";
 import { IProductService } from "./type";
 
 export class ProductService implements IProductService {
-  private productRepository: ProductRepository;
-  private paymentGatewayProvider: IPaymentGatewayProvider;
-
-  constructor(dependencies: Dependencies) {
-    Object.assign(this, dependencies);
-  }
+  constructor(
+    private productRepository: ProductRepository,
+    private paymentGatewayProvider: PaymentGateway,
+  ) {}
 
   async getProducts(
     params: Params,
@@ -81,6 +78,6 @@ export class ProductService implements IProductService {
   }
 
   async deleteProduct(id: string): Promise<void> {
-    await this.productRepository.delete(id);
+    await this.productRepository.update(id, { deleted: true });
   }
 }

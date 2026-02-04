@@ -3,7 +3,7 @@ import { getOrdersSchema } from "#schemas/order";
 import { FastifyPluginCallback } from "fastify";
 
 export const orderRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const controller = instance.container1.controllers.orderController
+  const controller = instance.container.controllers.orderController;
 
   instance.get(
     "/",

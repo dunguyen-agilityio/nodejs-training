@@ -6,7 +6,6 @@ import {
   OrderItem,
   Product,
   StockReservation,
-  User,
 } from "#entities";
 import { NotFoundError, UnexpectedError } from "#types/error";
 import Stripe from "stripe";
@@ -17,10 +16,8 @@ import {
   OrderRepository,
   UserRepository,
 } from "#repositories/types";
-import { StripePaymentGatewayProvider } from "#providers";
-import { Dependencies } from "#services/base";
-import { PaymentDetails, Response } from "#types/payment";
-import { IMailProvider } from "#providers/types";
+
+import { PaymentDetails, PaymentGateway, Response } from "#types/payment";
 import {
   Invoice,
   InvoiceLineItem,
@@ -36,6 +33,7 @@ import {
 import dayjs from "dayjs";
 import { StockReservationStatus } from "#types/checkout";
 import { QueryRunner } from "typeorm";
+import { EmailProvider } from "#types/mail";
 
 /**
  * @description Service responsible for handling all checkout-related operations,
@@ -43,19 +41,13 @@ import { QueryRunner } from "typeorm";
  * and order fulfillment after successful payment.
  */
 export class CheckoutService implements ICheckoutService {
-  private userRepository: UserRepository;
-  private cartRepository: CartRepository;
-  private orderRepository: OrderRepository;
-  private paymentGatewayProvider: StripePaymentGatewayProvider;
-  private mailProvider: IMailProvider;
-
-  /**
-   * @constructor
-   * @param dependencies Injected dependencies for the service.
-   */
-  constructor(dependencies: Dependencies) {
-    Object.assign(this, dependencies);
-  }
+  constructor(
+    private userRepository: UserRepository,
+    private cartRepository: CartRepository,
+    private orderRepository: OrderRepository,
+    private paymentGatewayProvider: PaymentGateway,
+    private mailProvider: EmailProvider,
+  ) {}
 
   /**
    * @description Prepares the user's cart for checkout by reserving stock for each item.
@@ -80,10 +72,29 @@ export class CheckoutService implements ICheckoutService {
         throw new UnexpectedError("Cart not payable");
       }
 
-      const cartItems = await queryRuner.manager.find(CartItem, {
-        where: { cartId: cart.id },
-        relations: { product: true },
-      });
+      const cartItems = await queryRuner.manager
+        .createQueryBuilder(CartItem, "cartItem")
+        .where("cartItem.cart_id = :cartId", { cartId: cart.id })
+        .leftJoinAndSelect("cartItem.product", "product")
+        .getMany();
+
+      const deletedProduct = cartItems.find((item) => item.product.deleted);
+
+      if (deletedProduct) {
+        throw new UnexpectedError(
+          `Product ${deletedProduct.product.name} is deleted`,
+        );
+      }
+
+      const outOfStockProduct = cartItems.find(
+        (item) => item.quantity > item.product.stock,
+      );
+
+      if (outOfStockProduct) {
+        throw new UnexpectedError(
+          `Product ${outOfStockProduct.product.name} is out of stock`,
+        );
+      }
 
       await this._reserveStock(queryRuner, cart.id, cartItems);
 
@@ -215,41 +226,42 @@ export class CheckoutService implements ICheckoutService {
     cartItems: CartItem[],
     invoiceLineItems: InvoiceLineItem[],
   ) {
-    const itemMap: Record<string, InvoiceLineItem> = {};
-    for (const line of invoiceLineItems) {
-      const { product } = line.pricing?.price_details || {};
-      if (product) {
-        itemMap[product] = line;
+    try {
+      const itemMap: Record<string, InvoiceLineItem> = {};
+      for (const line of invoiceLineItems) {
+        const { product } = line.pricing?.price_details || {};
+        if (product) {
+          itemMap[product] = line;
+        }
       }
-    }
 
-    for (const item of cartItems) {
-      const line = itemMap[item.product.id];
-      const total = parseFloat((line?.subtotal || 0).toString());
+      for (const item of cartItems) {
+        const line = itemMap[item.product.id];
+        const total = parseFloat((line?.subtotal || 0).toString());
 
-      const invoiceItem = queryRunner.manager.create(InvoiceItem, {
-        invoiceId,
-        name: item.product.name,
-        productId: item.product.id,
-        quantity: item.quantity,
-        total,
-        unitPrice: total / item.quantity,
-        id: line?.id,
-      });
+        const invoiceItem = queryRunner.manager.create(InvoiceItem, {
+          invoiceId,
+          name: item.product.name,
+          productId: item.product.id,
+          quantity: item.quantity,
+          total,
+          unitPrice: total / item.quantity,
+          id: line?.id,
+        });
 
-      await queryRunner.manager.save(invoiceItem);
+        await queryRunner.manager.save(invoiceItem);
+      }
+    } catch {
+      throw new UnexpectedError("Failed to create local invoice items");
     }
   }
 
   /**
-   * @method generatePaymentIntent
    * @description Generates a Stripe Payment Intent for preview purposes.
    * This involves preparing the checkout (reserving stock) and creating a Stripe invoice.
    * @param payload Stripe PaymentIntent creation parameters (e.g., currency).
    * @param userId The ID of the user.
    * @param userStripeId The Stripe customer ID of the user.
-   * @returns A Promise that resolves to the Stripe Invoice object containing the client secret.
-   * @throws {NotFoundError} If the cart is not found.
    */
   async generatePaymentIntent(
     payload: Stripe.PaymentIntentCreateParams,
@@ -260,6 +272,24 @@ export class CheckoutService implements ICheckoutService {
 
     if (!cart) {
       throw new NotFoundError("Cart not found");
+    }
+
+    const deletedProduct = cart.items.find((item) => item.product.deleted);
+
+    if (deletedProduct) {
+      throw new UnexpectedError(
+        `Product ${deletedProduct.product.name} is deleted`,
+      );
+    }
+
+    const outOfStockProduct = cart.items.find(
+      (item) => item.quantity > item.product.stock,
+    );
+
+    if (outOfStockProduct) {
+      throw new UnexpectedError(
+        `Product ${outOfStockProduct.product.name} is out of stock`,
+      );
     }
 
     const { currency } = payload;
@@ -293,12 +323,10 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @method prepareOrderForPayment
    * @description Prepares the order for payment by preparing the checkout (reserving stock)
    * and creating a local invoice based on an existing opened Stripe invoice.
    * @param userId The ID of the user.
    * @param stripeId The Stripe customer ID of the user.
-   * @returns A Promise that resolves to the Stripe Invoice object.
    */
   async prepareOrderForPayment(
     userId: string,

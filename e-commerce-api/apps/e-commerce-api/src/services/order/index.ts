@@ -3,22 +3,17 @@ import {
   CartRepository,
   OrderRepository,
   ProductRepository,
-  UserRepository,
 } from "#repositories/types";
-import { Dependencies } from "#services/base";
-import { NotFoundError, UnauthorizedError } from "#types/error";
+import { NotFoundError } from "#types/error";
 import { Pagination, Params } from "#types/query";
 import { IOrderService } from "./type";
 
 export class OrderService implements IOrderService {
-  private orderRepository: OrderRepository;
-  private cartRepository: CartRepository;
-  private productRepository: ProductRepository;
-  private userRepository: UserRepository;
-
-  constructor(dependencies: Dependencies) {
-    Object.assign(this, dependencies);
-  }
+  constructor(
+    private orderRepository: OrderRepository,
+    private cartRepository: CartRepository,
+    private productRepository: ProductRepository,
+  ) {}
 
   async createOrder(userId: string): Promise<Order> {
     // Start transaction
@@ -143,7 +138,10 @@ export class OrderService implements IOrderService {
     };
   }
 
-  async updateOrderStatus(orderId: number, status: Order["status"]): Promise<Order | null> {
+  async updateOrderStatus(
+    orderId: number,
+    status: Order["status"],
+  ): Promise<Order | null> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
     });

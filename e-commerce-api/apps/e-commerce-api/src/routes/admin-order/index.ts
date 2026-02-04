@@ -4,7 +4,7 @@ import { updateOrderStatusSchema } from "#schemas/admin-order";
 import { FastifyPluginCallback } from "fastify";
 
 export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const controller = instance.container1.controllers.adminOrderController;
+  const controller = instance.container.controllers.adminOrderController;
 
   instance.get(
     "/",

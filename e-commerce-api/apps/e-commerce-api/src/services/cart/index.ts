@@ -7,16 +7,13 @@ import {
   CartRepository,
   ProductRepository,
 } from "#repositories/types";
-import { Dependencies } from "#services/base";
 
 export class CartService implements ICartService {
-  private cartRepository: CartRepository;
-  private cartItemRepository: CartItemRepository;
-  private productRepository: ProductRepository;
-
-  constructor(dependencies: Dependencies) {
-    Object.assign(this, dependencies);
-  }
+  constructor(
+    private cartRepository: CartRepository,
+    private cartItemRepository: CartItemRepository,
+    private productRepository: ProductRepository,
+  ) {}
 
   async createCart(userId: string): Promise<Cart> {
     try {
@@ -47,7 +44,8 @@ export class CartService implements ICartService {
 
     const product = await this.productRepository.getById(productId);
 
-    if (!product) throw new NotFoundError(`Product ${productId} not found`);
+    if (!product || product.deleted)
+      throw new NotFoundError(`Product ${productId} not found`);
     if (product.stock < quantity)
       throw new BadRequestError(`Insufficient stock for Product ${productId}`);
 

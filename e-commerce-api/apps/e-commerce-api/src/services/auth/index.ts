@@ -1,20 +1,18 @@
 import { User } from "#entities";
 import { CartRepository, UserRepository } from "#repositories/types";
-import { Dependencies } from "#services/base";
 import { LoginParams } from "#types/auth";
 import { NotFoundError } from "#types/error";
 import { IAuthService } from "./type";
-import { IMailProvider, IPaymentGatewayProvider } from "#providers/types";
+import { EmailProvider } from "#types/mail";
+import { PaymentGateway } from "#types/payment";
 
 export class AuthService implements IAuthService {
-  private userRepository: UserRepository;
-  private cartRepository: CartRepository;
-  private paymentGatewayProvider: IPaymentGatewayProvider;
-  private mailProvider: IMailProvider;
-
-  constructor(dependecies: Dependencies) {
-    Object.assign(this, dependecies);
-  }
+  constructor(
+    private userRepository: UserRepository,
+    private cartRepository: CartRepository,
+    private paymentGatewayProvider: PaymentGateway,
+    private mailProvider: EmailProvider,
+  ) {}
 
   async register(body: User) {
     const {

@@ -1,4 +1,4 @@
-import { DataSource, EntityTarget, ObjectLiteral, Repository } from "typeorm";
+import { DataSource } from "typeorm";
 
 import {
   Cart,
@@ -12,8 +12,7 @@ import {
   StockReservation,
   User,
 } from "#entities";
-import * as Entities from "#entities";
-import * as Repositories from "#repositories";
+
 import {
   CartItemRepository,
   CartRepository,
@@ -37,133 +36,24 @@ import {
   OrderController,
   ProductController,
 } from "#controllers";
-import * as Services from "#services";
+
 import * as Controllers from "#controllers";
-import * as Providers from "#providers";
-import { create, hasProperty } from "./object";
-import { Dependencies } from "#services/base";
-import { uncapitalize } from "./string";
+
 import { FastifyInstance } from "fastify";
 import { PaymentGateway } from "#types/payment";
 import { SendGridEmailAdapter, StripePaymentAdapter } from "#adapters";
 import { EmailProvider } from "#types/mail";
-import { ProductService } from "#services/product1/index";
-import { UserService } from "#services/user1/index";
-import { CartService } from "#services/cart1/index";
-import { CartItemService } from "#services/cart-item1/index";
-import { CategoryService } from "#services/category1/index";
-import { OrderService } from "#services/order1/index";
-import { CheckoutService } from "#services/checkout1/index";
-import { AuthService } from "#services/auth1/index";
-import { MetricService } from "#services/metric1/index";
-import { TController } from "#types/container";
-
-const ProviderMapping = {
-  SendGridMailProvider: "MailProvider",
-  StripePaymentGatewayProvider: "PaymentGatewayProvider",
-};
-
-type ModuleKey =
-  | keyof typeof Entities
-  | "Checkout"
-  | "Auth"
-  | "Metric"
-  | "AdminOrder"
-  | keyof typeof ProviderMapping;
-
-type TRepository = typeof Repositories;
-type TService = typeof Services;
-
-type AllRegister = Controllers.Controllers &
-  Services.Services &
-  Providers.Providers;
-
-type TAllRegister = {
-  [key in keyof AllRegister]: AllRegister[key];
-};
-
-type Register<T extends keyof AllRegister> = TAllRegister[T];
-
-export class Container {
-  static #instance: Container;
-  items: Map<string, any> = new Map();
-  #dependencies = {} as Record<keyof Dependencies, any>;
-
-  private constructor() { }
-
-  static get instance() {
-    if (!this.#instance) {
-      this.#instance = new Container();
-    }
-
-    return this.#instance;
-  }
-
-  getItem<T extends keyof AllRegister>(name: T): Register<T> {
-    const item = this.items.get(name);
-
-    if (!item) {
-      throw new Error(`Missing register ${name}`);
-    }
-
-    return item as Register<T>;
-  }
-
-  setItem(name: string, value: any) {
-    return this.items.set(name, value);
-  }
-
-  setDataSource(dataSource: DataSource) {
-    Object.entries(Entities).forEach(([key, Entity]) => {
-      const [repositoryKey, repositoryName] = create<TRepository>(key, {
-        type: "Repository",
-      });
-
-      if (repositoryKey in Repositories) {
-        this.#dependencies[uncapitalize(repositoryName) as keyof Dependencies] =
-          new Repositories[repositoryKey](
-            dataSource.manager.getRepository(Entity) as any,
-          );
-      } else {
-        console.log("Missing register: ", key);
-      }
-    });
-
-    return this;
-  }
-
-  register<T extends ModuleKey>(key: T) {
-    const [providerKey, providerName] = create<typeof Providers>(key, {
-      nameMapping: ProviderMapping,
-    });
-
-    if (hasProperty<keyof typeof Providers>(providerKey, Providers)) {
-      const provider = new Providers[providerKey]();
-
-      this.#dependencies[uncapitalize(providerName) as keyof Dependencies] =
-        provider;
-      this.setItem(providerName, provider);
-      return this;
-    }
-
-    const [serviceKey] = create<TService>(key, { type: "Service" });
-    const [controllerKey] = create<typeof Controllers>(key, {
-      type: "Controller",
-    });
-
-    if (hasProperty<keyof TService>(serviceKey, Services)) {
-      const service = new Services[serviceKey](this.#dependencies);
-      this.setItem(serviceKey, service);
-
-      if (hasProperty<keyof typeof Controllers>(controllerKey, Controllers)) {
-        const controller = new Controllers[controllerKey](service as any);
-        this.setItem(controllerKey, controller);
-      }
-    }
-
-    return this;
-  }
-}
+import {
+  MetricService,
+  AuthService,
+  CartItemService,
+  CartService,
+  CategoryService,
+  CheckoutService,
+  OrderService,
+  ProductService,
+  UserService,
+} from "#services";
 
 export function buildControllers(
   services: ReturnType<typeof buildServices>,
@@ -185,38 +75,45 @@ export function buildServices(
   repos: ReturnType<typeof buildRepositories>,
   adapters: { paymentGateway: PaymentGateway; emailProvider: EmailProvider },
 ) {
+  const {
+    cartItemRepository,
+    cartRepository,
+    categoryRepository,
+    orderRepository,
+    productRepository,
+    userRepository,
+  } = repos;
+  const { emailProvider, paymentGateway } = adapters;
+
   return {
-    productService: new ProductService(
-      repos.productRepository,
-      adapters.paymentGateway,
-    ),
-    userService: new UserService(repos.userRepository),
+    productService: new ProductService(productRepository, paymentGateway),
+    userService: new UserService(userRepository, paymentGateway),
     cartService: new CartService(
-      repos.cartRepository,
-      repos.cartItemRepository,
-      repos.productRepository,
+      cartRepository,
+      cartItemRepository,
+      productRepository,
     ),
-    cartItemService: new CartItemService(repos.cartItemRepository),
-    categoryService: new CategoryService(repos.categoryRepository),
+    cartItemService: new CartItemService(cartItemRepository),
+    categoryService: new CategoryService(categoryRepository),
     orderService: new OrderService(
-      repos.orderRepository,
-      repos.cartRepository,
-      repos.productRepository,
+      orderRepository,
+      cartRepository,
+      productRepository,
     ),
     checkoutService: new CheckoutService(
-      repos.userRepository,
-      repos.cartRepository,
-      repos.orderRepository,
-      adapters.paymentGateway,
-      adapters.emailProvider,
+      userRepository,
+      cartRepository,
+      orderRepository,
+      paymentGateway,
+      emailProvider,
     ),
     authService: new AuthService(
-      repos.userRepository,
-      repos.cartRepository,
-      adapters.paymentGateway,
-      adapters.emailProvider,
+      userRepository,
+      cartRepository,
+      paymentGateway,
+      emailProvider,
     ),
-    metricService: new MetricService(repos.productRepository),
+    metricService: new MetricService(productRepository),
   };
 }
 
@@ -261,7 +158,8 @@ export function buildContainer(
   const controllers = buildControllers(services);
 
   const container = { repositories, services, controllers };
-  fastify.decorate("container1", container);
+  fastify.decorate("container", { getter: () => container });
+  fastify.decorateRequest("container", { getter: () => container });
   return container;
 }
 

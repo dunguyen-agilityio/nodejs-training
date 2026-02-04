@@ -10,15 +10,13 @@ export const authenticate = async (
   const auth = getAuth(request);
 
   if (!auth.isAuthenticated) {
-    return reply
-      .status(HttpStatus.UNAUTHORIZED)
-      .send({
-        message: "Unauthenticated: Please log in.",
-        status: HttpStatus.UNAUTHORIZED,
-      });
+    return reply.status(HttpStatus.UNAUTHORIZED).send({
+      message: "Unauthenticated: Please log in.",
+      status: HttpStatus.UNAUTHORIZED,
+    });
   }
 
-  const userService = request.container.getItem("UserService");
+  const { userService } = request.container.services;
   const user = await userService.getById(auth.userId);
 
   if (!user) {
@@ -26,9 +24,8 @@ export const authenticate = async (
   }
 
   if (!user.stripeId) {
-    const paymentGateway = request.container.getItem("PaymentGatewayProvider");
     const { email, name } = user;
-    const customer = await paymentGateway.createCustomer({ email, name });
+    const customer = await userService.createStripeCustomer({ email, name });
     user.stripeId = customer.id;
     await userService.save(user);
   }
