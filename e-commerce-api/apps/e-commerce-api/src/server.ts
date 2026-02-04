@@ -60,7 +60,7 @@ AppDataSource.initialize()
     })
 
     fastify.register(
-      (instance, opts, done) => {
+      (instance, _opts, done) => {
         instance.register(authRoutes, { prefix: '/auth' })
         instance.register(productRoutes, { prefix: '/products' })
         instance.register(categoryRoutes, { prefix: '/categories' })

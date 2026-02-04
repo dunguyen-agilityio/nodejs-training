@@ -11,7 +11,7 @@
   "importOrder": [
     "dotenv/config|reflect-metadata",
     "^@core/(.*)$",
-    "typeorm|fastify|@fastify/|@clerk/|@prisma/|@nestjs/|json-schema-to-ts",
+    "typeorm|fastify|@fastify/|@clerk/|@prisma/|@nestjs/|json-schema-to-ts|vitest",
     "<THIRD_PARTY_MODULES>",
     "^@server/(.*)$",
     "^@ui/(.*)$",
@@ -31,6 +31,7 @@
     "^#types",
     "^#dtos/(.*)$",
     "^#dtos",
+    "^#test-utils$",
     "^#schemas/(.*)$",
     "^#entities$",
     "^#entities/(.*)$",

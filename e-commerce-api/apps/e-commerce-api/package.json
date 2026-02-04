@@ -11,6 +11,7 @@
     "lint": "eslint src/ --max-warnings 0",
     "test:watch": "vitest",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "check-types": "tsc --noEmit",
     "migration:generate": "pnpm typeorm-cmj migration:generate ./src/database/migrations/InitialDatabase -d ./src/database/data-source.ts",
     "revert-migration": "pnpm typeorm-cmj migration:revert -d ./src/database/data-source.ts",
@@ -70,6 +71,7 @@
     "#types/*": "./src/types/*.ts",
     "#types": "./src/types/index.ts",
     "#utils/*": "./src/utils/*.ts",
-    "#data-source": "./src/database/data-source.ts"
+    "#data-source": "./src/database/data-source.ts",
+    "#test-utils": "./src/test-utils.ts"
   }
 }

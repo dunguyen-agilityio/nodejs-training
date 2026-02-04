@@ -20,18 +20,6 @@ export * from './order'
 export * from './admin-order'
 export * from './metric'
 
-export type Controllers = {
-  AdminOrderController: IAdminOrderController
-  AuthController: IAuthController
-  ProductController: IProductController
-  CartController: ICartController
-  CategoryController: ICategoryController
-  CartItemController: ICartItemController
-  CheckoutController: ICheckoutController
-  OrderController: IOrderController
-  MetricController: IMetricController
-}
-
 export type TControllers = {
   adminOrderController: IAdminOrderController
   authController: IAuthController

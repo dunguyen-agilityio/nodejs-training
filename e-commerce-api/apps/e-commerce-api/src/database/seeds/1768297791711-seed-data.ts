@@ -9,11 +9,24 @@ import env from '#env'
 
 import { USER_ROLES } from '#types'
 
+const mockLogger = {
+  info: () => {},
+  error: () => {},
+  warn: () => {},
+  debug: () => {},
+  trace: () => {},
+  fatal: () => {},
+  child: () => mockLogger,
+} as any
+
 export class SeedData1768297791711 implements MigrationInterface {
-  stripe = new StripePaymentAdapter(new Stripe(env.stripe.secretKey))
+  stripe = new StripePaymentAdapter(
+    new Stripe(env.stripe.secretKey),
+    mockLogger,
+  )
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    const { data } = await clerkClient.users.getUserList()
+    const { data } = await clerkClient.users.getUserList({})
 
     if (data.length > 0) {
       await Promise.all(

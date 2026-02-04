@@ -14,7 +14,11 @@ const createPaymentIntentSchema = {
   },
 }
 
-export const checkoutRoutes: FastifyPluginCallback = (instance, opts, done) => {
+export const checkoutRoutes: FastifyPluginCallback = (
+  instance,
+  _opts,
+  done,
+) => {
   const container = instance.container.controllers.checkoutController
   instance.post(
     '/payment-intents',
