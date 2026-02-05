@@ -9,11 +9,13 @@ import { useCart } from '@/context/CartContext'
 type TChild<T> = (props: TWithCart<T>) => React.ReactNode
 
 export const withCart = <T,>(Comp: TChild<T>) => {
-  const NewCompoent = ({ product, ...props }: { product: Product } & T) => {
+  const NewCompoent = (props: Product & T) => {
     const { addToCart, cart } = useCart()
 
+    const { id } = props
+
     const [quantity, setQuantity] = useState(
-      () => cart.find((item) => item.productId === product.id)?.quantity || 0,
+      () => cart.find((item) => item.productId === id)?.quantity || 0,
     )
 
     const handleAddToCart = (product: Product) => {
@@ -26,9 +28,8 @@ export const withCart = <T,>(Comp: TChild<T>) => {
     return (
       <Comp
         {...(props as JSX.IntrinsicAttributes & T)}
-        product={product}
         addToCart={handleAddToCart}
-        outStock={quantity >= product.stock}
+        outStock={quantity >= props.stock}
       />
     )
   }

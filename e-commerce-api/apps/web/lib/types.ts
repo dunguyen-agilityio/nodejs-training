@@ -7,6 +7,7 @@ export interface Product {
   category: string
   stock: number
   deleted?: boolean
+  image: string
 }
 
 export interface CartItem {
