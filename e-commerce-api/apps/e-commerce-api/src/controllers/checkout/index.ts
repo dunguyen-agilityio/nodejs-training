@@ -3,8 +3,6 @@ import { FromSchema } from 'json-schema-to-ts'
 
 import { ICheckoutService } from '#services/types'
 
-import { Response } from '#utils/response'
-
 import { UnexpectedError } from '#types'
 
 import {
@@ -12,10 +10,16 @@ import {
   paymentSuccessSchema,
 } from '#schemas/checkout'
 
+import { BaseController } from '../base'
 import { ICheckoutController } from './type'
 
-export class CheckoutController implements ICheckoutController {
-  constructor(private service: ICheckoutService) {}
+export class CheckoutController
+  extends BaseController
+  implements ICheckoutController
+{
+  constructor(private service: ICheckoutService) {
+    super()
+  }
 
   createPaymentIntentHandler = async (
     request: FastifyRequest<{
@@ -39,7 +43,7 @@ export class CheckoutController implements ICheckoutController {
     }
 
     const { client_secret } = confirmation_secret
-    Response.sendSuccess(reply, { clientSecret: client_secret })
+    this.sendItem(reply, { clientSecret: client_secret })
   }
 
   /**
@@ -53,7 +57,7 @@ export class CheckoutController implements ICheckoutController {
   ): Promise<void> => {
     const { stripeId, userId } = request.auth
     await this.service.prepareOrderForPayment(userId, stripeId)
-    Response.sendNoContent(reply)
+    this.sendNoContent(reply)
   }
 
   stripeWebhookHandler = async (
@@ -69,6 +73,6 @@ export class CheckoutController implements ICheckoutController {
       await this.service.handleSuccessfulPayment(customer, invoiceId)
     }
 
-    Response.sendSuccess(reply, { received: true })
+    this.sendItem(reply, { received: true })
   }
 }

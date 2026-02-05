@@ -2,6 +2,7 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { validateRequest } from '#middlewares'
 
+import { AuthErrorResponseSchema, RegisterResponseSchema } from '#schemas/auth'
 import { registerBodySchema } from '#schemas/auth.schema'
 
 export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
@@ -10,7 +11,18 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.post(
     '/webhooks',
     {
-      schema: { body: registerBodySchema },
+      schema: {
+        summary: 'Register User Webhook',
+        description:
+          'Webhook endpoint for Clerk to register a new user in the database.',
+        tags: ['auth'],
+        body: registerBodySchema,
+        response: {
+          201: RegisterResponseSchema,
+          400: AuthErrorResponseSchema,
+          500: AuthErrorResponseSchema,
+        },
+      },
       attachValidation: true,
       preHandler: [validateRequest],
     },

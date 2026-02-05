@@ -13,6 +13,7 @@ import { errorHandler } from './middlewares/error-handler'
 import { requestLogger, responseLogger } from './middlewares/request-logger'
 import sendgridPlugin from './plugins/sendgrid.plugin'
 import stripePlugin from './plugins/stripe.plugin'
+import swaggerPlugin from './plugins/swagger.plugin'
 import { authRoutes, cartRoutes, categoryRoutes } from './routes'
 import { adminOrderRoutes } from './routes/admin-order'
 import { checkoutRoutes } from './routes/checkout'
@@ -49,6 +50,7 @@ await Promise.all([
   fastify.register(clerkPlugin),
   fastify.register(stripePlugin),
   fastify.register(sendgridPlugin),
+  fastify.register(swaggerPlugin),
 ])
 
 AppDataSource.initialize()

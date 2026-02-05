@@ -4,7 +4,6 @@ import type { FromSchema } from 'json-schema-to-ts'
 import type { IAuthService } from '#services/types'
 
 import { isClerkAPIResponseError } from '#utils/clerk'
-import { Response } from '#utils/response'
 
 import { BadRequestError } from '#types'
 
@@ -12,10 +11,13 @@ import { transformatFromClerk } from '#dtos/user'
 
 import { registerBodySchema } from '#schemas/auth.schema'
 
+import { BaseController } from '../base'
 import { IAuthController } from './type'
 
-export class AuthController implements IAuthController {
-  constructor(private service: IAuthService) {}
+export class AuthController extends BaseController implements IAuthController {
+  constructor(private service: IAuthService) {
+    super()
+  }
 
   register = async (
     request: FastifyRequest<{
@@ -27,11 +29,9 @@ export class AuthController implements IAuthController {
       const newUser = transformatFromClerk(request.body)
       const user = await this.service.register(newUser)
 
-      Response.sendCreated(reply, user, {
-        message: 'User registered successfully.',
-      })
+      this.sendCreatedItem(reply, user)
     } catch (error) {
-      request.log.error(`Error - register: ${error}`)
+      this.logError(request, 'Error - register', error)
       if (isClerkAPIResponseError(error)) {
         throw new BadRequestError(error.errors[0].message)
       }

@@ -10,7 +10,7 @@ export const authenticate = async (
 
   if (!auth.isAuthenticated) {
     return reply.status(HttpStatus.UNAUTHORIZED).send({
-      message: 'Unauthenticated: Please log in.',
+      error: 'Unauthenticated: Please log in.',
       status: HttpStatus.UNAUTHORIZED,
     })
   }
@@ -45,9 +45,10 @@ export const authorizeAdmin = async (
 ) => {
   const auth = request.clerk.getAuth(request)
   if (!auth.userId) {
-    return reply
-      .status(HttpStatus.UNAUTHORIZED)
-      .send({ message: 'Unauthenticated: Please log in.' })
+    return reply.status(HttpStatus.UNAUTHORIZED).send({
+      error: 'Unauthenticated: Please log in.',
+      status: HttpStatus.UNAUTHORIZED,
+    })
   }
 
   const response =
@@ -58,8 +59,9 @@ export const authorizeAdmin = async (
   const isAdmin = response.data.find(({ role }) => role === 'org:admin')
 
   if (!isAdmin) {
-    return reply
-      .status(HttpStatus.FORBIDDEN)
-      .send({ message: 'Access denied: Admin role required.' })
+    return reply.status(HttpStatus.FORBIDDEN).send({
+      error: 'Access denied: Admin role required.',
+      status: HttpStatus.FORBIDDEN,
+    })
   }
 }

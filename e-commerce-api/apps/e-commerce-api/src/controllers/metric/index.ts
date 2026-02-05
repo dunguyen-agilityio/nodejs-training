@@ -2,15 +2,19 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { IMetricService } from '#services/types'
 
-import { Response } from '#utils/response'
-
+import { BaseController } from '../base'
 import { IMetricController } from './type'
 
-export class MetricController implements IMetricController {
-  constructor(private metricService: IMetricService) {}
+export class MetricController
+  extends BaseController
+  implements IMetricController
+{
+  constructor(private metricService: IMetricService) {
+    super()
+  }
 
   getProductMetrics = async (_: FastifyRequest, reply: FastifyReply) => {
     const rawData = await this.metricService.getDashboardStats()
-    Response.sendSuccess(reply, rawData)
+    this.sendItem(reply, rawData)
   }
 }

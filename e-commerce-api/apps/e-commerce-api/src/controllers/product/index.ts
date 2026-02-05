@@ -2,12 +2,11 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { IProductService } from '#services/types'
 
-import { Response } from '#utils/response'
-
 import { productToObject } from '#dtos/product'
 
 import { Product } from '#entities'
 
+import { BaseController } from '../base'
 import { IProductController } from './type'
 
 type ProductQuery = {
@@ -17,8 +16,13 @@ type ProductQuery = {
   category: string
 }
 
-export class ProductController implements IProductController {
-  constructor(private service: IProductService) {}
+export class ProductController
+  extends BaseController
+  implements IProductController
+{
+  constructor(private service: IProductService) {
+    super()
+  }
 
   updateProduct = async (
     request: FastifyRequest<{
@@ -37,7 +41,7 @@ export class ProductController implements IProductController {
 
     const product = await this.service.updateProduct(id, body)
 
-    Response.sendSuccess(reply, product)
+    this.sendItem(reply, product)
   }
 
   addNewProduct = async (
@@ -46,7 +50,7 @@ export class ProductController implements IProductController {
   ): Promise<void> => {
     const productData = request.body
     const newProduct = await this.service.saveProduct(productData)
-    Response.sendCreated(reply, newProduct)
+    this.sendCreatedItem(reply, newProduct)
   }
 
   getProducts = async (
@@ -64,9 +68,9 @@ export class ProductController implements IProductController {
     })
 
     if (meta?.pagination) {
-      Response.sendPaginated(reply, data.map(productToObject), meta.pagination)
+      this.sendPaginated(reply, data.map(productToObject), meta.pagination)
     } else {
-      Response.sendSuccess(reply, data.map(productToObject), meta)
+      this.sendSuccess(reply, data.map(productToObject), meta)
     }
   }
 
@@ -79,11 +83,11 @@ export class ProductController implements IProductController {
     const product = await this.service.getProductById(id)
 
     if (!product) {
-      Response.sendNotFound(reply, 'Product not found')
+      this.sendNotFound(reply, 'Product not found')
       return
     }
 
-    Response.sendSuccess(reply, productToObject(product))
+    this.sendItem(reply, productToObject(product))
   }
 
   deleteProduct = async (
@@ -92,6 +96,6 @@ export class ProductController implements IProductController {
   ): Promise<void> => {
     const id = request.params.id
     await this.service.deleteProduct(id)
-    Response.sendNoContent(reply)
+    this.sendNoContent(reply)
   }
 }

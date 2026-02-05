@@ -2,12 +2,16 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ICartItemService } from '#services/types'
 
-import { Response } from '#utils/response'
-
+import { BaseController } from '../base'
 import { ICartItemController } from './type'
 
-export class CartItemController implements ICartItemController {
-  constructor(private service: ICartItemService) {}
+export class CartItemController
+  extends BaseController
+  implements ICartItemController
+{
+  constructor(private service: ICartItemService) {
+    super()
+  }
 
   deleteCartItem = async (
     request: FastifyRequest<{ Params: { id: string } }>,
@@ -18,7 +22,7 @@ export class CartItemController implements ICartItemController {
       request.auth.userId,
     )
 
-    Response.sendNoContent(reply)
+    this.sendNoContent(reply)
   }
 
   updateCartItemQuantity = async (
@@ -31,6 +35,6 @@ export class CartItemController implements ICartItemController {
     const id = parseInt(request.params.id)
     const quantity = parseInt(request.body.quantity)
     await this.service.updateCartItemQuantity(id, quantity)
-    Response.sendSuccess(reply, { updated: true })
+    this.sendItem(reply, { updated: true })
   }
 }

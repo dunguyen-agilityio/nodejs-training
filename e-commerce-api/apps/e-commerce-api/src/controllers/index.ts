@@ -10,6 +10,7 @@ import {
   IProductController,
 } from './types'
 
+export * from './base'
 export * from './auth'
 export * from './product'
 export * from './cart'

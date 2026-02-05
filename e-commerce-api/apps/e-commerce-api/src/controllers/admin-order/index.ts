@@ -3,17 +3,21 @@ import { FromSchema } from 'json-schema-to-ts'
 
 import { IOrderService } from '#services/types'
 
-import { Response } from '#utils/response'
-
 import { formatOrderDto } from '#dtos/order'
 
 import { updateOrderStatusSchema } from '#schemas/admin-order'
 import { getOrdersSchema } from '#schemas/order'
 
+import { BaseController } from '../base'
 import { IAdminOrderController } from './type'
 
-export class AdminOrderController implements IAdminOrderController {
-  constructor(private service: IOrderService) {}
+export class AdminOrderController
+  extends BaseController
+  implements IAdminOrderController
+{
+  constructor(private service: IOrderService) {
+    super()
+  }
 
   getAllOrders = async (
     request: FastifyRequest<{
@@ -30,13 +34,13 @@ export class AdminOrderController implements IAdminOrderController {
     })
 
     if (response.meta?.pagination) {
-      Response.sendPaginated(
+      this.sendPaginated(
         reply,
         response.data.map((order) => formatOrderDto(order)),
         response.meta.pagination,
       )
     } else {
-      Response.sendSuccess(
+      this.sendSuccess(
         reply,
         response.data.map((order) => formatOrderDto(order)),
         response.meta,
@@ -57,9 +61,9 @@ export class AdminOrderController implements IAdminOrderController {
     const order = await this.service.updateOrderStatus(orderId, status)
 
     if (order) {
-      Response.sendSuccess(reply, formatOrderDto(order))
+      this.sendItem(reply, formatOrderDto(order))
     } else {
-      Response.sendNotFound(reply, 'Order not found')
+      this.sendNotFound(reply, 'Order not found')
     }
   }
 }

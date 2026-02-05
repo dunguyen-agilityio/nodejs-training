@@ -3,16 +3,20 @@ import { FromSchema } from 'json-schema-to-ts'
 
 import { IOrderService } from '#services/types'
 
-import { Response } from '#utils/response'
-
 import { formatOrderDto } from '#dtos/order'
 
 import { getOrdersSchema } from '#schemas/order'
 
+import { BaseController } from '../base'
 import { IOrderController } from './type'
 
-export class OrderController implements IOrderController {
-  constructor(private service: IOrderService) {}
+export class OrderController
+  extends BaseController
+  implements IOrderController
+{
+  constructor(private service: IOrderService) {
+    super()
+  }
 
   getOrders = async (
     request: FastifyRequest<{
@@ -30,13 +34,13 @@ export class OrderController implements IOrderController {
     })
 
     if (response.meta?.pagination) {
-      Response.sendPaginated(
+      this.sendPaginated(
         reply,
         response.data.map((order) => formatOrderDto(order)),
         response.meta.pagination,
       )
     } else {
-      Response.sendSuccess(
+      this.sendSuccess(
         reply,
         response.data.map((order) => formatOrderDto(order)),
         response.meta,
