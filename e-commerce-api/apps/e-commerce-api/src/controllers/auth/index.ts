@@ -39,4 +39,23 @@ export class AuthController extends BaseController implements IAuthController {
       throw error
     }
   }
+
+  login = async (
+    request: FastifyRequest<{
+      Body: FromSchema<typeof import('#schemas/auth.schema').loginBodySchema>
+    }>,
+    reply: FastifyReply,
+  ): Promise<void> => {
+    try {
+      const { identifier, password } = request.body
+      const result = await this.service.login(identifier, password)
+      reply.send(result)
+    } catch (error) {
+      this.logError(request, 'Error - login', error)
+      if (isClerkAPIResponseError(error)) {
+        throw new BadRequestError(error.errors[0].message)
+      }
+      throw error
+    }
+  }
 }

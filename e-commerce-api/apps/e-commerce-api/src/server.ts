@@ -53,13 +53,17 @@ await Promise.all([
   fastify.register(swaggerPlugin),
 ])
 
+fastify.decorateRequest('clerk', {
+  getter: () => ({ clerkClient, getAuth }),
+})
+
+fastify.decorate('clerk', {
+  getter: () => ({ clerkClient, getAuth }),
+})
+
 AppDataSource.initialize()
   .then((dataSource) => {
     buildContainer(fastify, dataSource)
-
-    fastify.decorateRequest('clerk', {
-      getter: () => ({ clerkClient, getAuth }),
-    })
 
     fastify.register(
       (instance, _opts, done) => {

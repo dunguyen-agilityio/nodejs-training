@@ -63,17 +63,28 @@ export function CartProvider({
         )
         setCart((prevCart) => {
           const existingItem = prevCart.find(
-            (item) => item.product.id === product.id,
+            (item) => item.productId === product.id,
           )
           if (existingItem) {
             return prevCart.map((item) =>
-              item.product.id === product.id
+              item.productId === product.id
                 ? { ...item, quantity: quantity }
                 : item,
             )
           }
 
-          return [...prevCart, { id: response.data.id, product, quantity }]
+          return [
+            ...prevCart,
+            {
+              id: response.data.id,
+              productId: product.id,
+              productName: product.name,
+              productImage: product.images[0]!,
+              productPrice: product.price,
+              productStock: product.stock,
+              quantity,
+            },
+          ]
         })
         toast.success(`${product.name} added to cart`)
       } catch (error) {

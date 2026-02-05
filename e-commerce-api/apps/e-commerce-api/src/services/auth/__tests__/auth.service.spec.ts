@@ -18,6 +18,7 @@ describe('AuthService', () => {
   let paymentGatewayProviderMock: ReturnType<typeof vi.mocked<PaymentGateway>>
   let mailProviderMock: ReturnType<typeof vi.mocked<EmailProvider>>
   let loggerMock: ReturnType<typeof vi.mocked<FastifyBaseLogger>>
+  let identityProviderMock: any
 
   beforeEach(() => {
     userRepositoryMock = {
@@ -64,13 +65,56 @@ describe('AuthService', () => {
       },
     })
 
+    identityProviderMock = {
+      login: vi.fn(),
+    }
+
     authService = new AuthService(
       userRepositoryMock,
       cartRepositoryMock,
       paymentGatewayProviderMock,
       mailProviderMock,
       loggerMock,
+      identityProviderMock,
     )
+  })
+
+  describe('login', () => {
+    it('should successfully login and return tokens when status is complete', async () => {
+      const identifier = 'test@example.com'
+      const password = 'password123'
+      const mockSignInResponse = {
+        status: 'complete',
+        createdSessionId: 'sess_123',
+        otherField: 'value',
+      }
+
+      identityProviderMock.login.mockResolvedValue(mockSignInResponse)
+
+      const result = await authService.login(identifier, password)
+
+      expect(identityProviderMock.login).toHaveBeenCalledWith(
+        identifier,
+        password,
+      )
+      expect(result).toEqual(mockSignInResponse)
+    })
+
+    it('should throw error when identity provider throws', async () => {
+      const identifier = 'test@example.com'
+      const password = 'password123'
+      const error = new Error('Login failed')
+
+      identityProviderMock.login.mockRejectedValue(error)
+
+      await expect(authService.login(identifier, password)).rejects.toThrow(
+        error,
+      )
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        { error },
+        'Error during login',
+      )
+    })
   })
 
   describe('register', () => {

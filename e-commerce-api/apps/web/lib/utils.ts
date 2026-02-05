@@ -29,7 +29,7 @@ export function debounce<T extends (...args: any[]) => void>(
 
 export const getCartTotal = (cartItems: CartItem[]) => {
   const cartTotal = cartItems.reduce(
-    (total, item) => total + item.product.price * item.quantity,
+    (total, item) => total + item.productPrice * item.quantity,
     0,
   )
 

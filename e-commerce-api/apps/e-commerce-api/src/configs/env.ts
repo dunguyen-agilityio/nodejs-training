@@ -37,6 +37,7 @@ export const env = {
   client: {
     baseUrl: process.env.CLIENT_BASE_URL!,
     loginPath: process.env.CLIENT_LOGIN_PATH!,
+    tokenTemplate: process.env.CLERK_TOKEN_TEMPLATE!,
   },
 
   // Environment

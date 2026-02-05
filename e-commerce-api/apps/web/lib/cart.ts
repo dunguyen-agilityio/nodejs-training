@@ -1,24 +1,14 @@
-import { auth } from '@clerk/nextjs/server'
-
 import { get } from './api'
+import { createAuthorizationHeader } from './auth'
 import { config } from './config'
-import { ApiResponse, Cart } from './types'
+import { Cart } from './types'
 
 export const getCarts = async () => {
-  const { getToken } = await auth()
-
   try {
-    const token = await getToken({
-      template: config.clerk.tokenTemplate,
-      expiresInSeconds: 3,
-    })
-    const response = await get<ApiResponse<Cart>>(
-      `${config.api.endpoint}/cart`,
-      {
-        Authorization: `Bearer ${token}`,
-      },
-    )
-    return response.data.items
+    const headers = await createAuthorizationHeader()
+    const response = await get<Cart>(`${config.api.endpoint}/cart`, headers)
+
+    return response.items
   } catch (error) {
     console.log('Failed to fetch cart on server:', error)
     return []

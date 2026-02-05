@@ -1,8 +1,7 @@
-import { auth } from '@clerk/nextjs/server'
-
 import Link from 'next/link'
 
 import { post } from '@/lib/api'
+import { createAuthorizationHeader } from '@/lib/auth'
 import { getCarts } from '@/lib/cart'
 import { config } from '@/lib/config'
 import { formatCurrency, getCartTotal } from '@/lib/utils'
@@ -11,22 +10,16 @@ import CheckoutForm from './CheckoutForm'
 import Provider from './Provider'
 
 export default async function CheckoutPage() {
-  const { getToken } = await auth()
-
   const getClientSecret = async (): Promise<{
     error?: string
     clientSecret: string
   }> => {
     try {
-      const token = await getToken({
-        template: config.clerk.tokenTemplate,
-      })
+      const headers = await createAuthorizationHeader()
       return await post<{ clientSecret: string }>(
         `${config.api.endpoint}/checkout/payment-intents`,
         { currency: 'usd' },
-        {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
       )
     } catch (error) {
       console.error('Error: ', error)
@@ -99,10 +92,10 @@ export default async function CheckoutPage() {
                 className="flex justify-between items-center text-sm"
               >
                 <span className="text-muted-foreground">
-                  {item.product.name} x {item.quantity}
+                  {item.productName} x {item.quantity}
                 </span>
                 <span className="font-medium text-foreground">
-                  {formatCurrency(item.product.price * item.quantity)}
+                  {formatCurrency(item.productPrice * item.quantity)}
                 </span>
               </div>
             ))}

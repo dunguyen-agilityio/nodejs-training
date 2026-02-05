@@ -4,7 +4,7 @@ import env from '#env'
 
 import type { TCartRepository, TUserRepository } from '#repositories'
 
-import { EmailProvider, PaymentGateway } from '#types'
+import { EmailProvider, IIdentityProvider, PaymentGateway } from '#types'
 
 import { User } from '#entities'
 
@@ -17,6 +17,7 @@ export class AuthService implements IAuthService {
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
     private logger: FastifyBaseLogger,
+    private identityProvider: IIdentityProvider,
   ) {}
 
   async register(body: User) {
@@ -84,6 +85,15 @@ export class AuthService implements IAuthService {
       return user
     } catch (error) {
       this.logger.error({ email, error }, 'Error during user registration')
+      throw error
+    }
+  }
+
+  async login(identifier: string, password: string) {
+    try {
+      return await this.identityProvider.login(identifier, password)
+    } catch (error) {
+      this.logger.error({ error }, 'Error during login')
       throw error
     }
   }

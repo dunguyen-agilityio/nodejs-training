@@ -1,27 +1,16 @@
-import { auth } from '@clerk/nextjs/server'
-
 import { NextRequest, NextResponse } from 'next/server'
 
 import { post } from '@/lib/api'
+import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
 export async function POST(req: NextRequest) {
-  const { getToken } = await auth()
-  const token = await getToken({
-    template: config.clerk.tokenTemplate,
-    expiresInSeconds: 3,
-  })
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const headers = await createAuthorizationHeader()
 
   const body = await req.json()
 
   try {
-    const data = await post(`${config.api.endpoint}/products`, body, {
-      Authorization: `Bearer ${token}`,
-    })
+    const data = await post(`${config.api.endpoint}/products`, body, headers)
 
     return NextResponse.json(data)
   } catch (error: any) {

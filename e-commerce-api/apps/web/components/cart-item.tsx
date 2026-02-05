@@ -31,7 +31,7 @@ export function CartItem({
     updateQuantity(item.id, newQuantity)
   }
 
-  const isOutOfStock = quantity > item.product.stock
+  const isOutOfStock = quantity > item.productStock
 
   return (
     <div
@@ -40,16 +40,16 @@ export function CartItem({
     >
       <div className="relative h-24 w-24 bg-secondary rounded-md overflow-hidden flex-shrink-0">
         <Image
-          src={item.product.images[0] || '/file-text.svg'}
-          alt={item.product.name}
+          src={item.productImage || '/file-text.svg'}
+          alt={item.productName}
           fill
           className="object-contain p-2"
         />
       </div>
       <div className="flex-grow gap-1">
-        <h3 className="font-semibold text-foreground">{item.product.name}</h3>
+        <h3 className="font-semibold text-foreground">{item.productName}</h3>
         <p className="text-muted-foreground text-sm">
-          {formatCurrency(item.product.price)}
+          {formatCurrency(item.productPrice)}
         </p>
         <div className="flex items-center gap-4 mt-2">
           <div className="flex items-center border border-input rounded-md">
@@ -62,7 +62,7 @@ export function CartItem({
             <span className="px-3 py-1 border-x border-input">{quantity}</span>
             <button
               onClick={handleIncrease}
-              disabled={quantity >= item.product.stock}
+              disabled={quantity >= item.productStock}
               className="px-3 py-1 hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             >
               +
@@ -77,13 +77,13 @@ export function CartItem({
         </div>
         {isOutOfStock && (
           <span className="text-destructive text-sm">
-            {`Out of stock: ${item.product.stock}`}
+            {`Out of stock: ${item.productStock}`}
           </span>
         )}
       </div>
 
       <div className="text-right font-semibold text-foreground">
-        {formatCurrency(item.product.price * item.quantity)}
+        {formatCurrency(item.productPrice * item.quantity)}
       </div>
     </div>
   )

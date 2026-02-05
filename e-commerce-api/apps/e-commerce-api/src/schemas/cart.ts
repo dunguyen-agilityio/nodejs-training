@@ -20,9 +20,9 @@ export const CartItemSchema = {
     id: { type: 'number', example: 1 },
     cartId: { type: 'number', example: 10 },
     quantity: { type: 'number', example: 2 },
-    product: CartProductSchema,
+    // product: CartProductSchema,
   },
-  required: ['id', 'cartId', 'quantity', 'product'],
+  required: ['id', 'quantity'],
   additionalProperties: true,
 } as const
 

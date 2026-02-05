@@ -12,7 +12,11 @@ export interface Product {
 export interface CartItem {
   id: string
   quantity: number
-  product: Product
+  productId: string
+  productName: string
+  productImage: string
+  productPrice: number
+  productStock: number
 }
 
 export interface Cart {

@@ -22,6 +22,7 @@ declare module 'fastify' {
     container: TContainer
     stripe: Stripe
     sendgrid: MailService
+    clerk: { getAuth: GetAuthFn<FastifyRequest>; clerkClient: ClerkClient }
   }
 }
 

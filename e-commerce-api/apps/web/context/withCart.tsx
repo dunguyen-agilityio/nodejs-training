@@ -13,7 +13,7 @@ export const withCart = <T,>(Comp: TChild<T>) => {
     const { addToCart, cart } = useCart()
 
     const [quantity, setQuantity] = useState(
-      () => cart.find((item) => item.product.id === product.id)?.quantity || 0,
+      () => cart.find((item) => item.productId === product.id)?.quantity || 0,
     )
 
     const handleAddToCart = (product: Product) => {

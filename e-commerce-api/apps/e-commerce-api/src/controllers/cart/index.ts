@@ -2,6 +2,8 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ICartService } from '#services/types'
 
+import { CartDto } from '#dtos/cart'
+
 import { BaseController } from '../base'
 import { ICartController } from './type'
 
@@ -16,7 +18,7 @@ export class CartController extends BaseController implements ICartController {
   ): Promise<void> => {
     const { userId } = request.auth
     const cart = await this.service.getCartByUserId(userId!)
-    this.sendItem(reply, cart)
+    this.sendItem(reply, new CartDto(cart))
   }
 
   addProductToCart = async (

@@ -1,7 +1,12 @@
+import { clerkClient } from '@clerk/fastify'
 import { FastifyInstance } from 'fastify'
 import { DataSource } from 'typeorm'
 
-import { SendGridEmailAdapter, StripePaymentAdapter } from '#adapters'
+import {
+  ClerkIdentityProvider,
+  SendGridEmailAdapter,
+  StripePaymentAdapter,
+} from '#adapters'
 
 import {
   AuthService,
@@ -150,6 +155,7 @@ export function buildServices(
       paymentGateway,
       emailProvider,
       fastify.log,
+      new ClerkIdentityProvider(clerkClient as any),
     ),
     adminService: new MetricService(productRepository, fastify.log),
   }

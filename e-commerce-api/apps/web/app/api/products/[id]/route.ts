@@ -4,29 +4,24 @@ import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { del, put } from '@/lib/api'
+import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { getToken } = await auth()
-  const token = await getToken({
-    template: config.clerk.tokenTemplate,
-    expiresInSeconds: 3,
-  })
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const headers = await createAuthorizationHeader()
 
   const { id } = await params
   const body = await req.json()
 
   try {
-    const data = await put(`${config.api.endpoint}/products/${id}`, body, {
-      Authorization: `Bearer ${token}`,
-    })
+    const data = await put(
+      `${config.api.endpoint}/products/${id}`,
+      body,
+      headers,
+    )
     return NextResponse.json(data)
   } catch (error: any) {
     return NextResponse.json(
@@ -40,22 +35,12 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { getToken } = await auth()
-  const token = await getToken({
-    template: config.clerk.tokenTemplate,
-    expiresInSeconds: 3,
-  })
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const headers = await createAuthorizationHeader()
 
   const { id } = await params
 
   try {
-    await del(`${config.api.endpoint}/products/${id}`, {
-      Authorization: `Bearer ${token}`,
-    })
+    await del(`${config.api.endpoint}/products/${id}`, headers)
 
     revalidatePath('/admin/products')
     revalidatePath('/')
