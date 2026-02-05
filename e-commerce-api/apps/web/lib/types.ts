@@ -72,3 +72,10 @@ export type ApiPagination = {
   totalItems: number
   totalPages: number
 }
+
+export type ProductSearchParams = {
+  search?: string
+  sort?: string
+  category?: string
+  page?: string
+}

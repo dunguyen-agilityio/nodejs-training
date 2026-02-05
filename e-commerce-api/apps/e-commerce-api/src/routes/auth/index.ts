@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { validateRequest } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import { AuthErrorResponseSchema, RegisterResponseSchema } from '#schemas/auth'
 import { loginBodySchema, registerBodySchema } from '#schemas/auth.schema'
 
@@ -9,7 +11,7 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.controllers.authController
 
   instance.post(
-    '/webhooks',
+    '/register',
     {
       schema: {
         summary: 'Register User Webhook',
@@ -18,9 +20,10 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
         tags: ['auth'],
         body: registerBodySchema,
         response: {
-          201: RegisterResponseSchema,
-          400: AuthErrorResponseSchema,
-          500: AuthErrorResponseSchema,
+          [HttpStatus.CREATED]: RegisterResponseSchema,
+          [HttpStatus.BAD_REQUEST]: AuthErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: AuthErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: AuthErrorResponseSchema,
         },
       },
       attachValidation: true,
@@ -39,13 +42,14 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
         tags: ['auth'],
         body: loginBodySchema,
         response: {
-          200: {
+          [HttpStatus.OK]: {
             description: 'Login successful',
             type: 'object',
             additionalProperties: true,
           },
-          400: AuthErrorResponseSchema,
-          500: AuthErrorResponseSchema,
+          [HttpStatus.BAD_REQUEST]: AuthErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: AuthErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: AuthErrorResponseSchema,
         },
       },
       attachValidation: true,

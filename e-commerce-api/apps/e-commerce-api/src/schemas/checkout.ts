@@ -1,9 +1,8 @@
 export const createPaymentIntentSchema = {
   type: 'object',
-  required: ['amount', 'currency'],
+  required: ['currency'],
   additionalProperties: true,
   properties: {
-    amount: { type: 'number' },
     currency: { type: 'string', pattern: '^[a-z]{3}$' },
   },
 } as const

@@ -9,8 +9,7 @@ export const getCarts = async () => {
     const response = await get<Cart>(`${config.api.endpoint}/cart`, headers)
 
     return response.items
-  } catch (error) {
-    console.log('Failed to fetch cart on server:', error)
+  } catch {
     return []
   }
 }

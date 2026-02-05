@@ -11,13 +11,11 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params
-  const response = await getProductById(id)
+  const product = await getProductById(id)
 
-  if (!response) {
+  if (!product) {
     notFound()
   }
-
-  const product = response.data
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-12">

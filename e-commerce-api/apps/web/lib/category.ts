@@ -1,3 +1,5 @@
+'use server'
+
 import { get } from './api'
 import { config } from './config'
 import { ApiResponse, Category } from './types'

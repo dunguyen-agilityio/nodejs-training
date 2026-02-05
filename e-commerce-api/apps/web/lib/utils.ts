@@ -16,7 +16,7 @@ export function debounce<T extends (...args: any[]) => void>(
 
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     const time =
-      typeof delay === 'function' ? delay(prevArgs || args, args) : delay
+      typeof delay === 'function' ? delay(prevArgs ?? args, args) : delay
 
     const context = this
 

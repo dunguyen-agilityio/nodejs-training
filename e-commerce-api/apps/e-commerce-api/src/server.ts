@@ -3,6 +3,8 @@ import 'reflect-metadata'
 
 import { clerkClient, clerkPlugin, getAuth } from '@clerk/fastify'
 import cors from '@fastify/cors'
+import fastifyHelmet from '@fastify/helmet'
+import fastifyRateLimit from '@fastify/rate-limit'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import Fastify from 'fastify'
 
@@ -51,6 +53,11 @@ await Promise.all([
   fastify.register(stripePlugin),
   fastify.register(sendgridPlugin),
   fastify.register(swaggerPlugin),
+  fastify.register(fastifyHelmet),
+  fastify.register(fastifyRateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+  }),
 ])
 
 fastify.decorateRequest('clerk', {
@@ -130,7 +137,6 @@ AppDataSource.initialize()
     })
   })
   .catch((error) => {
-    console.log(error)
     fastify.log.error('Database connection failed', error)
     fastify.close(() => {
       process.exit(0)

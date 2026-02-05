@@ -4,16 +4,11 @@ import { Response } from '#utils/response'
 
 import { ApiError, HttpStatus } from '#types'
 
-/**
- * Standardized error handler middleware for Fastify
- * Handles all errors consistently and provides structured error responses
- */
 export const errorHandler = (
   error: FastifyError | ApiError | Error,
   request: FastifyRequest,
   reply: FastifyReply,
 ): void => {
-  // Extract error context for logging
   const errorContext = {
     err: error,
     url: request.url,
@@ -26,40 +21,30 @@ export const errorHandler = (
     timestamp: new Date().toISOString(),
   }
 
-  // Log error with context
   request.log.error(errorContext, 'Request error')
 
-  // Handle ApiError instances (our custom errors)
   if (error instanceof ApiError) {
     return handleApiError(error, reply)
   }
 
-  // Handle Fastify validation errors
   if ('validation' in error && error.validation) {
     return handleValidationError(error as FastifyError, reply)
   }
 
-  // Handle TypeORM/Database errors
   if (isDatabaseError(error)) {
     return handleDatabaseError(error, reply)
   }
 
-  // Handle generic Error instances
   if (error instanceof Error) {
     return handleGenericError(error, reply)
   }
 
-  // Fallback for unknown error types
   Response.sendInternalError(reply, 'An unexpected error occurred')
 }
 
-/**
- * Handle custom ApiError instances
- */
 function handleApiError(error: ApiError, reply: FastifyReply): void {
   const { statusCode, message, details } = error
 
-  // Map specific error types to appropriate response methods
   switch (statusCode) {
     case HttpStatus.BAD_REQUEST:
       Response.sendBadRequest(reply, message, details)
@@ -94,9 +79,6 @@ function handleApiError(error: ApiError, reply: FastifyReply): void {
   }
 }
 
-/**
- * Handle Fastify validation errors
- */
 function handleValidationError(error: FastifyError, reply: FastifyReply): void {
   const validationErrors = error.validation || []
   const errorMessages = validationErrors.map((err) => ({
@@ -109,11 +91,7 @@ function handleValidationError(error: FastifyError, reply: FastifyReply): void {
   })
 }
 
-/**
- * Handle database errors (TypeORM, connection errors, etc.)
- */
 function handleDatabaseError(error: Error, reply: FastifyReply): void {
-  // Don't expose internal database errors in production
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   if (isDevelopment) {
@@ -126,27 +104,19 @@ function handleDatabaseError(error: Error, reply: FastifyReply): void {
   }
 }
 
-/**
- * Handle generic Error instances
- */
 function handleGenericError(error: Error, reply: FastifyReply): void {
   const isDevelopment = process.env.NODE_ENV === 'development'
 
-  // In development, show more details
   if (isDevelopment) {
     Response.sendInternalError(reply, error.message || 'An error occurred', {
       name: error.name,
       stack: error.stack,
     })
   } else {
-    // In production, hide internal error details
     Response.sendInternalError(reply, 'An unexpected error occurred')
   }
 }
 
-/**
- * Check if error is a database-related error
- */
 function isDatabaseError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
 
@@ -168,10 +138,6 @@ function isDatabaseError(error: unknown): boolean {
   )
 }
 
-/**
- * Error handler for async route handlers
- * Wraps async handlers to catch and handle errors properly
- */
 export const asyncHandler = <T extends unknown[]>(
   fn: (...args: T) => Promise<void>,
 ) => {
@@ -179,11 +145,9 @@ export const asyncHandler = <T extends unknown[]>(
     try {
       await fn(...args)
     } catch (error) {
-      // Extract request and reply from args (Fastify route handler signature)
       const request = args[0] as FastifyRequest
       const reply = args[1] as FastifyReply
 
-      // Use the error handler
       errorHandler(error as Error, request, reply)
     }
   }

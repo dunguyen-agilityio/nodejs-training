@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { authenticate, authorizeAdmin } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import { MetricErrorResponseSchema, ProductMetricSchema } from '#schemas/metric'
 
 export const metricRoutes: FastifyPluginCallback = (instance, _, done) => {
@@ -16,10 +18,11 @@ export const metricRoutes: FastifyPluginCallback = (instance, _, done) => {
         tags: ['admin', 'metrics'],
         security: [{ bearerAuth: [] }],
         response: {
-          200: ProductMetricSchema,
-          401: MetricErrorResponseSchema,
-          403: MetricErrorResponseSchema,
-          500: MetricErrorResponseSchema,
+          [HttpStatus.OK]: ProductMetricSchema,
+          [HttpStatus.UNAUTHORIZED]: MetricErrorResponseSchema,
+          [HttpStatus.FORBIDDEN]: MetricErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: MetricErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: MetricErrorResponseSchema,
         },
       },
     },

@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)', // Clerk auth pages
   '/sign-up(.*)',
   '/sign-out(.*)',
+  '/products(.*)',
   '/api/cart(.*)',
   '/api/checkout(.*)',
 ])

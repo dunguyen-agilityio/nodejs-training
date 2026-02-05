@@ -18,47 +18,62 @@ export async function getProducts({
   page = 1,
   limit = 10,
 }: GetProductsParams) {
-  const params = new URLSearchParams()
-  if (search) params.append('query', search)
+  try {
+    const params = new URLSearchParams()
+    if (search) params.append('query', search)
 
-  // Handle multiple categories
-  if (category) {
-    const categories = Array.isArray(category) ? category : [category]
-    const filteredCategories = categories.filter((c) => c !== 'All')
-    if (filteredCategories.length > 0) {
-      params.append('category', filteredCategories.join(','))
-    }
-  }
-  if (sort) params.append('sort', sort)
-  if (page) params.append('page', page.toString())
-  if (limit) params.append('pageSize', limit.toString())
-
-  const response = await get<
-    ApiResponse<
-      Product[],
-      {
-        meta: {
-          pagination: ApiPagination
-        }
+    // Handle multiple categories
+    if (category) {
+      const categories = Array.isArray(category) ? category : [category]
+      const filteredCategories = categories.filter((c) => c !== 'All')
+      if (filteredCategories.length > 0) {
+        params.append('category', filteredCategories.join(','))
       }
-    >
-  >(`${config.api.endpoint}/products?${params.toString()}`)
+    }
+    if (sort) params.append('sort', sort)
+    if (page) params.append('page', page.toString())
+    if (limit) params.append('pageSize', limit.toString())
 
-  const { currentPage, totalItems, totalPages } = response.meta.pagination
+    const response = await get<
+      ApiResponse<
+        Product[],
+        {
+          meta: {
+            pagination: ApiPagination
+          }
+        }
+      >
+    >(`${config.api.endpoint}/products?${params.toString()}`)
 
-  return {
-    products: response.data,
-    pagination: {
-      currentPage: page,
-      totalPages,
-      total: totalItems,
-      hasMore: currentPage < totalPages,
-    },
+    const { currentPage, totalItems, totalPages } = response.meta.pagination
+
+    return {
+      error: null,
+      products: response.data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        total: totalItems,
+        hasMore: currentPage < totalPages,
+      },
+    }
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error ? error.message : 'Failed to fetch products',
+      products: [],
+      pagination: {
+        currentPage: page,
+        totalPages: 0,
+        total: 0,
+        hasMore: false,
+      },
+    }
   }
 }
 
 export async function getProductById(id: string) {
-  return get<ApiResponse<Product>>(`${config.api.endpoint}/products/${id}`)
+  return get<Product>(`${config.api.endpoint}/products/${id}`)
 }
 
 export async function getCart(headers: HeadersInit = {}) {

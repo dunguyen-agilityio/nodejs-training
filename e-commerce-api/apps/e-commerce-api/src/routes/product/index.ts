@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { authenticate, authorizeAdmin, requiredId } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import { PaginationSchema } from '#schemas/pagination'
 import {
   ProductDetailResponseSchema,
@@ -32,9 +34,10 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
           },
         },
         response: {
-          200: ProductListResponseSchema,
-          400: ProductErrorResponseSchema,
-          500: ProductErrorResponseSchema,
+          [HttpStatus.OK]: ProductListResponseSchema,
+          [HttpStatus.BAD_REQUEST]: ProductErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ProductErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ProductErrorResponseSchema,
         },
       },
     },
@@ -58,9 +61,9 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
           required: ['id'],
         },
         response: {
-          200: ProductDetailResponseSchema,
-          404: ProductErrorResponseSchema,
-          500: ProductErrorResponseSchema,
+          [HttpStatus.OK]: ProductDetailResponseSchema,
+          [HttpStatus.NOT_FOUND]: ProductErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ProductErrorResponseSchema,
         },
       },
     },
@@ -119,11 +122,12 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
           },
         },
         response: {
-          201: ProductDetailResponseSchema,
-          400: ProductErrorResponseSchema,
-          401: ProductErrorResponseSchema,
-          403: ProductErrorResponseSchema,
-          500: ProductErrorResponseSchema,
+          [HttpStatus.CREATED]: ProductDetailResponseSchema,
+          [HttpStatus.BAD_REQUEST]: ProductErrorResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: ProductErrorResponseSchema,
+          [HttpStatus.FORBIDDEN]: ProductErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ProductErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ProductErrorResponseSchema,
         },
       },
     },
@@ -163,12 +167,13 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
           },
         },
         response: {
-          200: ProductDetailResponseSchema,
-          400: ProductErrorResponseSchema,
-          401: ProductErrorResponseSchema,
-          403: ProductErrorResponseSchema,
-          404: ProductErrorResponseSchema,
-          500: ProductErrorResponseSchema,
+          [HttpStatus.OK]: ProductDetailResponseSchema,
+          [HttpStatus.BAD_REQUEST]: ProductErrorResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: ProductErrorResponseSchema,
+          [HttpStatus.FORBIDDEN]: ProductErrorResponseSchema,
+          [HttpStatus.NOT_FOUND]: ProductErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ProductErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ProductErrorResponseSchema,
         },
       },
     },
@@ -194,14 +199,15 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
           required: ['id'],
         },
         response: {
-          204: {
+          [HttpStatus.NO_CONTENT]: {
             type: 'null',
             description: 'Product deleted successfully',
           },
-          401: ProductErrorResponseSchema,
-          403: ProductErrorResponseSchema,
-          404: ProductErrorResponseSchema,
-          500: ProductErrorResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: ProductErrorResponseSchema,
+          [HttpStatus.FORBIDDEN]: ProductErrorResponseSchema,
+          [HttpStatus.NOT_FOUND]: ProductErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ProductErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ProductErrorResponseSchema,
         },
       },
     },

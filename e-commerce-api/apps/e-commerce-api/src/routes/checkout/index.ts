@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { authenticate, validateRequest } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import {
   createPaymentIntentSchema,
   paymentSuccessSchema,
@@ -27,10 +29,10 @@ export const checkoutRoutes: FastifyPluginCallback = (
         security: [{ bearerAuth: [] }],
         body: createPaymentIntentSchema,
         response: {
-          200: PaymentIntentResponseSchema,
-          400: CheckoutErrorResponseSchema,
-          401: CheckoutErrorResponseSchema,
-          500: CheckoutErrorResponseSchema,
+          [HttpStatus.OK]: PaymentIntentResponseSchema,
+          [HttpStatus.BAD_REQUEST]: CheckoutErrorResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: CheckoutErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: CheckoutErrorResponseSchema,
         },
       },
       preHandler: [authenticate],
@@ -46,9 +48,9 @@ export const checkoutRoutes: FastifyPluginCallback = (
         tags: ['checkout'],
         security: [{ bearerAuth: [] }],
         response: {
-          204: { type: 'null' },
-          401: CheckoutErrorResponseSchema,
-          500: CheckoutErrorResponseSchema,
+          [HttpStatus.NO_CONTENT]: { type: 'null' },
+          [HttpStatus.UNAUTHORIZED]: CheckoutErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: CheckoutErrorResponseSchema,
         },
       },
     },
@@ -63,9 +65,10 @@ export const checkoutRoutes: FastifyPluginCallback = (
         tags: ['checkout'],
         body: paymentSuccessSchema,
         response: {
-          200: StripeWebhookAckSchema,
-          400: CheckoutErrorResponseSchema,
-          500: CheckoutErrorResponseSchema,
+          [HttpStatus.OK]: StripeWebhookAckSchema,
+          [HttpStatus.BAD_REQUEST]: CheckoutErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: CheckoutErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: CheckoutErrorResponseSchema,
         },
       },
     },

@@ -1,6 +1,6 @@
 'use client'
 
-import { updateOrderStatusAction } from '@/app/actions'
+import { updateOrderStatusAction } from '@/app/(dashboard)/actions'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 

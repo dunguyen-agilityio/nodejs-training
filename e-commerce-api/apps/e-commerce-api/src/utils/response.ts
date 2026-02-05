@@ -11,7 +11,7 @@ export interface ApiResponseSuccess<T = unknown> {
 }
 
 export interface ApiResponseError {
-  error: string
+  message: string
   status: number
   details?: unknown
 }
@@ -52,7 +52,7 @@ export class ApiResponseBuilder {
     details?: unknown,
   ): ApiResponseError {
     const response: ApiResponseError = {
-      error: message,
+      message,
       status: statusCode,
     }
     if (details) {

@@ -22,7 +22,7 @@ export async function PUT(
     return NextResponse.json(data)
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message },
+      { message: error.message },
       { status: error.status || 500 },
     )
   }
@@ -40,7 +40,7 @@ export async function DELETE(
     return NextResponse.json(data)
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message },
+      { message: error.message },
       { status: error.status || 500 },
     )
   }

@@ -11,5 +11,5 @@ export class ProductResponseDto extends Product {
 }
 
 export const productToObject = (product: Product) => {
-  return new ProductResponseDto(product)
+  return new ProductResponseDto(product).toObject()
 }

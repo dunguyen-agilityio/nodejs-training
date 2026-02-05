@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { authenticate } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import {
   CartItemSchema,
   CartItemUpdatedSchema,
@@ -33,11 +35,12 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
           ],
         },
         response: {
-          201: CartItemSchema,
-          400: ErrorResponseSchema,
-          401: ErrorResponseSchema,
-          404: ErrorResponseSchema,
-          500: ErrorResponseSchema,
+          [HttpStatus.CREATED]: CartItemSchema,
+          [HttpStatus.BAD_REQUEST]: ErrorResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: ErrorResponseSchema,
+          [HttpStatus.NOT_FOUND]: ErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ErrorResponseSchema,
         },
       },
     },
@@ -52,9 +55,10 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
         tags: ['cart'],
         security: [{ bearerAuth: [] }],
         response: {
-          200: CartSchema,
-          401: ErrorResponseSchema,
-          500: ErrorResponseSchema,
+          [HttpStatus.OK]: CartSchema,
+          [HttpStatus.UNAUTHORIZED]: ErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorResponseSchema,
         },
       },
     },
@@ -79,10 +83,11 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
           },
         },
         response: {
-          204: { type: 'null' },
-          401: ErrorResponseSchema,
-          404: ErrorResponseSchema,
-          500: ErrorResponseSchema,
+          [HttpStatus.NO_CONTENT]: { type: 'null' },
+          [HttpStatus.UNAUTHORIZED]: ErrorResponseSchema,
+          [HttpStatus.NOT_FOUND]: ErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ErrorResponseSchema,
         },
       },
     },
@@ -115,10 +120,11 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
           examples: [{ quantity: '3' }],
         },
         response: {
-          200: CartItemUpdatedSchema,
-          401: ErrorResponseSchema,
-          404: ErrorResponseSchema,
-          500: ErrorResponseSchema,
+          [HttpStatus.OK]: CartItemUpdatedSchema,
+          [HttpStatus.UNAUTHORIZED]: ErrorResponseSchema,
+          [HttpStatus.NOT_FOUND]: ErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ErrorResponseSchema,
         },
       },
     },

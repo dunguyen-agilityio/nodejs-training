@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { authenticate } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import { getOrdersSchema } from '#schemas/order'
 import {
   OrderErrorResponseSchema,
@@ -21,9 +23,10 @@ export const orderRoutes: FastifyPluginCallback = (instance, _, done) => {
         security: [{ bearerAuth: [] }],
         querystring: getOrdersSchema,
         response: {
-          200: OrdersPaginatedResponseSchema,
-          401: OrderErrorResponseSchema,
-          500: OrderErrorResponseSchema,
+          [HttpStatus.OK]: OrdersPaginatedResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: OrderErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: OrderErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: OrderErrorResponseSchema,
         },
       },
     },

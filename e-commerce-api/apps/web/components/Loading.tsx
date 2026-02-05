@@ -10,7 +10,7 @@ export interface LoadingRef {
 /**
  * Loading indicator component with optional full-screen overlay
  */
-const LoadingIndicator = ({
+export const LoadingIndicator = ({
   loading,
   fullScreen,
 }: {

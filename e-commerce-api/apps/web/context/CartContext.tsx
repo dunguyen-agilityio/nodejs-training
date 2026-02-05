@@ -3,7 +3,7 @@
 import { useAuth, useClerk } from '@clerk/nextjs'
 
 import { redirect } from 'next/navigation'
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { del, post, put } from '@/lib/api'
@@ -22,7 +22,7 @@ interface CartContextType {
 }
 
 interface CartAddResponse {
-  data: { id: string }
+  id: string
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -36,7 +36,16 @@ export function CartProvider({
 }) {
   const [cart, setCart] = useState<CartItem[]>(initialCart)
   const { isSignedIn } = useAuth()
-  const { signOut } = useClerk()
+
+  const { signOut, redirectToSignIn } = useClerk()
+
+  useEffect(() => {
+    return () => {
+      if (!isSignedIn) {
+        clearCart()
+      }
+    }
+  }, [isSignedIn])
 
   const handleApiError = (error: any) => {
     if (error instanceof UnauthorizedError) {
@@ -51,7 +60,7 @@ export function CartProvider({
     async (product: Product, quantity: number = 1) => {
       try {
         if (!isSignedIn) {
-          redirect('/sign-in')
+          redirectToSignIn({ redirectUrl: '/products' })
         }
 
         const response = await post<CartAddResponse>(
@@ -76,7 +85,7 @@ export function CartProvider({
           return [
             ...prevCart,
             {
-              id: response.data.id,
+              id: response.id,
               productId: product.id,
               productName: product.name,
               productImage: product.images[0]!,
@@ -91,10 +100,8 @@ export function CartProvider({
         handleApiError(error)
       }
     },
-    (prev: [Product], current: [Product]) => {
-      console.log(prev[0].id, current[0].id)
-      return prev[0].id === current[0].id ? 800 : 0
-    },
+    (prev: [Product], current: [Product]) =>
+      prev[0]?.id === current[0]?.id ? 800 : 0,
   )
 
   const removeFromCart = async (cartItemId: string) => {

@@ -60,7 +60,7 @@ export const PaginatedResponseSchema = {
 export const ErrorResponseSchema = {
   type: 'object',
   properties: {
-    error: {
+    message: {
       type: 'string',
       description: 'Error message',
       example: 'Resource not found',
@@ -74,7 +74,7 @@ export const ErrorResponseSchema = {
       description: 'Additional error details (optional)',
     },
   },
-  required: ['error', 'status'],
+  required: ['message', 'status'],
 } as const
 
 export function createSuccessResponseSchema(dataSchema: unknown) {

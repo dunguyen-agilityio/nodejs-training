@@ -14,14 +14,14 @@ export default async function EditProductPage({
 }: EditProductPageProps) {
   const { id } = await params
 
-  const response = await getProductById(id)
-  const categories = await fetchCategories()
+  const [product, categories] = await Promise.all([
+    getProductById(id),
+    fetchCategories(),
+  ])
 
-  if (!response) {
+  if (!product) {
     notFound()
   }
-
-  const { data: product } = response
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,7 @@
 import { FastifyPluginCallback } from 'fastify'
 
+import { HttpStatus } from '#types/http-status'
+
 import {
   CategoryErrorResponseSchema,
   CategoryListResponseSchema,
@@ -14,8 +16,9 @@ export const categoryRoutes: FastifyPluginCallback = (instance, _, done) => {
         description: 'Get all categories',
         tags: ['categories'],
         response: {
-          200: CategoryListResponseSchema,
-          500: CategoryErrorResponseSchema,
+          [HttpStatus.OK]: CategoryListResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: CategoryErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: CategoryErrorResponseSchema,
         },
       },
     },

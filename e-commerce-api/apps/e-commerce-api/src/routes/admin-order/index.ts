@@ -2,6 +2,8 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { authenticate, authorizeAdmin } from '#middlewares'
 
+import { HttpStatus } from '#types/http-status'
+
 import { updateOrderStatusSchema } from '#schemas/admin-order'
 import { getOrdersSchema } from '#schemas/order'
 import {
@@ -23,10 +25,11 @@ export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {
         security: [{ bearerAuth: [] }],
         querystring: getOrdersSchema,
         response: {
-          200: OrdersPaginatedResponseSchema,
-          401: ErrorResponseSchema,
-          403: ErrorResponseSchema,
-          500: ErrorResponseSchema,
+          [HttpStatus.OK]: OrdersPaginatedResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: ErrorResponseSchema,
+          [HttpStatus.FORBIDDEN]: ErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ErrorResponseSchema,
         },
       },
     },
@@ -50,12 +53,13 @@ export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
         body: updateOrderStatusSchema,
         response: {
-          200: OrderSchema,
-          400: ErrorResponseSchema,
-          401: ErrorResponseSchema,
-          403: ErrorResponseSchema,
-          404: ErrorResponseSchema,
-          500: ErrorResponseSchema,
+          [HttpStatus.OK]: OrderSchema,
+          [HttpStatus.BAD_REQUEST]: ErrorResponseSchema,
+          [HttpStatus.UNAUTHORIZED]: ErrorResponseSchema,
+          [HttpStatus.FORBIDDEN]: ErrorResponseSchema,
+          [HttpStatus.NOT_FOUND]: ErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: ErrorResponseSchema,
         },
       },
     },

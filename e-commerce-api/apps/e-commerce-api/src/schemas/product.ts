@@ -36,6 +36,11 @@ export const ProductSchema = {
       description: 'Product images URLs',
       example: ['https://example.com/image1.jpg'],
     },
+    image: {
+      type: 'string',
+      description: 'Product image URL',
+      example: 'https://example.com/image1.jpg',
+    },
     category: {
       type: 'string',
       description: 'Category name',

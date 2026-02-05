@@ -14,10 +14,6 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import Link from 'next/link'
 import { Toaster } from 'sonner'
 
-import { getCarts } from '@/lib/cart'
-import { CartItem } from '@/lib/types'
-
-import { CartProvider } from '@/context/CartContext'
 import QueryProvider from '@/context/query-provider'
 
 import { ModeToggle } from '@/components/mode-toggle'
@@ -45,22 +41,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const { isAuthenticated, sessionClaims } = await auth()
+  const { sessionClaims } = await auth()
 
   const isAdmin = sessionClaims?.org_role === 'org:admin'
 
-  let cart: CartItem[] = []
-  if (isAuthenticated && !isAdmin) {
-    try {
-      cart = await getCarts()
-    } catch (error) {
-      console.error('Failed to fetch cart on server:', error)
-      // Handle error gracefully, maybe show a toast on the client
-    }
-  }
-
   return (
-    <ClerkProvider afterSignOutUrl="/sign-out">
+    <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -72,51 +58,49 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <CartProvider initialCart={cart}>
-                <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
-                  <div className="flex items-center gap-4">
-                    <Link href="/" className="font-bold text-xl">
-                      MyStore
-                    </Link>
-                    <OrganizationSwitcher hidePersonal={isAdmin} />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {!isAdmin && (
-                      <>
+              <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
+                <div className="flex items-center gap-4">
+                  <Link href="/" className="font-bold text-xl">
+                    MyStore
+                  </Link>
+                  <OrganizationSwitcher hidePersonal={isAdmin} />
+                </div>
+                <div className="flex items-center gap-4">
+                  {!isAdmin && (
+                    <>
+                      <Link
+                        href="/cart"
+                        className="relative p-2 hover:bg-accent rounded-md"
+                      >
+                        🛒
+                      </Link>
+                      <SignedIn>
                         <Link
-                          href="/cart"
-                          className="relative p-2 hover:bg-accent rounded-md"
+                          href="/orders"
+                          className="text-sm font-medium hover:underline"
                         >
-                          🛒
+                          Orders
                         </Link>
-                        <SignedIn>
-                          <Link
-                            href="/orders"
-                            className="text-sm font-medium hover:underline"
-                          >
-                            Orders
-                          </Link>
-                        </SignedIn>
-                      </>
-                    )}
+                      </SignedIn>
+                    </>
+                  )}
 
-                    <ModeToggle />
-                    <SignedOut>
-                      <SignInButton mode="modal" />
-                      <SignUpButton mode="modal">
-                        <button className="bg-primary text-primary-foreground rounded-full font-medium text-sm h-10 px-4 cursor-pointer hover:bg-primary/90">
-                          Sign Up
-                        </button>
-                      </SignUpButton>
-                    </SignedOut>
-                    <SignedIn>
-                      <UserButton />
-                    </SignedIn>
-                  </div>
-                </header>
-                {children}
-                <Toaster />
-              </CartProvider>
+                  <ModeToggle />
+                  <SignedOut>
+                    <SignInButton mode="redirect" />
+                    <SignUpButton mode="redirect">
+                      <button className="bg-primary text-primary-foreground rounded-full font-medium text-sm h-10 px-4 cursor-pointer hover:bg-primary/90">
+                        Sign Up
+                      </button>
+                    </SignUpButton>
+                  </SignedOut>
+                  <SignedIn>
+                    <UserButton />
+                  </SignedIn>
+                </div>
+              </header>
+              {children}
+              <Toaster />
             </QueryProvider>
           </ThemeProvider>
         </body>
