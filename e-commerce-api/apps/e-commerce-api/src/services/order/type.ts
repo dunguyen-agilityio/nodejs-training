@@ -1,16 +1,16 @@
-import { Pagination, ProductQueryParams } from '#types'
+import { OrderQueryParams, Pagination } from '#types'
 
 import { Order } from '#entities'
 
 export interface IOrderService {
   getOrders(
-    params: Omit<ProductQueryParams, 'query' | 'categories'>,
+    params: OrderQueryParams,
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>
   createOrder(userId: string): Promise<Order>
 
   getOrdersByUserId(
     userId: string,
-    params: Omit<ProductQueryParams, 'query' | 'categories'>,
+    params: OrderQueryParams,
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>
 
   updateOrderStatus(

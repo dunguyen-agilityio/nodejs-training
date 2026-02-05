@@ -1,6 +1,6 @@
-import { QueryRunner } from 'typeorm'
+import { Between, QueryRunner } from 'typeorm'
 
-import { ProductQueryParams } from '#types'
+import { OrderQueryParams } from '#types'
 
 import { Order } from '#entities'
 
@@ -16,11 +16,24 @@ export class OrderRepository extends AbstractOrderRepository {
 
   async findOrdersByUserId(
     userId: string,
-    params: ProductQueryParams,
+    params: OrderQueryParams,
   ): Promise<[number, Order[]]> {
-    const { page, pageSize } = params
+    const { page, pageSize, date, status } = params
+    const dateStart = date ? date.startOf('day').toDate() : undefined
+    const dateEnd = date ? date.endOf('day').toDate() : undefined
+
+    const dateCondition =
+      dateStart && dateEnd ? { updatedAt: Between(dateStart, dateEnd) } : {}
+
     const [orders, count] = await this.findAndCount({
-      where: { user: { id: userId } },
+      where: {
+        user: { id: userId },
+        status,
+        ...dateCondition,
+      },
+      order: {
+        updatedAt: 'DESC',
+      },
       relations: { items: { product: true } },
       take: pageSize,
       skip: (page - 1) * pageSize,
@@ -29,9 +42,20 @@ export class OrderRepository extends AbstractOrderRepository {
     return [count, orders]
   }
 
-  async findOrders(params: ProductQueryParams): Promise<[number, Order[]]> {
-    const { page, pageSize } = params
+  async findOrders(params: OrderQueryParams): Promise<[number, Order[]]> {
+    const { page, pageSize, status, date } = params
+    const dateStart = date ? date.startOf('day').toDate() : undefined
+    const dateEnd = date ? date.endOf('day').toDate() : undefined
+
+    const dateCondition =
+      dateStart && dateEnd ? { updatedAt: Between(dateStart, dateEnd) } : {}
+
     const [orders, count] = await this.findAndCount({
+      where: {
+        status,
+        ...dateCondition,
+      },
+      order: { updatedAt: 'DESC' },
       relations: { items: { product: true } },
       take: pageSize,
       skip: (page - 1) * pageSize,

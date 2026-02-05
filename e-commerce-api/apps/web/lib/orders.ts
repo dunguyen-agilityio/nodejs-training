@@ -17,9 +17,22 @@ type AllOrdersResponse = ApiResponse<
   Order[],
   { meta: { pagination: ApiPagination } }
 >
-export async function getAllOrders(page: number = 1, pageSize: number = 20) {
+export async function getAllOrders(
+  page: number = 1,
+  pageSize: number = 20,
+  status?: string,
+  date?: string,
+) {
   const headers = await createAuthorizationHeader()
-  const url = `${config.api.endpoint}/admin/orders?page=${page}&pageSize=${pageSize}`
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  })
+
+  if (status) params.append('status', status)
+  if (date) params.append('date', date)
+
+  const url = `${config.api.endpoint}/admin/orders?${params.toString()}`
   const response = await get<AllOrdersResponse>(url, headers)
   return response
 }

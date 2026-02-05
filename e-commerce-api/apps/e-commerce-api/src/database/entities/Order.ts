@@ -7,6 +7,13 @@ import {
 import { OrderItem } from './OrderItem'
 import { User } from './User'
 
+export type OrderStatus =
+  | 'pending'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+
 @Entity({ name: 'orders' })
 export class Order extends BaseWithCreatedAndUpdated {
   @ManyToOne(() => User, (user) => user.orders)
@@ -14,7 +21,7 @@ export class Order extends BaseWithCreatedAndUpdated {
   user?: User
 
   @Column({ type: 'varchar' })
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status: OrderStatus
 
   @Column({ name: 'total_amount', type: 'decimal' })
   totalAmount: number

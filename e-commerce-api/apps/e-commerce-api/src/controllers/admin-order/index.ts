@@ -1,12 +1,16 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { FromSchema } from 'json-schema-to-ts'
 
+import dayjs from 'dayjs'
+
 import { IOrderService } from '#services/types'
 
 import { formatOrderDto } from '#dtos/order'
 
 import { updateOrderStatusSchema } from '#schemas/admin-order'
 import { getOrdersSchema } from '#schemas/order'
+
+import { OrderStatus } from '#entities'
 
 import { BaseController } from '../base'
 import { IAdminOrderController } from './type'
@@ -27,10 +31,14 @@ export class AdminOrderController
   ): Promise<void> => {
     const page = request.query.page
     const pageSize = request.query.pageSize
+    const status = request.query.status
+    const date = request.query.date
 
     const response = await this.service.getOrders({
       page,
       pageSize,
+      status: status as OrderStatus,
+      date: date ? dayjs(date) : undefined,
     })
 
     if (response.meta?.pagination) {

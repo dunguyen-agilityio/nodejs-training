@@ -6,7 +6,12 @@ import type {
   TProductRepository,
 } from '#repositories'
 
-import { NotFoundError, Pagination, ProductQueryParams } from '#types'
+import {
+  NotFoundError,
+  OrderQueryParams,
+  Pagination,
+  ProductQueryParams,
+} from '#types'
 
 import { Order, OrderItem, Product } from '#entities'
 
@@ -144,7 +149,7 @@ export class OrderService implements IOrderService {
 
   async getOrdersByUserId(
     userId: string,
-    params: Omit<ProductQueryParams, 'query'>,
+    params: OrderQueryParams,
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }> {
     this.logger.info(
       { userId, page: params.page, pageSize: params.pageSize },
@@ -175,7 +180,7 @@ export class OrderService implements IOrderService {
   }
 
   async getOrders(
-    params: Omit<ProductQueryParams, 'query'>,
+    params: OrderQueryParams,
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }> {
     this.logger.info(
       { page: params.page, pageSize: params.pageSize },

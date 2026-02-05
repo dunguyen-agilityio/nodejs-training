@@ -2,11 +2,12 @@ import Link from 'next/link'
 
 import { getAllOrders } from '@/lib/orders'
 
+import { OrderFilters } from '@/components/admin/order-filters'
 import { OrderStatusSelect } from '@/components/admin/order-status-select'
 import { PaginationControls } from '@/components/pagination-controls'
 
 interface AdminOrdersPageProps {
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; status?: string; date?: string }>
 }
 
 export default async function AdminOrdersPage({
@@ -14,13 +15,17 @@ export default async function AdminOrdersPage({
 }: AdminOrdersPageProps) {
   const params = await searchParams
   const page = Number(params.page) || 1
-  const response = await getAllOrders(page, 20)
+  const response = await getAllOrders(page, 20, params.status, params.date)
   const orders = response.data
   const pagination = response.meta.pagination
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+        <OrderFilters />
+      </div>
+
       <div className="rounded-md border bg-card">
         <div className="relative w-full overflow-auto">
           <table className="w-full caption-bottom text-sm">
@@ -68,7 +73,7 @@ export default async function AdminOrdersPage({
                       </Link>
                     </td>
                     <td className="p-4 align-middle">
-                      {new Date(order.date).toLocaleDateString()}
+                      {new Date(order.date).toLocaleString()}
                     </td>
                     <td className="p-4 align-middle">
                       <div className="flex flex-col">

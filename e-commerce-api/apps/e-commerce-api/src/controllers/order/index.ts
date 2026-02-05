@@ -1,11 +1,15 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { FromSchema } from 'json-schema-to-ts'
 
+import dayjs from 'dayjs'
+
 import { IOrderService } from '#services/types'
 
 import { formatOrderDto } from '#dtos/order'
 
 import { getOrdersSchema } from '#schemas/order'
+
+import { OrderStatus } from '#entities'
 
 import { BaseController } from '../base'
 import { IOrderController } from './type'
@@ -27,10 +31,14 @@ export class OrderController
     const page = request.query.page
     const pageSize = request.query.pageSize
     const userId = request.auth.userId
+    const status = request.query.status
+    const date = dayjs(request.query.date)
 
     const response = await this.service.getOrdersByUserId(userId, {
       page,
       pageSize,
+      ...(status && { status: status as OrderStatus }),
+      ...(date && { date }),
     })
 
     if (response.meta?.pagination) {
