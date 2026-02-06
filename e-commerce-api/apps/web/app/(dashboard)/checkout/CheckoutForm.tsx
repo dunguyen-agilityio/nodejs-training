@@ -7,10 +7,13 @@ import { toast } from 'sonner'
 import { post } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 
+import { useCart } from '@/context/CartContext'
+
 function CheckoutForm({ cartTotal }: { cartTotal: number }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
+  const { clearCart } = useCart()
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -27,6 +30,8 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/orders/prepare`,
         {},
       )
+
+      clearCart()
 
       const { error } = await stripe.confirmPayment({
         elements,

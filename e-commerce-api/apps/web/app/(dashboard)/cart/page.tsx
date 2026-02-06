@@ -13,7 +13,7 @@ import Loading, { LoadingRef } from '@/components/Loading'
 import { CartItem } from '@/components/cart-item'
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useCart()
+  const { cart, removeFromCart, updateQuantity, cartTotal, status } = useCart()
   const [localCart, setLocalCart] = useState(cart)
   const loadingRef = useRef<LoadingRef | null>(null)
 
@@ -101,8 +101,15 @@ export default function CartPage() {
             </div>
             <Link
               href="/checkout"
-              onClick={() => loadingRef.current?.showLoading()}
-              className="w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors"
+              aria-disabled={status === 'out_of_stock'}
+              onClick={(e) => {
+                if (status === 'out_of_stock') {
+                  e.preventDefault()
+                  return
+                }
+                loadingRef.current?.showLoading()
+              }}
+              className={`w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors ${status === 'out_of_stock' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Proceed to Checkout
             </Link>

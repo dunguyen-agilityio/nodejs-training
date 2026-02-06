@@ -1,11 +1,11 @@
-import { Edit, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
 import { getCategories, getProducts } from '@/lib/data'
 
-import { DeleteProductButton } from '@/components/admin/delete-product-button'
-import { DuplicateProductButton } from '@/components/admin/duplicate-product-button'
+import { ProductActionsDropdown } from '@/components/admin/product-actions-dropdown'
+import { ProductStatusFilter } from '@/components/admin/product-status-filter'
 import { CategoryFilter } from '@/components/category-filter'
 import { PaginationControls } from '@/components/pagination-controls'
 import { SearchInput } from '@/components/search-input'
@@ -17,13 +17,14 @@ interface AdminProductsPageProps {
     category?: string
     sort?: string
     page?: string
+    status?: string
   }>
 }
 
 export default async function AdminProductsPage({
   searchParams,
 }: AdminProductsPageProps) {
-  const { search, category, sort, page } = await searchParams
+  const { search, category, sort, page, status } = await searchParams
   const currentPage = Number(page) || 1
   const limit = 10
 
@@ -33,7 +34,11 @@ export default async function AdminProductsPage({
     sort,
     page: currentPage,
     limit,
+    status,
   })
+
+  // In a real app, these counts should come from the API
+  // For now, we only have pagination.total for the current filter
 
   const categories = await getCategories()
 
@@ -48,6 +53,8 @@ export default async function AdminProductsPage({
           <Plus className="h-4 w-4" /> Add Product
         </Link>
       </div>
+
+      <ProductStatusFilter />
 
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card p-4 rounded-lg border">
         <SearchInput />
@@ -116,15 +123,7 @@ export default async function AdminProductsPage({
                     <td className="p-4 align-middle">{product.stock}</td>
                     <td className="p-4 align-middle text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link
-                          href={`/admin/products/${product.id}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                          title="Edit product"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                        <DuplicateProductButton product={product} />
-                        <DeleteProductButton productId={product.id} />
+                        <ProductActionsDropdown product={product} />
                       </div>
                     </td>
                   </tr>

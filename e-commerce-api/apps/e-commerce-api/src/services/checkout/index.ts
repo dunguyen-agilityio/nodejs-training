@@ -2,7 +2,6 @@ import { FastifyBaseLogger } from 'fastify'
 import { QueryRunner } from 'typeorm'
 
 import dayjs from 'dayjs'
-import Stripe from 'stripe'
 
 import env from '#env'
 
@@ -32,6 +31,8 @@ import {
   UnexpectedError,
 } from '#types'
 
+import { CartItemDto } from '#dtos/cart-item'
+
 import {
   Cart,
   CartItem,
@@ -42,7 +43,7 @@ import {
   StockReservation,
 } from '#entities'
 
-import { ICheckoutService } from './type'
+import { ConfirmationEmailPayload, ICheckoutService } from './type'
 
 export class CheckoutService implements ICheckoutService {
   constructor(
@@ -55,14 +56,214 @@ export class CheckoutService implements ICheckoutService {
   ) {}
 
   /**
+   * @description Generates a Stripe Payment Intent for preview purposes.
+   * This involves preparing the checkout (reserving stock) and creating a Stripe invoice.
+   */
+  async generatePaymentIntent(
+    payload: { currency: string },
+    userId: string,
+    userStripeId: string,
+  ): Promise<TResponse<Invoice & { items: CartItem[] }>> {
+    this.logger.info(
+      { userId, userStripeId, currency: payload.currency },
+      'Generating payment intent',
+    )
+
+    const queryRunner = this.createQueryRunner()
+    try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+      this.logger.debug(
+        { userId, userStripeId, currency: payload.currency },
+        'Transaction started for payment intent generation',
+      )
+      const cart = await this._getCart(queryRunner, userId)
+
+      if (!cart) {
+        this.logger.error({ userId }, 'Cart not found for payment intent')
+        throw new NotFoundError('Cart not found')
+      }
+
+      this._validateCart(cart.items, userId)
+
+      const { currency } = payload
+
+      const invoice = await this.paymentGatewayProvider.createInvoice({
+        currency,
+        customer: userStripeId,
+      })
+
+      this.logger.info({ invoiceId: invoice.id }, 'Invoice created')
+
+      await Promise.all(
+        cart.items.map(
+          ({ quantity, product: { price, name, id: productId } }) =>
+            this.paymentGatewayProvider.createInvoiceItem({
+              invoice: invoice.id,
+              description: name,
+              customer: userStripeId,
+              quantity,
+              price_data: {
+                currency,
+                product: productId.toString(),
+                unit_amount: Math.round(price * 100),
+              },
+            }),
+        ),
+      )
+
+      this.logger.info({ invoiceId: invoice.id }, 'Invoice items created')
+
+      const finalizeInvoice = await this.paymentGatewayProvider.finalizeInvoice(
+        invoice.id,
+      )
+
+      this.logger.info(
+        { userId, invoiceId: invoice.id },
+        'Payment intent generated successfully',
+      )
+      await queryRunner.commitTransaction()
+      return {
+        ...finalizeInvoice,
+        items: cart.items.map((item) => new CartItemDto(item)),
+      }
+    } catch (error) {
+      this.logger.error({ error }, 'Error generating payment intent')
+      await queryRunner.rollbackTransaction()
+      throw error
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
+  /**
+   * @description Prepares the order for payment by preparing the checkout (reserving stock)
+   * and creating a local invoice based on an existing opened Stripe invoice.
+   */
+  async prepareOrderForPayment(
+    userId: string,
+    stripeId: string,
+  ): Promise<Invoice> {
+    this.logger.info({ userId, stripeId }, 'Preparing order for payment')
+    const cart = await this._prepareCheckout(userId)
+
+    const invoice =
+      await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId)
+
+    await this._createLocalInvoice(userId, cart, invoice)
+
+    this.logger.info(
+      { userId, invoiceId: invoice.id },
+      'Order prepared for payment successfully',
+    )
+    return invoice
+  }
+
+  /**
+   * @description Handles the post-payment logic after a successful Stripe webhook event.
+   * This method finalizes the order by updating stock, creating an order in the database,
+   * clearing the cart, and sending a confirmation email. It operates within a transaction.
+   */
+  async handleSuccessfulPayment(
+    stripeId: string,
+    invoiceId: string,
+  ): Promise<void> {
+    this.logger.info({ stripeId, invoiceId }, 'Handling successful payment')
+    const queryRunner = this.createQueryRunner()
+    try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+      this.logger.debug(
+        { stripeId, invoiceId },
+        'Transaction started for payment handling',
+      )
+
+      const user = await this.userRepository.getByStripeId(stripeId)
+      if (!user) {
+        this.logger.error({ stripeId }, 'User not found for successful payment')
+        throw new NotFoundError('User not found')
+      }
+
+      this.logger.debug(
+        { userId: user.id, stripeId },
+        'User found for payment processing',
+      )
+
+      const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
+      if (!invoice || invoice.status !== 'paid') {
+        this.logger.error(
+          { invoiceId, status: invoice?.status },
+          'Invoice not paid or not found',
+        )
+        throw new UnexpectedError('Invoice not paid or not found')
+      }
+
+      const cart = await this._getCart(queryRunner, user.id)
+
+      const { paymentDetails, invoiceItems } =
+        await this._getPaymentDetailsAndItems(invoiceId, invoice)
+
+      await this._updateStockAndReservations(queryRunner, cart.id)
+      await this._createOrder(queryRunner, user.id, invoice, invoiceItems)
+      await this._updateLocalInvoice(queryRunner, invoice.id, paymentDetails)
+      await queryRunner.manager.delete(CartItem, { cartId: cart.id })
+
+      await queryRunner.commitTransaction()
+      this.logger.info(
+        { userId: user.id, invoiceId, cartId: cart.id },
+        'Payment handled successfully',
+      )
+
+      const {
+        currency,
+        total,
+        number: invoice_number,
+        receipt_number,
+        invoice_pdf,
+      } = invoice
+      const { email, name } = user
+      const { paid_at, payment_method, receipt_url } = paymentDetails
+
+      const formattedPaymenMethod = formatPaymentMethod(
+        payment_method.type as PaymentMethodType,
+        payment_method,
+      )
+
+      await this._sendConfirmationEmail(invoiceItems, {
+        currency,
+        customer_email: email,
+        customer_name: name,
+        invoice_url: invoice_pdf!,
+        invoice_number: invoice_number!,
+        paid_at,
+        payment_method: formattedPaymenMethod,
+        receipt_number: receipt_number!,
+        receipt_url,
+        total,
+      })
+    } catch (error) {
+      this.logger.error(
+        { stripeId, invoiceId, error },
+        'Error handling successful payment',
+      )
+      await queryRunner.rollbackTransaction()
+      throw error
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
+  private createQueryRunner() {
+    return this.orderRepository.manager.connection.createQueryRunner()
+  }
+
+  /**
    * @description Prepares the user's cart for checkout by reserving stock for each item.
    * This method initiates a database transaction to ensure atomicity.
-   * @param userId The ID of the user whose cart is being prepared.
    */
   private async _prepareCheckout(userId: string): Promise<Cart> {
-    this.logger.info({ userId }, 'Preparing checkout for user')
-    const queryRuner =
-      this.cartRepository.manager.connection.createQueryRunner()
+    this.logger.debug({ userId }, 'Preparing checkout for user')
+    const queryRuner = this.createQueryRunner()
 
     try {
       await queryRuner.connect()
@@ -72,66 +273,11 @@ export class CheckoutService implements ICheckoutService {
         'Transaction started for checkout preparation',
       )
 
-      const cart = await queryRuner.manager
-        .createQueryBuilder(Cart, 'cart')
-        .setLock('pessimistic_write')
-        .where('cart.user_id = :userId', { userId: userId })
-        .getOne()
+      const cart = await this._getCart(queryRuner, userId)
 
-      if (!cart || cart.status !== 'active') {
-        this.logger.warn(
-          { userId, cartStatus: cart?.status },
-          'Cart not payable',
-        )
-        throw new UnexpectedError('Cart not payable')
-      }
+      const { items: cartItems } = cart
 
-      this.logger.debug(
-        { userId, cartId: cart.id },
-        'Cart found and locked for checkout',
-      )
-
-      const cartItems = await queryRuner.manager
-        .createQueryBuilder(CartItem, 'cartItem')
-        .where('cartItem.cart_id = :cartId', { cartId: cart.id })
-        .leftJoinAndSelect('cartItem.product', 'product')
-        .getMany()
-
-      const deletedProduct = cartItems.find((item) => item.product.deleted)
-
-      if (deletedProduct) {
-        this.logger.error(
-          {
-            userId,
-            productId: deletedProduct.product.id,
-            productName: deletedProduct.product.name,
-          },
-          'Deleted product found in cart',
-        )
-        throw new UnexpectedError(
-          `Product ${deletedProduct.product.name} is deleted`,
-        )
-      }
-
-      const outOfStockProduct = cartItems.find(
-        (item) => item.quantity > item.product.stock,
-      )
-
-      if (outOfStockProduct) {
-        this.logger.error(
-          {
-            userId,
-            productId: outOfStockProduct.product.id,
-            productName: outOfStockProduct.product.name,
-            requested: outOfStockProduct.quantity,
-            available: outOfStockProduct.product.stock,
-          },
-          'Product out of stock',
-        )
-        throw new UnexpectedError(
-          `Product ${outOfStockProduct.product.name} is out of stock`,
-        )
-      }
+      this._validateCart(cartItems, userId)
 
       await this._reserveStock(queryRuner, cart.id, cartItems)
 
@@ -142,22 +288,21 @@ export class CheckoutService implements ICheckoutService {
       )
       return { ...cart, items: cartItems }
     } catch (error) {
-      this.logger.error({ userId, error }, 'Error preparing checkout')
+      let errorMessage = 'Failed to prepare Checkout'
+      if (error instanceof UnexpectedError) {
+        errorMessage = error.message
+      }
+      this.logger.error({ userId, error }, errorMessage)
       await queryRuner.rollbackTransaction()
-      throw new UnexpectedError('Failed to prepare Checkout')
+      throw new UnexpectedError(errorMessage)
     } finally {
       await queryRuner.release()
     }
   }
 
   /**
-   * @method _reserveStock
    * @description Reserves stock for products in the cart. This is a private helper method for `prepareCheckout`.
    * It checks for available stock and creates stock reservations.
-   * @param queryRuner The TypeORM QueryRunner for transaction management.
-   * @param cartId The ID of the cart for which stock is being reserved.
-   * @param cartItems The items in the cart.
-   * @throws {Error} If any product is out of stock.
    */
   private async _reserveStock(
     queryRuner: QueryRunner,
@@ -218,10 +363,6 @@ export class CheckoutService implements ICheckoutService {
   /**
    * @description Creates a local representation of the Stripe invoice in the application's database.
    * It initiates a database transaction to ensure atomicity.
-   * @param userId The ID of the user.
-   * @param cart The user's cart.
-   * @param paymentInvoice The Stripe Invoice object.
-   * @throws {UnexpectedError} If creating the local invoice fails.
    */
   private async _createLocalInvoice(
     userId: string,
@@ -232,11 +373,10 @@ export class CheckoutService implements ICheckoutService {
       { userId, cartId: cart.id, invoiceId: paymentInvoice.id },
       'Creating local invoice',
     )
-    const { id: cartId, items } = cart
+    const { id: cartId } = cart
     const { lines, currency, total, id: invoiceId } = paymentInvoice
 
-    const queryRunner =
-      this.cartRepository.manager.connection.createQueryRunner()
+    const queryRunner = this.createQueryRunner()
 
     try {
       await queryRunner.connect()
@@ -251,7 +391,7 @@ export class CheckoutService implements ICheckoutService {
         id: invoiceId,
       })
 
-      await this._createInvoiceItems(queryRunner, invoice.id, items, lines.data)
+      await this._createInvoiceItems(queryRunner, invoice.id, lines.data)
 
       await queryRunner.manager.save(invoice)
 
@@ -273,50 +413,37 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @method _createInvoiceItems
-   * @description Private helper method to create and save local invoice items within a transaction.
-   * @param queryRunner The TypeORM QueryRunner for transaction management.
-   * @param invoiceId The ID of the local invoice.
-   * @param cartItems The cart items to convert into invoice items.
-   * @param invoiceLineItems The line items from the Stripe invoice.
+   * @description Create and save local invoice items within a transaction.
    */
   private async _createInvoiceItems(
     queryRunner: QueryRunner,
     invoiceId: string,
-    cartItems: CartItem[],
     invoiceLineItems: InvoiceLineItem[],
   ) {
     this.logger.debug(
-      { invoiceId, itemCount: cartItems.length },
+      { invoiceId, itemCount: invoiceLineItems.length },
       'Creating invoice items',
     )
     try {
-      const itemMap: Record<string, InvoiceLineItem> = {}
       for (const line of invoiceLineItems) {
         const { product } = line.pricing?.price_details || {}
-        if (product) {
-          itemMap[product] = line
-        }
-      }
 
-      for (const item of cartItems) {
-        const line = itemMap[item.product.id]
-        const total = parseFloat((line?.subtotal || 0).toString())
+        const total = line.subtotal
 
         const invoiceItem = queryRunner.manager.create(InvoiceItem, {
           invoiceId,
-          name: item.product.name,
-          productId: item.product.id,
-          quantity: item.quantity,
+          product: { id: product! },
+          quantity: line.quantity ?? 1,
           total,
-          unitPrice: total / item.quantity,
-          id: line?.id,
+          unitPrice: total / (line.quantity ?? 1),
+          id: line.id,
         })
 
         await queryRunner.manager.save(invoiceItem)
       }
+
       this.logger.debug(
-        { invoiceId, itemCount: cartItems.length },
+        { invoiceId, itemCount: invoiceLineItems.length },
         'Invoice items created successfully',
       )
     } catch (error) {
@@ -326,41 +453,62 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @description Generates a Stripe Payment Intent for preview purposes.
-   * This involves preparing the checkout (reserving stock) and creating a Stripe invoice.
-   * @param payload Stripe PaymentIntent creation parameters (e.g., currency).
-   * @param userId The ID of the user.
-   * @param userStripeId The Stripe customer ID of the user.
+   * @description Retrieve an active cart for a user within a transaction.
    */
-  async generatePaymentIntent(
-    payload: Stripe.PaymentIntentCreateParams,
+  private async _getCart(
+    queryRunner: QueryRunner,
     userId: string,
-    userStripeId: string,
-  ): Promise<TResponse<Invoice>> {
-    this.logger.info(
-      { userId, userStripeId, currency: payload.currency },
-      'Generating payment intent',
-    )
-    const cart = await this.cartRepository.getCartByUserId(userId)
+  ): Promise<Cart> {
+    this.logger.debug({ userId }, 'Fetching cart for payment processing')
+    const cart = await queryRunner.manager
+      .createQueryBuilder(Cart, 'cart')
+      .setLock('pessimistic_write')
+      .where('cart.user_id = :userId', { userId })
+      .getOne()
 
-    if (!cart) {
-      this.logger.error({ userId }, 'Cart not found for payment intent')
-      throw new NotFoundError('Cart not found')
+    if (!cart || cart.status !== 'active') {
+      this.logger.debug(
+        { userId, cartStatus: cart?.status },
+        'Cart not active or not found',
+      )
+      throw new UnexpectedError('Cart not active or not found')
     }
+    this.logger.debug({ userId, cartId: cart.id }, 'Cart fetched successfully')
 
-    const deletedProduct = cart.items.find((item) => item.product.deleted)
+    const cartItems = await queryRunner.manager
+      .createQueryBuilder(CartItem, 'cartItem')
+      .where('cartItem.cart_id = :cartId', { cartId: cart.id })
+      .leftJoinAndSelect('cartItem.product', 'product')
+      .getMany()
 
-    if (deletedProduct) {
+    this._validateCart(cartItems, userId)
+
+    return { ...cart, items: cartItems }
+  }
+
+  /**
+   * @description Validate cart items availability and stock.
+   */
+  private _validateCart(cartItems: CartItem[], userId: string) {
+    const unavailableProduct = cartItems.find(
+      (item) => item.product.status !== 'published',
+    )
+
+    if (unavailableProduct) {
       this.logger.error(
-        { userId, productId: deletedProduct.product.id },
-        'Deleted product in cart',
+        {
+          userId,
+          productId: unavailableProduct.product.id,
+          status: unavailableProduct.product.status,
+        },
+        'Unavailable product in cart',
       )
       throw new UnexpectedError(
-        `Product ${deletedProduct.product.name} is deleted`,
+        `Product ${unavailableProduct.product.name} is not available`,
       )
     }
 
-    const outOfStockProduct = cart.items.find(
+    const outOfStockProduct = cartItems.find(
       (item) => item.quantity > item.product.stock,
     )
 
@@ -374,197 +522,19 @@ export class CheckoutService implements ICheckoutService {
       )
     }
 
-    const { currency } = payload
-
-    const invoice = await this.paymentGatewayProvider.createInvoice({
-      currency,
-      customer: userStripeId,
-    })
-
-    await Promise.all(
-      cart.items.map(({ quantity, product: { price, name, id: productId } }) =>
-        this.paymentGatewayProvider.createInvoiceItem({
-          invoice: invoice.id,
-          description: name,
-          customer: userStripeId,
-          quantity,
-          price_data: {
-            currency,
-            product: productId.toString(),
-            unit_amount: price * 100,
-          },
-        }),
-      ),
+    const totalAmount = cartItems.reduce(
+      (total, item) => total + Math.round(item.product.price * item.quantity),
+      0,
     )
+    this.logger.info({ totalAmount }, 'Total amount calculated')
 
-    const finalizeInvoice = await this.paymentGatewayProvider.finalizeInvoice(
-      invoice.id,
-    )
-
-    this.logger.info(
-      { userId, invoiceId: invoice.id },
-      'Payment intent generated successfully',
-    )
-    return finalizeInvoice
-  }
-
-  /**
-   * @description Prepares the order for payment by preparing the checkout (reserving stock)
-   * and creating a local invoice based on an existing opened Stripe invoice.
-   * @param userId The ID of the user.
-   * @param stripeId The Stripe customer ID of the user.
-   */
-  async prepareOrderForPayment(
-    userId: string,
-    stripeId: string,
-  ): Promise<Invoice> {
-    this.logger.info({ userId, stripeId }, 'Preparing order for payment')
-    const cart = await this._prepareCheckout(userId)
-
-    const invoice =
-      await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId)
-
-    await this._createLocalInvoice(userId, cart, invoice)
-
-    this.logger.info(
-      { userId, invoiceId: invoice.id },
-      'Order prepared for payment successfully',
-    )
-    return invoice
-  }
-
-  /**
-   * @description Handles the post-payment logic after a successful Stripe webhook event.
-   * This method finalizes the order by updating stock, creating an order in the database,
-   * clearing the cart, and sending a confirmation email. It operates within a transaction.
-   * @param stripeId The Stripe customer ID.
-   * @param invoiceId The Stripe Invoice ID.
-   */
-  async handleSuccessfulPayment(
-    stripeId: string,
-    invoiceId: string,
-  ): Promise<void> {
-    this.logger.info({ stripeId, invoiceId }, 'Handling successful payment')
-    const queryRunner =
-      this.cartRepository.manager.connection.createQueryRunner()
-    try {
-      await queryRunner.connect()
-      await queryRunner.startTransaction()
-      this.logger.debug(
-        { stripeId, invoiceId },
-        'Transaction started for payment handling',
-      )
-
-      const user = await this.userRepository.getByStripeId(stripeId)
-      if (!user) {
-        this.logger.error({ stripeId }, 'User not found for successful payment')
-        throw new NotFoundError('User not found')
-      }
-
-      this.logger.debug(
-        { userId: user.id, stripeId },
-        'User found for payment processing',
-      )
-
-      const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
-      if (!invoice || invoice.status !== 'paid') {
-        this.logger.error(
-          { invoiceId, status: invoice?.status },
-          'Invoice not paid or not found',
-        )
-        throw new UnexpectedError('Invoice not paid or not found')
-      }
-
-      const cart = await this._getCart(queryRunner, user.id)
-      if (!cart) {
-        this.logger.warn(
-          { userId: user.id },
-          'No active cart found for successful payment',
-        )
-        return
-      }
-
-      const { paymentDetails, invoiceItems } =
-        await this._getPaymentDetailsAndItems(invoiceId, invoice)
-
-      await this._updateStockAndReservations(queryRunner, cart.id)
-      await this._createOrder(queryRunner, user.id, invoice, invoiceItems)
-      await this._updateLocalInvoice(queryRunner, invoice.id, paymentDetails)
-      await queryRunner.manager.delete(CartItem, { cartId: cart.id })
-
-      await queryRunner.commitTransaction()
-      this.logger.info(
-        { userId: user.id, invoiceId, cartId: cart.id },
-        'Payment handled successfully',
-      )
-
-      const {
-        currency,
-        total,
-        number: invoice_number,
-        receipt_number,
-        invoice_pdf,
-      } = invoice
-      const { email, name } = user
-      const { paid_at, payment_method, receipt_url } = paymentDetails
-
-      const formattedPaymenMethod = formatPaymentMethod(
-        payment_method.type as PaymentMethodType,
-        payment_method,
-      )
-
-      await this._sendConfirmationEmail(invoiceItems, {
-        currency,
-        customer_email: email,
-        customer_name: name,
-        invoice_url: invoice_pdf!,
-        invoice_number: invoice_number!,
-        paid_at,
-        payment_method: formattedPaymenMethod,
-        receipt_number: receipt_number!,
-        receipt_url,
-        total,
-      })
-    } catch (error) {
-      this.logger.error(
-        { stripeId, invoiceId, error },
-        'Error handling successful payment',
-      )
-      await queryRunner.rollbackTransaction()
-      throw error
-    } finally {
-      await queryRunner.release()
+    if (totalAmount < 1) {
+      throw new UnexpectedError('Total amount is less than 1')
     }
   }
 
   /**
-   * @description Private helper method to retrieve an active cart for a user within a transaction.
-   * @param queryRunner The TypeORM QueryRunner for transaction management.
-   * @param userId The ID of the user.
-   */
-  private async _getCart(queryRunner: QueryRunner, userId: string) {
-    this.logger.debug({ userId }, 'Fetching cart for payment processing')
-    const cart = await queryRunner.manager
-      .createQueryBuilder(Cart, 'cart')
-      .setLock('pessimistic_write')
-      .where('cart.user_id = :userId', { userId })
-      .getOne()
-
-    if (!cart || cart.status !== 'active') {
-      this.logger.debug(
-        { userId, cartStatus: cart?.status },
-        'Cart not active or not found',
-      )
-      return null
-    }
-    this.logger.debug({ userId, cartId: cart.id }, 'Cart fetched successfully')
-    return cart
-  }
-
-  /**
-   * @description Private helper method to fetch payment details and local invoice items from Stripe.
-   * @param invoiceId The Stripe Invoice ID.
-   * @param invoice The Stripe Invoice object.
+   * @description Fetch payment details and local invoice items from Stripe.
    */
   private async _getPaymentDetailsAndItems(
     invoiceId: string,
@@ -601,7 +571,7 @@ export class CheckoutService implements ICheckoutService {
     }
 
     const invoiceItems = await this.cartRepository.manager.find(InvoiceItem, {
-      where: { invoiceId },
+      where: { invoiceId, product: true },
     })
 
     this.logger.debug(
@@ -620,10 +590,7 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @description Private helper method to update product stock and convert stock reservations
-   * to a 'converted' status after a successful order.
-   * @param queryRunner The TypeORM QueryRunner for transaction management.
-   * @param cartId The ID of the cart associated with the order.
+   * @description Update product stock and convert stock reservations to a 'converted' status after a successful order.
    */
   private async _updateStockAndReservations(
     queryRunner: QueryRunner,
@@ -670,12 +637,7 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @description Private helper method to create an order and its associated order items
-   * in the database after a successful payment.
-   * @param queryRunner The TypeORM QueryRunner for transaction management.
-   * @param userId The ID of the user placing the order.
-   * @param invoice The Stripe Invoice object related to the payment.
-   * @param invoiceItems The local InvoiceItem entities for the order.
+   * @description Create an order and its associated order items in the database after a successful payment.
    */
   private async _createOrder(
     queryRunner: QueryRunner,
@@ -699,11 +661,11 @@ export class CheckoutService implements ICheckoutService {
     })
 
     const orderItems = await Promise.all(
-      invoiceItems.map(async ({ unitPrice, quantity, productId }) => {
+      invoiceItems.map(async ({ unitPrice, quantity, product }) => {
         return queryRunner.manager.create(OrderItem, {
           order,
           priceAtPurchase: unitPrice,
-          product: { id: productId },
+          product,
           quantity,
         })
       }),
@@ -714,11 +676,7 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @description Private helper method to update the status and payment details
-   * of the local invoice after a successful payment.
-   * @param queryRunner The TypeORM QueryRunner for transaction management.
-   * @param invoiceId The ID of the local invoice to update.
-   * @param paymentDetails An object containing payment-related details (e.g., paid_at, paymentIntentId).
+   * @description Update the status and payment details of the local invoice after a successful payment.
    */
   private async _updateLocalInvoice(
     queryRunner: QueryRunner,
@@ -734,11 +692,6 @@ export class CheckoutService implements ICheckoutService {
     this.logger.debug({ invoiceId }, 'Local invoice updated successfully')
   }
 
-  /**
-   * @method _sendConfirmationEmail
-   * @description Private helper method to send a payment confirmation email to the user.
-   * @param invoiceItems The local InvoiceItem entities.
-   */
   private async _sendConfirmationEmail(
     invoiceItems: InvoiceItem[],
     {
@@ -752,18 +705,7 @@ export class CheckoutService implements ICheckoutService {
       invoice_number,
       currency,
       total,
-    }: {
-      paid_at: number
-      receipt_url: string
-      payment_method: string
-      receipt_number: string
-      invoice_url: string
-      customer_name: string
-      customer_email: string
-      invoice_number: string
-      currency: string
-      total: number
-    },
+    }: ConfirmationEmailPayload,
   ) {
     this.logger.info(
       { customer_email, invoice_number },
@@ -785,11 +727,11 @@ export class CheckoutService implements ICheckoutService {
         payment_method,
         invoice_url,
         receipt_url: receipt_url,
-        items: invoiceItems.map(({ unitPrice, quantity, total, name }) => ({
+        items: invoiceItems.map(({ unitPrice, quantity, total, product }) => ({
           quantity,
           unit_price: formatStripeAmount(unitPrice, currency),
           total: formatStripeAmount(total, currency),
-          name,
+          name: product.name,
         })),
       },
     }

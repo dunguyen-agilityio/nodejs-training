@@ -1,8 +1,6 @@
 import { CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 
-import ClearCart from './ClearCart'
-
 export default function CheckoutSuccessPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
@@ -22,7 +20,6 @@ export default function CheckoutSuccessPage() {
       >
         Continue Shopping
       </Link>
-      <ClearCart />
     </div>
   )
 }

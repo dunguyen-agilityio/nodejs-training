@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import { CartItem } from './types'
+import { CheckoutItem } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -27,7 +27,7 @@ export function debounce<T extends (...args: any[]) => void>(
   } as T
 }
 
-export const getCartTotal = (cartItems: CartItem[]) => {
+export const getCartTotal = (cartItems: CheckoutItem[]) => {
   const cartTotal = cartItems.reduce(
     (total, item) => total + item.productPrice * item.quantity,
     0,

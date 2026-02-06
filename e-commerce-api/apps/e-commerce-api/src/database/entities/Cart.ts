@@ -16,7 +16,7 @@ export class Cart extends BaseWithCreatedAndUpdated {
   @Column({ type: 'varchar', default: 'active' })
   status: 'active' | 'abandoned' | 'converted'
 
-  @OneToMany(() => CartItem, (cartItem) => cartItem.cartId)
+  @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
   items: CartItem[]
 
   constructor(cart: BaseWithCreatedAndUpdatedProps<Cart>) {

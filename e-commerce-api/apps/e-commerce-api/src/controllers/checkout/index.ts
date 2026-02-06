@@ -27,23 +27,23 @@ export class CheckoutController
     }>,
     reply: FastifyReply,
   ) => {
-    const { amount, currency } = request.body
+    const { currency } = request.body
     const { stripeId, userId } = request.auth
 
     const invoice = await this.service.generatePaymentIntent(
-      { amount, currency },
+      { currency },
       userId,
       stripeId,
     )
 
-    const { confirmation_secret } = invoice
+    const { confirmation_secret, items } = invoice
 
     if (!confirmation_secret) {
       throw new UnexpectedError()
     }
 
     const { client_secret } = confirmation_secret
-    this.sendItem(reply, { clientSecret: client_secret })
+    this.sendItem(reply, { clientSecret: client_secret, items })
   }
 
   /**

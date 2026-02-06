@@ -3,7 +3,8 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - "@clerk/shared"
+  - '@clerk/shared'
+  - '@heroui/shared-utils'
   - better-sqlite3
   - esbuild
   - sharp

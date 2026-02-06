@@ -1,5 +1,4 @@
 import { Repository } from 'typeorm'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Product } from '#entities'
@@ -91,6 +90,51 @@ describe('ProductRepository', () => {
         expect.stringContaining('LOWER(product.category) IN (:...categories)'),
         expect.objectContaining({ categories: ['cat1'] }),
       )
+    })
+
+    it('should filter by specific status', async () => {
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
+
+      await productRepository.getProducts({
+        query: '',
+        categories: [],
+        pageSize: 10,
+        skip: 0,
+        status: 'draft',
+      })
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'product.status = :status',
+        { status: 'draft' },
+      )
+    })
+
+    it('should default to published status if not provided', async () => {
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
+
+      await productRepository.getProducts({
+        query: '',
+        categories: [],
+        pageSize: 10,
+        skip: 0,
+      })
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'product.status = :status',
+        { status: 'published' },
+      )
+    })
+  })
+
+  describe('softDeleteById', () => {
+    it('should update status to deleted', async () => {
+      productRepository.update = vi.fn()
+
+      await productRepository.softDeleteById('p1')
+
+      expect(productRepository.update).toHaveBeenCalledWith('p1', {
+        status: 'deleted',
+      })
     })
   })
 

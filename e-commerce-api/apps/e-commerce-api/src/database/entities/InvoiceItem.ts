@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm'
+import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm'
+import { Product } from './Product'
 
 @Entity()
 export class InvoiceItem {
@@ -8,11 +9,9 @@ export class InvoiceItem {
   @Column({ name: 'invoice_id', type: 'varchar' })
   invoiceId: string
 
+  @ManyToOne(() => Product, (product) => product.invoiceItems)
   @Column({ name: 'product_id', type: 'varchar' })
-  productId: string
-
-  @Column({ type: 'varchar' })
-  name: string
+  product: Product
 
   @Column({ name: 'unit_price', type: 'int' })
   unitPrice: number // cents

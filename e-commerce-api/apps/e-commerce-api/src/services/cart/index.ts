@@ -60,9 +60,12 @@ export class CartService implements ICartService {
 
     const product = await this.productRepository.getById(productId)
 
-    if (!product || product.deleted) {
-      this.logger.error({ productId, userId }, 'Product not found or deleted')
-      throw new NotFoundError(`Product ${productId} not found`)
+    if (!product || product.status !== 'published') {
+      this.logger.error(
+        { productId, userId, status: product?.status },
+        'Product not found or not published',
+      )
+      throw new NotFoundError(`Product ${productId} not found or not available`)
     }
     if (product.stock < quantity) {
       this.logger.error(

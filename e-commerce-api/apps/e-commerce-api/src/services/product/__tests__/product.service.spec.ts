@@ -45,7 +45,7 @@ describe('ProductService', () => {
           },
           createdAt: new Date(),
           updatedAt: new Date(),
-          deleted: false,
+          status: 'published',
         },
       ]
       const totalCount = 1
@@ -108,7 +108,7 @@ describe('ProductService', () => {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        deleted: false,
+        status: 'published',
       }
       productRepositoryMock.getById.mockResolvedValue(mockProduct)
 
@@ -151,7 +151,7 @@ describe('ProductService', () => {
         images: ['image1.jpg'],
         createdAt: new Date(),
         updatedAt: new Date(),
-        deleted: false,
+        status: 'published',
       }
 
       const stripeProduct = { id: 'stripe_123' }
@@ -195,7 +195,7 @@ describe('ProductService', () => {
         images: ['image1.jpg'],
         createdAt: new Date(),
         updatedAt: new Date(),
-        deleted: false,
+        status: 'published',
       }
 
       mockPaymentGateway.createProduct = vi.fn()
@@ -227,7 +227,7 @@ describe('ProductService', () => {
         },
         createdAt: new Date(),
         updatedAt: new Date(),
-        deleted: false,
+        status: 'published',
       }
 
       const updates = { name: 'New Name', price: 100 }

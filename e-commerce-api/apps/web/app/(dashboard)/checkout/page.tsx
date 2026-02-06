@@ -2,23 +2,26 @@ import Link from 'next/link'
 
 import { post } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
-import { getCarts } from '@/lib/cart'
 import { config } from '@/lib/config'
+import { PaymentIntent } from '@/lib/types'
 import { formatCurrency, getCartTotal } from '@/lib/utils'
 
 import CheckoutForm from './CheckoutForm'
 import Provider from './Provider'
 
 export default async function CheckoutPage() {
-  const getClientSecret = async (): Promise<{
-    error?: string
-    clientSecret: string
-  }> => {
+  const getPaymentIntent = async (
+    currency = 'usd',
+  ): Promise<
+    PaymentIntent & {
+      error?: string
+    }
+  > => {
     try {
       const headers = await createAuthorizationHeader()
-      return await post<{ clientSecret: string }>(
+      return await post<PaymentIntent>(
         `${config.api.endpoint}/checkout/payment-intents`,
-        { currency: 'usd' },
+        { currency },
         headers,
       )
     } catch (error) {
@@ -29,16 +32,18 @@ export default async function CheckoutPage() {
         message = error.message
       }
 
-      return { error: message, clientSecret: '' }
+      return { error: message, clientSecret: '', items: [] }
     }
   }
-  const clientSecret = await getClientSecret()
+  const { clientSecret, items, error } = await getPaymentIntent()
 
-  const cartItems = await getCarts()
+  if (error) {
+    throw new Error(error)
+  }
 
-  const cartTotal = getCartTotal(cartItems)
+  const cartTotal = getCartTotal(items)
 
-  if (cartItems.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -55,12 +60,10 @@ export default async function CheckoutPage() {
   }
 
   // Handle error from checkout service
-  if (clientSecret.error) {
+  if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 gap-4 text-center">
-        <h1 className="text-xl font-bold mb-4 text-foreground">
-          {clientSecret.error}
-        </h1>
+        <h1 className="text-xl font-bold mb-4 text-foreground">{error}</h1>
         <Link
           href="/cart"
           className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90"
@@ -76,7 +79,7 @@ export default async function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div>
-          <Provider clientSecret={clientSecret.clientSecret}>
+          <Provider clientSecret={clientSecret}>
             <CheckoutForm cartTotal={cartTotal} />
           </Provider>
         </div>
@@ -86,9 +89,9 @@ export default async function CheckoutPage() {
             Order Summary
           </h2>
           <div className="space-y-4 mb-4">
-            {cartItems.map((item) => (
+            {items.map((item) => (
               <div
-                key={item.id}
+                key={item.productId}
                 className="flex justify-between items-center text-sm"
               >
                 <span className="text-muted-foreground">

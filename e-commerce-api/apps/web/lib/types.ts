@@ -6,7 +6,7 @@ export interface Product {
   images: string[]
   category: string
   stock: number
-  deleted?: boolean
+  status: 'draft' | 'published' | 'archived' | 'deleted'
   image: string
 }
 
@@ -18,6 +18,16 @@ export interface CartItem {
   productImage: string
   productPrice: number
   productStock: number
+}
+
+export type CheckoutItem = Pick<
+  CartItem,
+  'productId' | 'productName' | 'productPrice' | 'quantity'
+>
+
+export interface PaymentIntent {
+  clientSecret: string
+  items: CheckoutItem[]
 }
 
 export interface Cart {

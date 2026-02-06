@@ -14,6 +14,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import Link from 'next/link'
 import { Toaster } from 'sonner'
 
+import { AppProvider } from '@/context/heroui-provider'
 import QueryProvider from '@/context/query-provider'
 
 import { ModeToggle } from '@/components/mode-toggle'
@@ -58,49 +59,51 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
-                <div className="flex items-center gap-4">
-                  <Link href="/" className="font-bold text-xl">
-                    MyStore
-                  </Link>
-                  <OrganizationSwitcher hidePersonal={isAdmin} />
-                </div>
-                <div className="flex items-center gap-4">
-                  {!isAdmin && (
-                    <>
-                      <Link
-                        href="/cart"
-                        className="relative p-2 hover:bg-accent rounded-md"
-                      >
-                        🛒
-                      </Link>
-                      <SignedIn>
+              <AppProvider>
+                <header className="flex justify-between items-center p-4 h-16 border-b bg-background">
+                  <div className="flex items-center gap-4">
+                    <Link href="/" className="font-bold text-xl">
+                      MyStore
+                    </Link>
+                    <OrganizationSwitcher hidePersonal={isAdmin} />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {!isAdmin && (
+                      <>
                         <Link
-                          href="/orders"
-                          className="text-sm font-medium hover:underline"
+                          href="/cart"
+                          className="relative p-2 hover:bg-accent rounded-md"
                         >
-                          Orders
+                          🛒
                         </Link>
-                      </SignedIn>
-                    </>
-                  )}
+                        <SignedIn>
+                          <Link
+                            href="/orders"
+                            className="text-sm font-medium hover:underline"
+                          >
+                            Orders
+                          </Link>
+                        </SignedIn>
+                      </>
+                    )}
 
-                  <ModeToggle />
-                  <SignedOut>
-                    <SignInButton mode="redirect" />
-                    <SignUpButton mode="redirect">
-                      <button className="bg-primary text-primary-foreground rounded-full font-medium text-sm h-10 px-4 cursor-pointer hover:bg-primary/90">
-                        Sign Up
-                      </button>
-                    </SignUpButton>
-                  </SignedOut>
-                  <SignedIn>
-                    <UserButton />
-                  </SignedIn>
-                </div>
-              </header>
-              {children}
-              <Toaster />
+                    <ModeToggle />
+                    <SignedOut>
+                      <SignInButton mode="redirect" />
+                      <SignUpButton mode="redirect">
+                        <button className="bg-primary text-primary-foreground rounded-full font-medium text-sm h-10 px-4 cursor-pointer hover:bg-primary/90">
+                          Sign Up
+                        </button>
+                      </SignUpButton>
+                    </SignedOut>
+                    <SignedIn>
+                      <UserButton />
+                    </SignedIn>
+                  </div>
+                </header>
+                {children}
+                <Toaster />
+              </AppProvider>
             </QueryProvider>
           </ThemeProvider>
         </body>

@@ -31,6 +31,11 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
               type: 'string',
               description: 'Filter by category (comma-separated)',
             },
+            status: {
+              type: 'string',
+              description:
+                'Filter by status (draft, published, archived, deleted, all)',
+            },
           },
         },
         response: {
@@ -163,6 +168,10 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
             images: {
               type: 'array',
               items: { type: 'string' },
+            },
+            status: {
+              type: 'string',
+              enum: ['draft', 'published', 'archived', 'deleted'],
             },
           },
         },

@@ -16,4 +16,13 @@ export class CartItemDto extends CartItem {
       quantity: this.quantity,
     }
   }
+
+  toCheckoutItem() {
+    return {
+      productId: this.product.id,
+      productName: this.product.name,
+      productPrice: this.product.price,
+      quantity: this.quantity,
+    }
+  }
 }

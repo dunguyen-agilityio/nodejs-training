@@ -26,7 +26,7 @@ export interface IProduct {
   active: boolean
   created: number
   default_price?: string | Price | null
-  deleted?: void
+
   description: string | null
   images: Array<string>
   name: string

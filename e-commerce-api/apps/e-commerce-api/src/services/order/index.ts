@@ -6,12 +6,7 @@ import type {
   TProductRepository,
 } from '#repositories'
 
-import {
-  NotFoundError,
-  OrderQueryParams,
-  Pagination,
-  ProductQueryParams,
-} from '#types'
+import { NotFoundError, OrderQueryParams, Pagination } from '#types'
 
 import { Order, OrderItem, Product } from '#entities'
 

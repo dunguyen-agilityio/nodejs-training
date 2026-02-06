@@ -68,6 +68,7 @@ describe('CheckoutService', () => {
         name: 'P1',
         stock: 10,
         reservedStock: 0,
+        status: 'published',
       }
 
       const mockCart = {
@@ -224,6 +225,7 @@ describe('CheckoutService', () => {
         name: 'P1',
         stock: 10,
         reservedStock: 0,
+        status: 'published',
       }
       const mockCart = {
         id: 1,
@@ -295,6 +297,7 @@ describe('CheckoutService', () => {
         name: 'P1',
         stock: 1, // Limited stock
         reservedStock: 0,
+        status: 'published',
       }
       const mockCart = {
         id: 1,

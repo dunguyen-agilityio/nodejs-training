@@ -3,7 +3,13 @@
 import { useAuth, useClerk } from '@clerk/nextjs'
 
 import { redirect } from 'next/navigation'
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { toast } from 'sonner'
 
 import { del, post, put } from '@/lib/api'
@@ -19,6 +25,7 @@ interface CartContextType {
   clearCart: () => void
   cartTotal: number
   cartCount: number
+  status: 'available' | 'out_of_stock'
 }
 
 interface CartAddResponse {
@@ -35,17 +42,24 @@ export function CartProvider({
   initialCart?: CartItem[]
 }) {
   const [cart, setCart] = useState<CartItem[]>(initialCart)
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, isLoaded } = useAuth()
 
   const { signOut, redirectToSignIn } = useClerk()
 
+  const status: 'available' | 'out_of_stock' = useMemo(() => {
+    const outOfStockItem = cart.find(
+      (item) => item.quantity > item.productStock,
+    )
+    return outOfStockItem ? 'out_of_stock' : 'available'
+  }, [cart])
+
   useEffect(() => {
     return () => {
-      if (!isSignedIn) {
+      if (!isSignedIn && isLoaded) {
         clearCart()
       }
     }
-  }, [isSignedIn])
+  }, [isSignedIn, isLoaded])
 
   const handleApiError = (error: any) => {
     if (error instanceof UnauthorizedError) {
@@ -155,6 +169,7 @@ export function CartProvider({
         clearCart,
         cartTotal,
         cartCount,
+        status,
       }}
     >
       {children}

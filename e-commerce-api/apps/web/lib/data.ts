@@ -9,6 +9,7 @@ export interface GetProductsParams {
   sort?: string
   page?: number
   limit?: number
+  status?: string
 }
 
 export async function getProducts({
@@ -17,10 +18,12 @@ export async function getProducts({
   sort,
   page = 1,
   limit = 10,
+  status,
 }: GetProductsParams) {
   try {
     const params = new URLSearchParams()
     if (search) params.append('query', search)
+    if (status) params.append('status', status)
 
     // Handle multiple categories
     if (category) {

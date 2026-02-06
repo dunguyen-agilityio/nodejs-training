@@ -16,7 +16,7 @@ export class ProductRepository extends AbstractProductRepository {
   async getProducts(
     params: Omit<ProductQueryParams, 'page'> & { skip: number },
   ): Promise<[Product[], number]> {
-    const { query, skip, categories, pageSize } = params
+    const { query, skip, categories, pageSize, status } = params
 
     const queryBuilder = this.createQueryBuilder('product')
 
@@ -37,17 +37,26 @@ export class ProductRepository extends AbstractProductRepository {
       queryParams.categories = categories.map((c) => c.toLowerCase())
     }
 
-    queryBuilder
-      .where(where, queryParams)
-      .andWhere('product.deleted IS NULL OR product.deleted = :deleted', {
-        deleted: false,
+    queryBuilder.where(where, queryParams)
+
+    if (status && status !== 'all') {
+      queryBuilder.andWhere('product.status = :status', { status })
+    } else if (!status) {
+      // Default: published only if no status specified
+      queryBuilder.andWhere('product.status = :status', {
+        status: 'published',
       })
+    }
 
     return queryBuilder
       .leftJoinAndSelect('product.category', 'category')
       .skip(skip)
       .take(pageSize)
       .getManyAndCount()
+  }
+
+  async softDeleteById(id: string | number): Promise<void> {
+    await this.update(id, { status: 'deleted' } as Partial<Product>)
   }
 
   async decreaseStock(

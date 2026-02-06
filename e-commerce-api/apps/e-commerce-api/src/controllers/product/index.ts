@@ -4,7 +4,7 @@ import { IProductService } from '#services/types'
 
 import { productToObject } from '#dtos/product'
 
-import { Product } from '#entities'
+import { Product, ProductStatus } from '#entities'
 
 import { BaseController } from '../base'
 import { IProductController } from './type'
@@ -14,6 +14,7 @@ type ProductQuery = {
   pageSize: string
   query: string
   category: string
+  status?: string
 }
 
 export class ProductController
@@ -59,12 +60,19 @@ export class ProductController
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const { page = '1', pageSize = '10', query = '', category } = request.query
+    const {
+      page = '1',
+      pageSize = '10',
+      query = '',
+      category,
+      status,
+    } = request.query
     const { data, meta } = await this.service.getProducts({
       page: parseInt(page),
       pageSize: parseInt(pageSize),
       query,
       categories: category?.split(',') || [],
+      status: status as ProductStatus | 'all',
     })
 
     if (meta?.pagination) {

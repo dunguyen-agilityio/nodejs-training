@@ -56,6 +56,13 @@ export const ProductSchema = {
       format: 'date-time',
       description: 'Last update timestamp',
     },
+    status: {
+      type: 'string',
+      enum: ['draft', 'published', 'archived', 'deleted'],
+      description: 'Product status',
+      default: 'draft',
+      example: 'published',
+    },
   },
   required: ['id', 'name', 'description', 'price', 'stock', 'category'],
 } as const
