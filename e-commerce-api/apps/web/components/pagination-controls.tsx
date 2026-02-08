@@ -22,6 +22,42 @@ export function PaginationControls({
     router.replace(`${pathname}?${params.toString()}`)
   }
 
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pageNumbers = []
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i)
+      }
+    } else {
+      if (currentPage <= 4) {
+        // Start: 1, 2, 3, 4, 5, ..., total
+        for (let i = 1; i <= 5; i++) {
+          pageNumbers.push(i)
+        }
+        pageNumbers.push('...')
+        pageNumbers.push(totalPages)
+      } else if (currentPage >= totalPages - 3) {
+        // End: 1, ..., total-4, total-3, total-2, total-1, total
+        pageNumbers.push(1)
+        pageNumbers.push('...')
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pageNumbers.push(i)
+        }
+      } else {
+        // Middle: 1, ..., current-1, current, current+1, ..., total
+        pageNumbers.push(1)
+        pageNumbers.push('...')
+        pageNumbers.push(currentPage - 1)
+        pageNumbers.push(currentPage)
+        pageNumbers.push(currentPage + 1)
+        pageNumbers.push('...')
+        pageNumbers.push(totalPages)
+      }
+    }
+    return pageNumbers
+  }
+
   return (
     <div className="flex items-center justify-center gap-2 mt-8">
       <button
@@ -32,9 +68,30 @@ export function PaginationControls({
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
-      <span className="text-sm font-medium">
-        Page {currentPage} of {totalPages}
-      </span>
+
+      {getPageNumbers().map((page, index) =>
+        page === '...' ? (
+          <span
+            key={`ellipsis-${index}`}
+            className="px-2 text-muted-foreground"
+          >
+            ...
+          </span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => handlePageChange(Number(page))}
+            className={`inline-flex items-center justify-center h-9 w-9 rounded-md border shadow-sm text-sm font-medium ${
+              currentPage === page
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background border-input hover:bg-accent hover:text-accent-foreground'
+            }`}
+          >
+            {page}
+          </button>
+        ),
+      )}
+
       <button
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}

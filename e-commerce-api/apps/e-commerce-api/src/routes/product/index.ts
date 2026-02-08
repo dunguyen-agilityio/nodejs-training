@@ -122,6 +122,12 @@ export const productAdminRoutes: FastifyPluginCallback = (
               items: { type: 'string' },
               description: 'Product images URLs',
             },
+            status: {
+              type: 'string',
+              enum: ['draft', 'published'],
+              description: 'Product status',
+              default: 'draft',
+            },
           },
         },
         response: {

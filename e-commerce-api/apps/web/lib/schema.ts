@@ -28,6 +28,7 @@ export const productSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock must be non-negative'),
   category: z.string().min(1, 'Category is required'),
   image: z.string().default('/file-text.svg'),
+  isPublic: z.boolean().default(false),
 })
 
 // Input type (before coercion) - form inputs are strings

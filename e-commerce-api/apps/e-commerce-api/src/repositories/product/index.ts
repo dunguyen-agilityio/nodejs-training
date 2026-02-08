@@ -16,7 +16,15 @@ export class ProductRepository extends AbstractProductRepository {
   async getProducts(
     params: Omit<ProductQueryParams, 'page'> & { skip: number },
   ): Promise<[Product[], number]> {
-    const { query, skip, categories, pageSize, status } = params
+    const {
+      query,
+      skip,
+      categories,
+      pageSize,
+      status,
+      orderBy = 'updatedAt',
+      order = 'DESC',
+    } = params
 
     const queryBuilder = this.createQueryBuilder('product')
 
@@ -47,6 +55,8 @@ export class ProductRepository extends AbstractProductRepository {
         status: 'published',
       })
     }
+
+    queryBuilder.orderBy(`product.${orderBy}`, order)
 
     return queryBuilder
       .leftJoinAndSelect('product.category', 'category')

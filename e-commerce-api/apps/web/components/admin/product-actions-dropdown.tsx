@@ -142,23 +142,19 @@ export function ProductActionsDropdown({
           aria-label="Product Actions"
           onAction={handleAction}
           variant="flat"
-          className="shadow-lg"
+          className="shadow-lg bg-background z-50 rounded-md border border-default-200"
         >
           <DropdownSection title="Actions" showDivider>
             <DropdownItem
               key="edit"
               startContent={<Edit className="h-4 w-4" />}
-              description="Edit product details"
-            >
-              Edit
-            </DropdownItem>
+              description="Edit details"
+            />
             <DropdownItem
               key="duplicate"
               startContent={<Copy className="h-4 w-4" />}
-              description="Clone this product"
-            >
-              Duplicate
-            </DropdownItem>
+              description="Duplicate"
+            />
           </DropdownSection>
 
           <DropdownSection title="Status" showDivider>
@@ -168,25 +164,22 @@ export function ProductActionsDropdown({
                 startContent={<Send className="h-4 w-4" />}
                 className="text-success"
                 color="success"
-              >
-                Publish
-              </DropdownItem>
+                description="Publish"
+              />
             ) : null}
             {product.status !== 'archived' ? (
               <DropdownItem
                 key="archive"
                 startContent={<Archive className="h-4 w-4" />}
-              >
-                Archive
-              </DropdownItem>
+                description="Archive"
+              />
             ) : null}
             {product.status !== 'draft' ? (
               <DropdownItem
                 key="draft"
                 startContent={<FileText className="h-4 w-4" />}
-              >
-                Mark as Draft
-              </DropdownItem>
+                description="Mark as Draft"
+              />
             ) : null}
           </DropdownSection>
 
@@ -196,10 +189,8 @@ export function ProductActionsDropdown({
               className="text-danger"
               color="danger"
               startContent={<Trash2 className="h-4 w-4" />}
-              description="Permanently remove product"
-            >
-              Delete
-            </DropdownItem>
+              description="Delete"
+            />
           </DropdownSection>
         </DropdownMenu>
       </Dropdown>

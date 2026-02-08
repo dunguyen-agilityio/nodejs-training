@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 
-import { OrderStatus, ProductStatus } from '#entities'
+import { OrderStatus, Product, ProductStatus } from '#entities'
 
 /**
  * Query parameters for filtering and paginating products
@@ -11,6 +11,11 @@ export type ProductQueryParams = {
   pageSize: number
   categories: string[]
   status?: ProductStatus | 'all'
+  orderBy?: keyof Pick<
+    Product,
+    'name' | 'price' | 'stock' | 'createdAt' | 'updatedAt'
+  >
+  order?: 'ASC' | 'DESC'
 }
 
 /**

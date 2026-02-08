@@ -101,7 +101,7 @@ export class ProductService implements IProductService {
       active: true,
       default_price_data: {
         currency: 'usd',
-        unit_amount: price * 100,
+        unit_amount: Math.round(price * 100),
       },
     })
 

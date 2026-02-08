@@ -41,9 +41,11 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
           stock: initialData.stock,
           category: initialData.category,
           image: initialData.images?.[0] || '/file-text.svg',
+          isPublic: initialData.status === 'published',
         }
       : {
           image: '/file-text.svg',
+          isPublic: false,
         },
   })
 
@@ -67,17 +69,21 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
         category: 'product',
       }),
     )
+    setValue('isPublic', faker.datatype.boolean())
   }
 
-  const onSubmit = async ({ image, ...data }: ProductFormInput) => {
+  const onSubmit = async ({ image, isPublic, ...data }: ProductFormInput) => {
     try {
+      const payload = {
+        ...data,
+        status: isPublic ? 'published' : 'draft',
+        images: image ? [image] : [],
+      }
+
       if (!id) {
-        await post(getClientEndpoint(API_ROUTES.PRODUCT.CREATE), {
-          ...data,
-          images: image ? [image] : [],
-        })
+        await post(getClientEndpoint(API_ROUTES.PRODUCT.CREATE), payload)
       } else {
-        await put(getClientEndpoint(API_ROUTES.PRODUCT.UPDATE(id)), data)
+        await put(getClientEndpoint(API_ROUTES.PRODUCT.UPDATE(id)), payload)
       }
 
       toast.success(
@@ -94,9 +100,8 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
       }
 
       toast.error(
-        message || isEditing
-          ? 'Failed to update product'
-          : 'Failed to create product',
+        message ||
+          (isEditing ? 'Failed to update product' : 'Failed to create product'),
       )
     }
   }
@@ -212,6 +217,18 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
                 {errors.category.message}
               </p>
             )}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isPublic"
+              {...register('isPublic')}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <label htmlFor="isPublic" className="text-sm font-medium">
+              Public (Visible to customers)
+            </label>
           </div>
         </div>
         <div className="relative h-96 flex-1">
