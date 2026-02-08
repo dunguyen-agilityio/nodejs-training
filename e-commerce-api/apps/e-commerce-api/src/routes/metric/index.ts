@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { authenticate, authorizeAdmin } from '#middlewares'
-
 import { HttpStatus } from '#types/http-status'
 
 import { MetricErrorResponseSchema, ProductMetricSchema } from '#schemas/metric'
@@ -12,7 +10,7 @@ export const metricRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.get(
     '/product',
     {
-      preHandler: [authenticate, authorizeAdmin],
+      preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
         description: 'Admin: product dashboard metrics',
         tags: ['admin', 'metrics'],

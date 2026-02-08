@@ -67,13 +67,24 @@ export const ProductSchema = {
   required: ['id', 'name', 'description', 'price', 'stock', 'category'],
 } as const
 
+export const addProductSchema = {
+  type: 'object',
+  properties: ProductSchema.properties,
+  required: ['name', 'description', 'price', 'stock', 'category', 'status'],
+} as const
+
+export const updateProductSchema = {
+  type: 'object',
+  properties: ProductSchema.properties,
+} as const
+
 export const ProductListResponseSchema =
   createPaginatedResponseSchema(ProductSchema)
 
 export const ProductDetailResponseSchema = ProductSchema
 
-export const ProductCreateResponseSchema = ProductSchema
+export const ProductCreateResponseSchema = addProductSchema
 
-export const ProductUpdateResponseSchema = ProductSchema
+export const ProductUpdateResponseSchema = updateProductSchema
 
 export const ProductErrorResponseSchema = ErrorResponseSchema

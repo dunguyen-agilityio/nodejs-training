@@ -1,6 +1,5 @@
 import {
   IAuthService,
-  ICartItemService,
   ICartService,
   ICategoryService,
   ICheckoutService,
@@ -15,14 +14,12 @@ export * from './user'
 export * from './product'
 export * from './category'
 export * from './cart'
-export * from './cart-item'
 export * from './checkout'
 export * from './order'
 export * from './metric'
 
 export type TServices = {
   authService: IAuthService
-  cartItemService: ICartItemService
   cartService: ICartService
   categoryService: ICategoryService
   checkoutService: ICheckoutService

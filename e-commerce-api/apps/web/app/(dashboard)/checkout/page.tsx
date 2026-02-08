@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { post } from '@/lib/api'
+import { API_ROUTES, post } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { PaymentIntent } from '@/lib/types'
@@ -20,7 +20,7 @@ export default async function CheckoutPage() {
     try {
       const headers = await createAuthorizationHeader()
       return await post<PaymentIntent>(
-        `${config.api.endpoint}/checkout/payment-intents`,
+        `${config.api.endpoint}${API_ROUTES.CHECKOUT.CREATE}`,
         { currency },
         headers,
       )

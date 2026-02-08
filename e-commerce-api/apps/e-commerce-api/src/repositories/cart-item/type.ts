@@ -7,7 +7,6 @@ export abstract class AbstractCartItemRepository extends BaseRepository<CartItem
     productId: string,
     cartId: number,
   ): Promise<CartItem | null>
-  abstract deleteCartItem(cartItemId: number, userId: string): Promise<boolean>
 
   abstract deleteByCartId(cartId: number): Promise<boolean>
 

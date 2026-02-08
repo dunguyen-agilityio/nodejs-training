@@ -13,17 +13,6 @@ export class CartItemRepository extends AbstractCartItemRepository {
     })
   }
 
-  async deleteCartItem(cartItemId: number, userId: string): Promise<boolean> {
-    const result = await this.createQueryBuilder('cartItem')
-      .delete()
-      .from('cart_items')
-      .where('cartItemId = :cartItemId', { cartItemId })
-      .andWhere('userId = :userId', { userId })
-      .execute()
-
-    return !!result.affected
-  }
-
   async deleteByCartId(cartId: number): Promise<boolean> {
     const result = await this.createQueryBuilder('cartItem')
       .delete()

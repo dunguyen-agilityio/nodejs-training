@@ -2,7 +2,7 @@ import { FromSchema } from 'json-schema-to-ts'
 
 import { USER_ROLES } from '#types'
 
-import { registerBodySchema } from '#schemas/auth.schema'
+import { registerBodySchema } from '#schemas/auth'
 
 import { User } from '#entities'
 

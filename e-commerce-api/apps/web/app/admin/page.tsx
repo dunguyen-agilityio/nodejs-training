@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { get } from '@/lib/api'
+import { API_ROUTES, get } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
@@ -13,7 +13,7 @@ type ProductMetric = {
 export default async function AdminDashboard() {
   const headers = await createAuthorizationHeader()
   const response = await get<ProductMetric>(
-    `${config.api.endpoint}/metrics/product`,
+    `${config.api.endpoint}${API_ROUTES.METRIC.PRODUCT}`,
     headers,
   )
   const { totalProducts, totalStock, totalValue } = response || {}

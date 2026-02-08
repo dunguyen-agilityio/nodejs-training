@@ -1,8 +1,11 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { FromSchema } from 'json-schema-to-ts'
 
 import { IProductService } from '#services/types'
 
 import { productToObject } from '#dtos/product'
+
+import { addProductSchema, updateProductSchema } from '#schemas/product'
 
 import { Product, ProductStatus } from '#entities'
 
@@ -28,12 +31,7 @@ export class ProductController
   updateProduct = async (
     request: FastifyRequest<{
       Params: { id: string }
-      Body: Partial<
-        Pick<
-          Product,
-          'category' | 'description' | 'images' | 'name' | 'price' | 'stock'
-        >
-      >
+      Body: FromSchema<typeof updateProductSchema>
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
@@ -42,16 +40,16 @@ export class ProductController
 
     const product = await this.service.updateProduct(id, body)
 
-    this.sendItem(reply, product)
+    this.sendItem(reply, productToObject(product))
   }
 
   addNewProduct = async (
-    request: FastifyRequest<{ Body: Omit<Product, 'id'> }>,
+    request: FastifyRequest<{ Body: FromSchema<typeof addProductSchema> }>,
     reply: FastifyReply,
   ): Promise<void> => {
     const productData = request.body
     const newProduct = await this.service.saveProduct(productData)
-    this.sendCreatedItem(reply, newProduct)
+    this.sendCreatedItem(reply, productToObject(newProduct))
   }
 
   getProducts = async (

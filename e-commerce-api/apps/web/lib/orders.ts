@@ -1,4 +1,4 @@
-import { get, patch } from './api'
+import { API_ROUTES, get, patch } from './api'
 import { createAuthorizationHeader } from './auth'
 import { config } from './config'
 import { ApiPagination, ApiResponse, Order, OrderStatus } from './types'
@@ -32,7 +32,7 @@ export async function getAllOrders(
   if (status) params.append('status', status)
   if (date) params.append('date', date)
 
-  const url = `${config.api.endpoint}/admin/orders?${params.toString()}`
+  const url = `${config.api.endpoint}${API_ROUTES.ORDER.GET_ALL}?${params.toString()}`
   const response = await get<AllOrdersResponse>(url, headers)
   return response
 }
@@ -41,7 +41,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   const headers = await createAuthorizationHeader()
 
   const response = await patch<ApiResponse<Order>>(
-    `${config.api.endpoint}/admin/orders/${orderId}/status`,
+    `${config.api.endpoint}${API_ROUTES.ORDER.UPDATE(orderId)}`,
     { status },
     headers,
   )

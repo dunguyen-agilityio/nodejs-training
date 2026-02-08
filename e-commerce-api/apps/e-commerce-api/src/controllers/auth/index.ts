@@ -9,7 +9,7 @@ import { BadRequestError } from '#types'
 
 import { transformatFromClerk } from '#dtos/user'
 
-import { registerBodySchema } from '#schemas/auth.schema'
+import { loginBodySchema, registerBodySchema } from '#schemas/auth'
 
 import { BaseController } from '../base'
 import { IAuthController } from './type'
@@ -27,11 +27,12 @@ export class AuthController extends BaseController implements IAuthController {
   ): Promise<void> => {
     try {
       const newUser = transformatFromClerk(request.body)
+      request.log.info(newUser, 'New User')
       const user = await this.service.register(newUser)
+      request.log.info(user, 'User Registered')
 
       this.sendCreatedItem(reply, user)
     } catch (error) {
-      this.logError(request, 'Error - register', error)
       if (isClerkAPIResponseError(error)) {
         throw new BadRequestError(error.errors[0].message)
       }
@@ -42,18 +43,19 @@ export class AuthController extends BaseController implements IAuthController {
 
   login = async (
     request: FastifyRequest<{
-      Body: FromSchema<typeof import('#schemas/auth.schema').loginBodySchema>
+      Body: FromSchema<typeof loginBodySchema>
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
     try {
       const { identifier, password } = request.body
+      request.log.info({ identifier }, 'Login attempt')
       const result = await this.service.login(identifier, password)
+      request.log.info(result, 'User logged in successfully')
       reply.send(result)
     } catch (error) {
-      this.logError(request, 'Error - login', error)
       if (isClerkAPIResponseError(error)) {
-        throw new BadRequestError(error.errors[0].message)
+        throw new BadRequestError('Invalid credentials')
       }
       throw error
     }

@@ -4,8 +4,13 @@ import { validateRequest } from '#middlewares'
 
 import { HttpStatus } from '#types/http-status'
 
-import { AuthErrorResponseSchema, RegisterResponseSchema } from '#schemas/auth'
-import { loginBodySchema, registerBodySchema } from '#schemas/auth.schema'
+import {
+  AuthErrorResponseSchema,
+  LoginResponseSchema,
+  RegisterResponseSchema,
+  loginBodySchema,
+  registerBodySchema,
+} from '#schemas/auth'
 
 export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.controllers.authController
@@ -42,11 +47,7 @@ export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
         tags: ['auth'],
         body: loginBodySchema,
         response: {
-          [HttpStatus.OK]: {
-            description: 'Login successful',
-            type: 'object',
-            additionalProperties: true,
-          },
+          [HttpStatus.OK]: LoginResponseSchema,
           [HttpStatus.BAD_REQUEST]: AuthErrorResponseSchema,
           [HttpStatus.INTERNAL_SERVER_ERROR]: AuthErrorResponseSchema,
           [HttpStatus.TOO_MANY_REQUESTS]: AuthErrorResponseSchema,

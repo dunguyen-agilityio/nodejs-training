@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { authenticate } from '#middlewares'
-
 import { HttpStatus } from '#types/http-status'
 
 import {
@@ -12,12 +10,12 @@ import {
 import { ErrorResponseSchema } from '#schemas/response'
 
 export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
-  const { cartController, cartItemController } = instance.container.controllers
+  const { cartController } = instance.container.controllers
 
   instance.post(
-    '/add',
+    '/add-item',
     {
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
       schema: {
         description: 'Add product to cart (create/update cart item)',
         tags: ['cart'],
@@ -49,7 +47,7 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.get(
     '/',
     {
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
       schema: {
         description: "Get current user's cart",
         tags: ['cart'],
@@ -67,7 +65,7 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.delete(
     '/items/:id',
     {
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
       schema: {
         description: 'Delete a cart item',
         tags: ['cart'],
@@ -91,12 +89,12 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    cartItemController.deleteCartItem,
+    cartController.deleteCartItem,
   )
   instance.put(
     '/items/:id',
     {
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
       schema: {
         description: 'Update cart item quantity',
         tags: ['cart'],
@@ -128,7 +126,7 @@ export const cartRoutes: FastifyPluginCallback = (instance, _, done) => {
         },
       },
     },
-    cartItemController.updateCartItemQuantity,
+    cartController.updateCartItemQuantity,
   )
   done()
 }

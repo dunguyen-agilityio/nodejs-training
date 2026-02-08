@@ -5,11 +5,11 @@ export class ProductResponseDto extends Product {
     super(product)
   }
 
-  toObject() {
+  toJSON() {
     return { ...this, category: this.category.name, image: this.images[0] }
   }
 }
 
 export const productToObject = (product: Product) => {
-  return new ProductResponseDto(product).toObject()
+  return new ProductResponseDto(product).toJSON()
 }

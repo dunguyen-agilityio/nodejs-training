@@ -20,9 +20,7 @@ export class SendGridEmailAdapter implements EmailProvider {
       { to, from, templateId, dynamicTemplateData },
       false,
       (error) => {
-        if (!error) {
-          this.logger.info('Email sent successfully')
-        } else {
+        if (error) {
           if ('response' in error) {
             this.logger.error(
               `Error - sendWithTemplate: ${error.response.body}`,

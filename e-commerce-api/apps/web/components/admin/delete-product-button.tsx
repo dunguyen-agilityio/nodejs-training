@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { toast } from 'sonner'
 
-import { del } from '@/lib/api'
+import { API_ROUTES, del } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
 
 import {
   AlertDialog,
@@ -24,7 +25,7 @@ interface DeleteProductButtonProps {
 }
 
 export const deleteProduct = async (productId: string) => {
-  await del(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${productId}`)
+  await del(getClientEndpoint(API_ROUTES.PRODUCT.DELETE(productId)))
 }
 
 export function DeleteProductButton({ productId }: DeleteProductButtonProps) {

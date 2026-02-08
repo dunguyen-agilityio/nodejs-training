@@ -1,6 +1,7 @@
 import { GetAuthFn } from '@clerk/backend/internal'
 import type { ClerkClient } from '@clerk/fastify'
 
+import { authenticate, authorizeAdmin } from '#middlewares'
 import type { MailService } from '@sendgrid/mail'
 import type { Stripe } from 'stripe'
 
@@ -23,6 +24,8 @@ declare module 'fastify' {
     stripe: Stripe
     sendgrid: MailService
     clerk: { getAuth: GetAuthFn<FastifyRequest>; clerkClient: ClerkClient }
+    authenticate: typeof authenticate
+    authorizeAdmin: typeof authorizeAdmin
   }
 }
 

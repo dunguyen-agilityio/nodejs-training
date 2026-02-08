@@ -4,7 +4,8 @@ import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import React, { FormEvent, Suspense, useState } from 'react'
 import { toast } from 'sonner'
 
-import { post } from '@/lib/api'
+import { API_ROUTES, post } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
 import { formatCurrency } from '@/lib/utils'
 
 import { useCart } from '@/context/CartContext'
@@ -26,10 +27,7 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
     setIsLoading(true)
 
     try {
-      await post(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/orders/prepare`,
-        {},
-      )
+      await post(getClientEndpoint(API_ROUTES.CHECKOUT.PREPARE), {})
 
       clearCart()
 

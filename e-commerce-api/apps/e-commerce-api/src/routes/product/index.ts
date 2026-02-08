@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { authenticate, authorizeAdmin, requiredId } from '#middlewares'
-
 import { HttpStatus } from '#types/http-status'
 
 import { PaginationSchema } from '#schemas/pagination'
@@ -51,7 +49,6 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.get(
     '/:id',
     {
-      preHandler: [requiredId],
       schema: {
         description: 'Get a single product by ID',
         tags: ['products'],
@@ -75,22 +72,23 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
     productController.getProduct,
   )
 
-  instance.register(productAdminRoutes)
-  instance.register(productAdminRoutes, { prefix: '/admin' })
-
   done()
 }
 
-const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
-  instance.addHook('preHandler', authenticate)
-  instance.addHook('preHandler', authorizeAdmin)
+export const productAdminRoutes: FastifyPluginCallback = (
+  instance,
+  _,
+  done,
+) => {
+  instance.addHook('preHandler', instance.authenticate)
+  instance.addHook('preHandler', instance.authorizeAdmin)
 
   const { productController } = instance.container.controllers
 
   instance.post(
     '/',
     {
-      preHandler: [authenticate, authorizeAdmin],
+      preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
         description: 'Create a new product (Admin only)',
         tags: ['products', 'admin'],
@@ -142,7 +140,7 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.put(
     '/:id',
     {
-      preHandler: [authenticate, authorizeAdmin],
+      preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
         description: 'Update a product (Admin only)',
         tags: ['products', 'admin'],
@@ -192,7 +190,7 @@ const productAdminRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.delete(
     '/:id',
     {
-      preHandler: [requiredId],
+      preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
         description: 'Delete a product (Admin only)',
         tags: ['products', 'admin'],

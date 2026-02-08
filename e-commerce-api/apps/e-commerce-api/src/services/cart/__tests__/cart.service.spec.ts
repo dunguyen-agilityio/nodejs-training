@@ -45,7 +45,8 @@ describe('CartService', () => {
     })
 
     cartItemRepositoryMock = {
-      deleteCartItem: vi.fn(),
+      deleteByCartId: vi.fn(),
+      createQueryBuilder: vi.fn(),
     }
 
     productRepositoryMock = {
@@ -242,18 +243,101 @@ describe('CartService', () => {
   })
 
   describe('removeProductFromCart', () => {
-    it('should call repository deleteCartItem', async () => {
+    it('should call deleteCartItem and return true', async () => {
       const itemId = 100
       const userId = 'user-1'
-      cartItemRepositoryMock.deleteCartItem.mockResolvedValue(true)
+
+      // Mock deleteCartItem to succeed
+      vi.spyOn(cartService, 'deleteCartItem').mockResolvedValue()
 
       const result = await cartService.removeProductFromCart(itemId, userId)
 
-      expect(cartItemRepositoryMock.deleteCartItem).toHaveBeenCalledWith(
-        itemId,
-        userId,
-      )
+      expect(cartService.deleteCartItem).toHaveBeenCalledWith(itemId, userId)
       expect(result).toBe(true)
+    })
+
+    it('should return false if deleteCartItem throws NotFoundError', async () => {
+      const itemId = 100
+      const userId = 'user-1'
+
+      vi.spyOn(cartService, 'deleteCartItem').mockRejectedValue(
+        new NotFoundError('Item not found'),
+      )
+
+      const result = await cartService.removeProductFromCart(itemId, userId)
+
+      expect(cartService.deleteCartItem).toHaveBeenCalledWith(itemId, userId)
+      expect(result).toBe(false)
+    })
+
+    it('should throw other errors', async () => {
+      const itemId = 100
+      const userId = 'user-1'
+
+      vi.spyOn(cartService, 'deleteCartItem').mockRejectedValue(
+        new Error('Other error'),
+      )
+
+      await expect(
+        cartService.removeProductFromCart(itemId, userId),
+      ).rejects.toThrow('Other error')
+    })
+  })
+
+  describe('deleteCartItem', () => {
+    it('should call repository createQueryBuilder and execute delete', async () => {
+      const cartItemId = 100
+      const userId = 'user-1'
+
+      const mockDeleteQueryBuilder = {
+        delete: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue({ affected: 1 }),
+      }
+
+      cartItemRepositoryMock.createQueryBuilder = vi
+        .fn()
+        .mockReturnValue(mockDeleteQueryBuilder)
+
+      await cartService.deleteCartItem(cartItemId, userId)
+
+      expect(cartItemRepositoryMock.createQueryBuilder).toHaveBeenCalledWith(
+        'cartItem',
+      )
+      expect(mockDeleteQueryBuilder.delete).toHaveBeenCalled()
+      expect(mockDeleteQueryBuilder.from).toHaveBeenCalledWith('cart_items')
+      expect(mockDeleteQueryBuilder.where).toHaveBeenCalledWith(
+        'id = :cartItemId',
+        { cartItemId },
+      )
+      expect(mockDeleteQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'cart_id IN (SELECT id FROM carts WHERE user_id = :userId)',
+        { userId },
+      )
+      expect(mockDeleteQueryBuilder.execute).toHaveBeenCalled()
+    })
+
+    it('should throw NotFoundError if no rows affected', async () => {
+      const cartItemId = 100
+      const userId = 'user-1'
+
+      const mockDeleteQueryBuilder = {
+        delete: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue({ affected: 0 }),
+      }
+
+      cartItemRepositoryMock.createQueryBuilder = vi
+        .fn()
+        .mockReturnValue(mockDeleteQueryBuilder)
+
+      await expect(
+        cartService.deleteCartItem(cartItemId, userId),
+      ).rejects.toThrow(NotFoundError)
     })
   })
 
@@ -267,9 +351,8 @@ describe('CartService', () => {
 
       await cartService.clearCart(userId)
 
-      expect(cartItemRepositoryMock.deleteCartItem).toHaveBeenCalledWith(
+      expect(cartItemRepositoryMock.deleteByCartId).toHaveBeenCalledWith(
         mockCart.id,
-        userId,
       )
     })
   })

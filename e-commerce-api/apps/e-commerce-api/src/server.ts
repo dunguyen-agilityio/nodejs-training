@@ -9,6 +9,7 @@ import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts
 import Fastify from 'fastify'
 
 import { AppDataSource } from '#data-source'
+import { authenticate, authorizeAdmin } from '#middlewares'
 
 import { env } from './configs/env'
 import { errorHandler } from './middlewares/error-handler'
@@ -21,7 +22,8 @@ import { adminOrderRoutes } from './routes/admin-order'
 import { checkoutRoutes } from './routes/checkout'
 import { metricRoutes } from './routes/metric'
 import { orderRoutes } from './routes/order'
-import { productRoutes } from './routes/product'
+import { productAdminRoutes, productRoutes } from './routes/product'
+import { userRoutes } from './routes/user'
 import { buildContainer } from './utils/container'
 
 const envToLogger = {
@@ -94,8 +96,18 @@ AppDataSource.initialize()
           }),
         )
 
+        instance.decorate('authenticate', {
+          getter: () => authenticate,
+        })
+
+        instance.decorate('authorizeAdmin', {
+          getter: () => authorizeAdmin,
+        })
+
         instance.register(authRoutes, { prefix: '/auth' })
+        instance.register(userRoutes, { prefix: '/users' })
         instance.register(productRoutes, { prefix: '/products' })
+        instance.register(productAdminRoutes, { prefix: '/admin/products' })
         instance.register(categoryRoutes, { prefix: '/categories' })
         instance.register(cartRoutes, { prefix: '/cart' })
         instance.register(orderRoutes, { prefix: '/orders' })

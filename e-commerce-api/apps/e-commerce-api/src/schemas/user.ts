@@ -1,3 +1,5 @@
+import { ErrorResponseSchema } from './response'
+
 export const UserSchema = {
   type: 'object',
   properties: {
@@ -14,6 +16,69 @@ export const UserSchema = {
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
   },
-  required: ['id', 'firstName', 'email', 'createdAt', 'updatedAt'],
+  required: [
+    'id',
+    'firstName',
+    'email',
+    'createdAt',
+    'updatedAt',
+    'stripeId',
+    'role',
+  ],
   additionalProperties: true,
+} as const
+
+export const UserProfileResponseSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    email: { type: 'string' },
+    name: { type: 'string' },
+    avatar: { type: 'string' },
+    firstName: { type: 'string' },
+    lastName: { type: 'string' },
+    username: { type: 'string' },
+    phone: { type: 'string' },
+    age: { type: 'number' },
+    role: { type: 'string' },
+    stripeId: { type: 'string' },
+    updatedAt: { type: 'string' },
+    createdAt: { type: 'string' },
+  },
+  required: [
+    'id',
+    'firstName',
+    'email',
+    'createdAt',
+    'updatedAt',
+    'avatar',
+    'stripeId',
+    'role',
+  ],
+}
+
+export const UserErrorResponseSchema = ErrorResponseSchema
+
+export const UpdateUserRoleSchema = {
+  type: 'object',
+  properties: {
+    data: {
+      type: 'object',
+      properties: {
+        role_name: { type: 'string', enum: ['User', 'Admin'] },
+        role: { type: 'string', enum: ['org:user', 'org:admin'] },
+        public_user_data: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'string' },
+          },
+          required: ['user_id'],
+        },
+      },
+      required: ['role_name', 'role', 'public_user_data'],
+    },
+    type: { type: 'string', enum: ['organizationMembership.updated'] },
+    object: { type: 'string', enum: ['event'] },
+  },
+  required: ['data', 'type', 'object'],
 } as const

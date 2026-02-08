@@ -20,8 +20,10 @@ import {
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { success } from 'zod'
 
-import { post, put } from '@/lib/api'
+import { API_ROUTES, post, put } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
 import { Product } from '@/lib/types'
 
 import {
@@ -90,7 +92,7 @@ export function ProductActionsDropdown({
     if (isLoading) return
     setIsLoading(true)
     try {
-      await post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+      await post(getClientEndpoint(API_ROUTES.PRODUCT.CREATE), {
         name: `${product.name} (Copy)`,
         description: product.description,
         price: product.price,
@@ -114,12 +116,9 @@ export function ProductActionsDropdown({
     if (isLoading) return
     setIsLoading(true)
     try {
-      await put(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${product.id}`,
-        {
-          status,
-        },
-      )
+      await put(getClientEndpoint(API_ROUTES.PRODUCT.UPDATE(product.id)), {
+        status,
+      })
 
       toast.success(`Product status updated to ${status}`)
       router.refresh()

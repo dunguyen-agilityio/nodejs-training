@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { del, put } from '@/lib/api'
+import { API_ROUTES, del, put } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
@@ -15,7 +15,7 @@ export async function PUT(
 
   try {
     const data = await put(
-      `${config.api.endpoint}/cart/items/${id}`,
+      `${config.api.endpoint}${API_ROUTES.CART.UPDATE_ITEM(id)}`,
       body,
       headers,
     )
@@ -36,7 +36,10 @@ export async function DELETE(
   const headers = await createAuthorizationHeader()
 
   try {
-    const data = await del(`${config.api.endpoint}/cart/items/${id}`, headers)
+    const data = await del(
+      `${config.api.endpoint}${API_ROUTES.CART.DELETE_ITEM(id)}`,
+      headers,
+    )
     return NextResponse.json(data)
   } catch (error: any) {
     return NextResponse.json(

@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { authenticate } from '#middlewares'
-
 import { HttpStatus } from '#types/http-status'
 
 import { getOrdersSchema } from '#schemas/order'
@@ -16,7 +14,7 @@ export const orderRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.get(
     '/',
     {
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
       schema: {
         description: "Get current user's orders (paginated)",
         tags: ['orders'],

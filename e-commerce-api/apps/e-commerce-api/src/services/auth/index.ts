@@ -36,65 +36,64 @@ export class AuthService implements IAuthService {
 
     this.logger.info({ email, name }, 'Registering new user')
 
-    try {
-      const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
-        email,
+    const customer = await this.paymentGatewayProvider.findOrCreateCustomer({
+      email,
+      name,
+    })
+    const user = await this.userRepository.save({
+      avatar,
+      firstName,
+      lastName,
+      username,
+      phone,
+      stripeId: customer.id,
+      age,
+      role,
+      id,
+      email,
+    })
+    await this.cartRepository.save({
+      user,
+      status: 'active',
+      items: [],
+    })
+
+    this.logger.debug({ userId: user.id }, 'Cart created for user')
+
+    const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
+
+    await this.mailProvider.sendWithTemplate({
+      from: env.sendgrid.fromEmail,
+      templateId: env.sendgrid.templates.registerSuccess,
+      to: email,
+      dynamicTemplateData: {
         name,
-      })
-      const user = await this.userRepository.save({
-        avatar,
-        firstName,
-        lastName,
-        username,
-        phone,
-        stripeId: customer.id,
-        age,
-        role,
-        id,
         email,
-      })
-      await this.cartRepository.save({
-        user,
-        status: 'active',
-        items: [],
-      })
+        app_name: env.app.name,
+        logo_url: env.app.logoUrl,
+        login_url: loginPath,
+        support_email: env.sendgrid.supportEmail,
+        year: env.app.year,
+      },
+    })
 
-      this.logger.debug({ userId: user.id }, 'Cart created for user')
-
-      const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
-
-      await this.mailProvider.sendWithTemplate({
-        from: env.sendgrid.fromEmail,
-        templateId: env.sendgrid.templates.registerSuccess,
-        to: email,
-        dynamicTemplateData: {
-          name,
-          email,
-          app_name: env.app.name,
-          logo_url: env.app.logoUrl,
-          login_url: loginPath,
-          support_email: env.sendgrid.supportEmail,
-          year: env.app.year,
-        },
-      })
-
-      this.logger.info(
-        { userId: user.id, email },
-        'User registered successfully, confirmation email sent',
-      )
-      return user
-    } catch (error) {
-      this.logger.error({ email, error }, 'Error during user registration')
-      throw error
-    }
+    this.logger.info(
+      { userId: user.id, email },
+      'User registered successfully, confirmation email sent',
+    )
+    return user
   }
 
-  async login(identifier: string, password: string) {
-    try {
-      return await this.identityProvider.login(identifier, password)
-    } catch (error) {
-      this.logger.error({ error }, 'Error during login')
-      throw error
-    }
+  async login(
+    identifier: string,
+    password: string,
+  ): Promise<{ user: User; jwt: string }> {
+    this.logger.info({ identifier }, 'Login attempt')
+    const { jwt, userId } = await this.identityProvider.login(
+      identifier,
+      password,
+    )
+    const user = await this.userRepository.getById(userId)
+    return { jwt, user: user! }
   }
 }

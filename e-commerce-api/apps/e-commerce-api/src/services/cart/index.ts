@@ -151,14 +151,83 @@ export class CartService implements ICartService {
     userId: string,
   ): Promise<boolean> {
     this.logger.info({ userId, itemId }, 'Removing product from cart')
-    return this.cartItemRepository.deleteCartItem(itemId, userId)
+    try {
+      await this.deleteCartItem(itemId, userId)
+      return true
+    } catch (error) {
+      if (error instanceof NotFoundError) return false
+      throw error
+    }
   }
 
   async clearCart(userId: string): Promise<void> {
     this.logger.info({ userId }, 'Clearing cart')
     const cart = await this.getCartByUserId(userId)
     // delete all items in cart
-    await this.cartItemRepository.deleteCartItem(cart.id, userId)
+    await this.cartItemRepository.deleteByCartId(cart.id)
     this.logger.info({ userId, cartId: cart.id }, 'Cart cleared successfully')
+  }
+
+  async getCartItemByProduct(
+    productId: string,
+    cartId: number,
+  ): Promise<CartItem | null> {
+    this.logger.debug({ productId, cartId }, 'Fetching cart item by product')
+    return await this.cartItemRepository.findOneBy({
+      product: { id: productId },
+      cartId,
+    })
+  }
+
+  async deleteCartItem(cartItemId: number, userId: string): Promise<void> {
+    this.logger.info({ cartItemId, userId }, 'Deleting cart item')
+
+    const result = await this.cartItemRepository
+      .createQueryBuilder('cartItem')
+      .delete()
+      .from('cart_items')
+      .where('id = :cartItemId', { cartItemId })
+      .andWhere('cart_id IN (SELECT id FROM carts WHERE user_id = :userId)', {
+        userId,
+      })
+      .execute()
+
+    if (result.affected === 0) {
+      throw new NotFoundError('Item not found or user lacks permission')
+    }
+
+    this.logger.info(
+      { cartItemId, userId, affected: result.affected },
+      'Cart item deleted successfully',
+    )
+  }
+
+  async updateCartItemQuantity(
+    cartItemId: number,
+    quantity: number,
+    userId: string,
+  ): Promise<boolean> {
+    this.logger.info(
+      { cartItemId, quantity, userId },
+      'Updating cart item quantity',
+    )
+    const result = await this.cartItemRepository
+      .createQueryBuilder('cartItem')
+      .update({ quantity })
+      .where('id = :cartItemId', { cartItemId })
+      .andWhere('cart_id IN (SELECT id FROM carts WHERE user_id = :userId)', {
+        userId,
+      })
+      .execute()
+
+    if (result.affected === 0) {
+      throw new NotFoundError('Item not found or user lacks permission')
+    }
+
+    this.logger.info(
+      { cartItemId, quantity, affected: result.affected },
+      'Cart item quantity updated successfully',
+    )
+    return true
   }
 }

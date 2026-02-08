@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
-import { post, put } from '@/lib/api'
+import { API_ROUTES, post, put } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
 import { type ProductFormInput, productSchema } from '@/lib/schema'
 import { Product } from '@/lib/types'
 
@@ -58,21 +59,25 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
     setValue('price', faker.commerce.price({ min: 10, max: 500 }))
     setValue('stock', faker.number.int({ min: 20, max: 200 }).toString())
     setValue('category', randomCategory)
-    setValue('image', faker.image.url({ width: 800, height: 600 }))
+    setValue(
+      'image',
+      faker.image.urlLoremFlickr({
+        width: 800,
+        height: 600,
+        category: 'product',
+      }),
+    )
   }
 
   const onSubmit = async ({ image, ...data }: ProductFormInput) => {
     try {
       if (!id) {
-        await post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+        await post(getClientEndpoint(API_ROUTES.PRODUCT.CREATE), {
           ...data,
           images: image ? [image] : [],
         })
       } else {
-        await put(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${id}`,
-          data,
-        )
+        await put(getClientEndpoint(API_ROUTES.PRODUCT.UPDATE(id)), data)
       }
 
       toast.success(

@@ -1,13 +1,15 @@
 import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm'
 import { Product } from './Product'
+import { Invoice } from './Invoice'
 
 @Entity()
 export class InvoiceItem {
   @PrimaryColumn({ type: 'varchar' })
   id: string
 
+  @ManyToOne(() => Invoice, (invoice) => invoice.items)
   @Column({ name: 'invoice_id', type: 'varchar' })
-  invoiceId: string
+  invoice: Invoice
 
   @ManyToOne(() => Product, (product) => product.invoiceItems)
   @Column({ name: 'product_id', type: 'varchar' })

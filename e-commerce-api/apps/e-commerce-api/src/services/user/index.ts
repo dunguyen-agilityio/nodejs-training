@@ -20,22 +20,22 @@ export class UserService implements IUserService {
     private logger: FastifyBaseLogger,
   ) {}
 
-  async addRoleForUser(userId: string, role: USER_ROLES): Promise<boolean> {
+  async addRoleForUser(userId: string, role: USER_ROLES): Promise<User> {
     this.logger.info({ userId, role }, 'Adding role to user')
     const user = await this.userRepository.getById(userId)
 
     if (!user) {
       this.logger.warn({ userId, role }, 'User not found for role assignment')
-      return false
+      throw new Error('User not found')
     }
     await this.userRepository.save({ ...user, role })
     this.logger.info({ userId, role }, 'Role added to user successfully')
-    return true
+    return user
   }
 
   async getById(id: string): Promise<User | null> {
     this.logger.debug({ userId: id }, 'Fetching user by ID')
-    return this.userRepository.findOneBy({ id })
+    return await this.userRepository.findOneBy({ id })
   }
 
   save(user: User): Promise<User> {

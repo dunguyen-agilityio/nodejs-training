@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { post } from '@/lib/api'
+import { API_ROUTES, post } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await post(
-      `${config.api.endpoint}/checkout/orders/prepare`,
+      `${config.api.endpoint}${API_ROUTES.CHECKOUT.PREPARE}`,
       body,
       headers,
     )

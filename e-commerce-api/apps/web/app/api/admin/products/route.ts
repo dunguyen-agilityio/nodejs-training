@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { post } from '@/lib/api'
+import { API_ROUTES, post } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
@@ -10,7 +10,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
 
   try {
-    const data = await post(`${config.api.endpoint}/products`, body, headers)
+    const data = await post(
+      `${config.api.endpoint}${API_ROUTES.PRODUCT.CREATE}`,
+      body,
+      headers,
+    )
 
     return NextResponse.json(data)
   } catch (error: any) {

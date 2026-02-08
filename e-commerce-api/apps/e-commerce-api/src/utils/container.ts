@@ -10,7 +10,6 @@ import {
 
 import {
   AuthService,
-  CartItemService,
   CartService,
   CategoryService,
   CheckoutService,
@@ -39,13 +38,13 @@ import {
   AdminOrderController,
   AuthController,
   CartController,
-  CartItemController,
   CategoryController,
   CheckoutController,
   MetricController,
   OrderController,
   ProductController,
   TControllers,
+  UserController,
 } from '#controllers'
 
 import type { EmailProvider, PaymentGateway } from '#types'
@@ -75,11 +74,11 @@ export function buildControllers(
     adminOrderController: new AdminOrderController(services.orderService),
     authController: new AuthController(services.authService),
     cartController: new CartController(services.cartService),
-    cartItemController: new CartItemController(services.cartItemService),
     categoryController: new CategoryController(services.categoryService),
     checkoutController: new CheckoutController(services.checkoutService),
     metricController: new MetricController(services.adminService),
     orderController: new OrderController(services.orderService),
+    userController: new UserController(services.userService),
   }
 }
 
@@ -117,12 +116,14 @@ export function buildServices(
     orderRepository,
     productRepository,
     userRepository,
+    invoiceRepository,
   } = repos
   const { emailProvider, paymentGateway } = adapters
 
   return {
     productService: new ProductService(
       productRepository,
+      categoryRepository,
       paymentGateway,
       fastify.log,
     ),
@@ -133,7 +134,6 @@ export function buildServices(
       productRepository,
       fastify.log,
     ),
-    cartItemService: new CartItemService(cartItemRepository, fastify.log),
     categoryService: new CategoryService(categoryRepository, fastify.log),
     orderService: new OrderService(
       orderRepository,
@@ -145,6 +145,7 @@ export function buildServices(
       userRepository,
       cartRepository,
       orderRepository,
+      invoiceRepository,
       paymentGateway,
       emailProvider,
       fastify.log,
@@ -155,7 +156,7 @@ export function buildServices(
       paymentGateway,
       emailProvider,
       fastify.log,
-      new ClerkIdentityProvider(clerkClient as any),
+      new ClerkIdentityProvider(clerkClient, fastify.log),
     ),
     adminService: new MetricService(productRepository, fastify.log),
   }

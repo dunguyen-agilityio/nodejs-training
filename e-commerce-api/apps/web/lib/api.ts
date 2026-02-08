@@ -94,3 +94,49 @@ export async function del<T>(
   })
   return handleResponse<T>(response)
 }
+
+export const API_ROUTES = {
+  AUTH: {
+    LOGIN: '/auth/login',
+    REGISTER: '/auth/register',
+  },
+  USER: {
+    PROFILE: '/users/me',
+    UPDATE_ROLE: '/users/update-role',
+  },
+  PRODUCT: {
+    GET: '/products',
+    GET_BY_ID: (id: string) => `/products/${id}`,
+    CREATE: '/admin/products',
+    UPDATE: (id: string) => `/admin/products/${id}`,
+    DELETE: (id: string) => `/admin/products/${id}`,
+  },
+  CATEGORY: {
+    GET: '/categories',
+    GET_BY_ID: (id: string) => `/categories/${id}`,
+    CREATE: '/admin/categories',
+    UPDATE: (id: string) => `/admin/categories/${id}`,
+    DELETE: (id: string) => `/admin/categories/${id}`,
+  },
+  CART: {
+    GET: '/cart',
+    ADD_ITEM: '/cart/add-item',
+    DELETE_ITEM: (id: string) => `/cart/items/${id}`,
+    UPDATE_ITEM: (id: string) => `/cart/items/${id}`,
+  },
+  ORDER: {
+    GET: '/orders',
+    GET_BY_ID: (id: string) => `/orders/${id}`,
+    CREATE: '/orders',
+    GET_ALL: '/admin/orders',
+    UPDATE: (id: string) => `/orders/${id}`,
+    DELETE: (id: string) => `/orders/${id}`,
+  },
+  CHECKOUT: {
+    PREPARE: '/checkout/orders/prepare',
+    CREATE: '/checkout/payment-intents',
+  },
+  METRIC: {
+    PRODUCT: '/metrics/product',
+  },
+}

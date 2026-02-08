@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { authenticate, validateRequest } from '#middlewares'
+import { validateRequest } from '#middlewares'
 
 import { HttpStatus } from '#types/http-status'
 
@@ -35,14 +35,14 @@ export const checkoutRoutes: FastifyPluginCallback = (
           [HttpStatus.INTERNAL_SERVER_ERROR]: CheckoutErrorResponseSchema,
         },
       },
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
     },
     container.createPaymentIntentHandler,
   )
   instance.post(
     '/orders/prepare',
     {
-      preHandler: [authenticate],
+      preHandler: [instance.authenticate],
       schema: {
         description: 'Prepare order for payment',
         tags: ['checkout'],

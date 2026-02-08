@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { post } from '@/lib/api'
+import { API_ROUTES, post } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
 import { Product } from '@/lib/types'
 
 interface DuplicateProductButtonProps {
@@ -25,7 +26,7 @@ export function DuplicateProductButton({
       setIsLoading(true)
 
       // Create a new product with duplicated data
-      await post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+      await post(getClientEndpoint(API_ROUTES.PRODUCT.CREATE), {
         name: `${product.name} (Copy)`,
         description: product.description,
         price: product.price,

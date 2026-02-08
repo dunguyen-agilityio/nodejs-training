@@ -28,7 +28,7 @@ export default fp(async function swaggerPlugin(fastify: FastifyInstance) {
           description: 'Development server',
         },
         {
-          url: 'https://api.example.com',
+          url: 'https://saundra-unawarded-shirlee.ngrok-free.dev',
           description: 'Production server',
         },
       ],
@@ -42,6 +42,7 @@ export default fp(async function swaggerPlugin(fastify: FastifyInstance) {
         { name: 'checkout', description: 'Checkout and payment endpoints' },
         { name: 'admin', description: 'Admin endpoints' },
         { name: 'metrics', description: 'Metrics and analytics endpoints' },
+        { name: 'users', description: 'User endpoints' },
       ],
       components: {
         securitySchemes: {

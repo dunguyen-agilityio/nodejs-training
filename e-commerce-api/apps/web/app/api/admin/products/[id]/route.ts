@@ -1,9 +1,7 @@
-import { auth } from '@clerk/nextjs/server'
-
 import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { del, put } from '@/lib/api'
+import { API_ROUTES, del, put } from '@/lib/api'
 import { createAuthorizationHeader } from '@/lib/auth'
 import { config } from '@/lib/config'
 
@@ -18,7 +16,7 @@ export async function PUT(
 
   try {
     const data = await put(
-      `${config.api.endpoint}/products/${id}`,
+      `${config.api.endpoint}${API_ROUTES.PRODUCT.UPDATE(id)}`,
       body,
       headers,
     )
@@ -40,7 +38,7 @@ export async function DELETE(
   const { id } = await params
 
   try {
-    await del(`${config.api.endpoint}/products/${id}`, headers)
+    await del(`${config.api.endpoint}${API_ROUTES.PRODUCT.DELETE(id)}`, headers)
 
     revalidatePath('/admin/products')
     revalidatePath('/')

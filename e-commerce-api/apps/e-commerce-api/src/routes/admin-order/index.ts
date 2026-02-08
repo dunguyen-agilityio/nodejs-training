@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { authenticate, authorizeAdmin } from '#middlewares'
-
 import { HttpStatus } from '#types/http-status'
 
 import { updateOrderStatusSchema } from '#schemas/admin-order'
@@ -18,7 +16,7 @@ export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.get(
     '/',
     {
-      preHandler: [authenticate, authorizeAdmin],
+      preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
         description: 'Admin: get all orders (paginated)',
         tags: ['admin', 'orders'],
@@ -39,7 +37,7 @@ export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {
   instance.patch(
     '/:id/status',
     {
-      preHandler: [authenticate, authorizeAdmin],
+      preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
         description: 'Admin: update order status',
         tags: ['admin', 'orders'],

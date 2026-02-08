@@ -1,8 +1,10 @@
 import { FastifyBaseLogger } from 'fastify'
+import { FromSchema } from 'json-schema-to-ts'
 
-import type { TProductRepository } from '#repositories'
+import type { TCategoryRepository, TProductRepository } from '#repositories'
 
 import {
+  BadRequestError,
   NotFoundError,
   Pagination,
   PartialProduct,
@@ -10,13 +12,16 @@ import {
   ProductQueryParams,
 } from '#types'
 
-import { Product } from '#entities'
+import { addProductSchema, updateProductSchema } from '#schemas/product'
+
+import { Category, Product } from '#entities'
 
 import { IProductService } from './type'
 
 export class ProductService implements IProductService {
   constructor(
     private productRepository: TProductRepository,
+    private categoryRepository: TCategoryRepository,
     private paymentGatewayProvider: PaymentGateway,
     private logger: FastifyBaseLogger,
   ) {}
@@ -71,51 +76,61 @@ export class ProductService implements IProductService {
     return product
   }
 
-  async saveProduct(payload: Omit<Product, 'id'>): Promise<Product> {
+  async saveProduct(
+    payload: FromSchema<typeof addProductSchema>,
+  ): Promise<Product> {
     this.logger.info(
       { name: payload.name, price: payload.price },
       'Creating new product',
     )
-    try {
-      const { price, name, images, description } = payload
 
-      const newProduct = await this.paymentGatewayProvider.createProduct({
-        name,
-        description,
-        images,
-        active: true,
-        default_price_data: {
-          currency: 'usd',
-          unit_amount: price * 100,
-        },
-      })
+    const { price, name, images, description, category: categoryName } = payload
 
-      this.logger.debug(
-        { productId: newProduct.id, name },
-        'Stripe product created',
-      )
+    const category = await this.categoryRepository.findOneBy({
+      name: categoryName,
+    })
 
-      const product = await this.productRepository.save({
-        ...payload,
-        id: newProduct.id,
-      })
-
-      this.logger.info(
-        { productId: product.id, name: product.name },
-        'Product created successfully',
-      )
-      return product
-    } catch (error) {
-      this.logger.error({ name: payload.name, error }, 'Error creating product')
-      throw error
+    if (!category) {
+      throw new BadRequestError(`Not found Category by name: ${categoryName}`)
     }
+
+    const newProduct = await this.paymentGatewayProvider.createProduct({
+      name,
+      description,
+      images,
+      active: true,
+      default_price_data: {
+        currency: 'usd',
+        unit_amount: price * 100,
+      },
+    })
+
+    this.logger.debug(
+      { productId: newProduct.id, name },
+      'Stripe product created',
+    )
+
+    const product = await this.productRepository.save({
+      ...payload,
+      id: newProduct.id,
+      category,
+    })
+    this.logger.info(
+      { productId: product.id, name: product.name },
+      'Product created successfully',
+    )
+    return { ...product, category }
   }
 
-  async updateProduct(id: string, body: PartialProduct): Promise<Product> {
+  async updateProduct(
+    id: string,
+    body: FromSchema<typeof updateProductSchema>,
+  ): Promise<Product> {
     this.logger.info(
       { productId: id, updates: Object.keys(body) },
       'Updating product',
     )
+
     const product = await this.getProductById(id)
 
     if (!product) {
@@ -123,9 +138,28 @@ export class ProductService implements IProductService {
       throw new NotFoundError(`Not found Product by ID: ${id}`)
     }
 
-    const updated = await this.productRepository.save({ ...product, ...body })
+    let category: Category | null = product.category
+
+    if (body.category) {
+      category = await this.categoryRepository.findOneBy({
+        name: body.category,
+      })
+
+      if (!category) {
+        throw new BadRequestError(
+          `Not found Category by name: ${body.category}`,
+        )
+      }
+    }
+
+    const updated = await this.productRepository.save({
+      ...product,
+      ...body,
+      category,
+    })
+
     this.logger.info({ productId: id }, 'Product updated successfully')
-    return updated
+    return { ...updated, category }
   }
 
   async deleteProduct(id: string): Promise<void> {

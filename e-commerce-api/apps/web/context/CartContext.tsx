@@ -2,7 +2,6 @@
 
 import { useAuth, useClerk } from '@clerk/nextjs'
 
-import { redirect } from 'next/navigation'
 import React, {
   createContext,
   useContext,
@@ -12,7 +11,8 @@ import React, {
 } from 'react'
 import { toast } from 'sonner'
 
-import { del, post, put } from '@/lib/api'
+import { API_ROUTES, del, post, put } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
 import { UnauthorizedError } from '@/lib/errors'
 import { CartItem, Product } from '@/lib/types'
 import { debounce, getCartTotal } from '@/lib/utils'
@@ -78,7 +78,7 @@ export function CartProvider({
         }
 
         const response = await post<CartAddResponse>(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/add`,
+          getClientEndpoint(API_ROUTES.CART.ADD_ITEM),
           {
             productId: product.id,
             quantity,
@@ -120,9 +120,7 @@ export function CartProvider({
 
   const removeFromCart = async (cartItemId: string) => {
     try {
-      await del(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/items/${cartItemId}`,
-      )
+      await del(getClientEndpoint(API_ROUTES.CART.DELETE_ITEM(cartItemId)))
       setCart((prevCart) => prevCart.filter((item) => item.id !== cartItemId))
       toast.success('Item removed from cart')
     } catch (error) {
@@ -136,12 +134,9 @@ export function CartProvider({
       return
     }
     try {
-      await put(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/cart/items/${cartItemId}`,
-        {
-          quantity,
-        },
-      )
+      await put(getClientEndpoint(API_ROUTES.CART.UPDATE_ITEM(cartItemId)), {
+        quantity,
+      })
       setCart((prevCart) =>
         prevCart.map((item) =>
           item.id === cartItemId ? { ...item, quantity } : item,

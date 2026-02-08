@@ -1,6 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryColumn,
+} from 'typeorm'
 
 import { InvoiceStatus } from '#types'
+import { InvoiceItem } from './InvoiceItem'
 
 @Entity()
 export class Invoice {
@@ -22,6 +29,9 @@ export class Invoice {
 
   @Column({ type: 'int', name: 'total_amount' })
   totalAmount: number // cents
+
+  @OneToMany(() => InvoiceItem, (item) => item.invoice)
+  items: InvoiceItem[]
 
   // state
   @Column({

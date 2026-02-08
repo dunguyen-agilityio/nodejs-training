@@ -1,4 +1,4 @@
-import { get } from './api'
+import { API_ROUTES, get } from './api'
 import { fetchCategories } from './category'
 import { config } from './config'
 import { ApiPagination, ApiResponse, CartItem, Product } from './types'
@@ -46,7 +46,7 @@ export async function getProducts({
           }
         }
       >
-    >(`${config.api.endpoint}/products?${params.toString()}`)
+    >(`${config.api.endpoint}${API_ROUTES.PRODUCT.GET}?${params.toString()}`)
 
     const { currentPage, totalItems, totalPages } = response.meta.pagination
 
@@ -76,11 +76,16 @@ export async function getProducts({
 }
 
 export async function getProductById(id: string) {
-  return get<Product>(`${config.api.endpoint}/products/${id}`)
+  return get<Product>(
+    `${config.api.endpoint}${API_ROUTES.PRODUCT.GET_BY_ID(id)}`,
+  )
 }
 
 export async function getCart(headers: HeadersInit = {}) {
-  return get<ApiResponse<CartItem[]>>(`${config.api.endpoint}/cart`, headers)
+  return get<ApiResponse<CartItem[]>>(
+    `${config.api.endpoint}${API_ROUTES.CART.GET}`,
+    headers,
+  )
 }
 
 export async function getCategories() {
