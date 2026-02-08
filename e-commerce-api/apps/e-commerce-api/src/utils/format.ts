@@ -41,18 +41,16 @@ export function formatStripeDate(
   }).format(new Date(unixSeconds * 1000))
 }
 
-export const formatPaymentMethod = (
-  type: PaymentMethodType,
-  paymentMethod: PaymentMethod,
-) => {
-  if (!paymentMethod[type]) return ''
+export const formatPaymentMethod = (paymentMethod: PaymentMethod) => {
+  const pmtype = paymentMethod.type
+  if (!paymentMethod[pmtype]) return ''
 
-  switch (type) {
+  switch (pmtype) {
     case 'card':
-      return `${paymentMethod[type].brand.toUpperCase()} •••• ${paymentMethod[type].last4}`
+      return `${paymentMethod[pmtype].brand.toUpperCase()} •••• ${paymentMethod[pmtype].last4}`
 
     case 'link':
-      return `Link ${paymentMethod[type].email}`
+      return `Link ${paymentMethod[pmtype].email}`
 
     default:
       return ''

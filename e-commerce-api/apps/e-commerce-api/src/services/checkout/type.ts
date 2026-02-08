@@ -1,13 +1,11 @@
 import { Invoice, TResponse } from '#types'
 
-import { CartItem } from '#entities'
-
 export interface ICheckoutService {
   generatePaymentIntent(
     payload: { currency: string },
     userId: string,
     userStripeId: string,
-  ): Promise<TResponse<Invoice & { items: CartItem[] }>>
+  ): Promise<TResponse<Invoice>>
   prepareOrderForPayment(userId: string, stripeId: string): Promise<Invoice>
   handleSuccessfulPayment(stripeId: string, invoiceId: string): Promise<void>
 }

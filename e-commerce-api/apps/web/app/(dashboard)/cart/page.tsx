@@ -3,8 +3,15 @@
 import { useAuth } from '@clerk/nextjs'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { toast } from 'sonner'
 
+import { API_ROUTES, post } from '@/lib/api'
+import { createAuthorizationHeader } from '@/lib/auth'
+import { getClientEndpoint } from '@/lib/client'
+import { config } from '@/lib/config'
+import { PaymentIntent } from '@/lib/types'
 import { debounce, formatCurrency } from '@/lib/utils'
 
 import { useCart } from '@/context/CartContext'
@@ -16,12 +23,33 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartTotal, status } = useCart()
   const [localCart, setLocalCart] = useState(cart)
   const loadingRef = useRef<LoadingRef | null>(null)
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const { isLoaded } = useAuth()
 
   useEffect(() => {
     setLocalCart(cart)
   }, [cart])
+
+  const handleCheckout = (e: React.MouseEvent<HTMLButtonElement>) => {
+    startTransition(async () => {
+      try {
+        if (status === 'out_of_stock') {
+          e.preventDefault()
+          return
+        }
+
+        const { clientSecret } = await post<PaymentIntent>(
+          getClientEndpoint(API_ROUTES.CHECKOUT.CREATE),
+          { currency: 'usd' },
+        )
+        router.push(`/checkout?clientSecret=${clientSecret}`)
+      } catch {
+        toast.error('Failed to checkout. Please try again later.')
+      }
+    })
+  }
 
   const handleUpdateQuantity = debounce(
     (itemId: string, newQuantity: number) => {
@@ -99,20 +127,13 @@ export default function CartPage() {
               <span>Total</span>
               <span>{formatCurrency(cartTotal)}</span>
             </div>
-            <Link
-              href="/checkout"
+            <button
               aria-disabled={status === 'out_of_stock'}
-              onClick={(e) => {
-                if (status === 'out_of_stock') {
-                  e.preventDefault()
-                  return
-                }
-                loadingRef.current?.showLoading()
-              }}
+              onClick={handleCheckout}
               className={`w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors ${status === 'out_of_stock' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Proceed to Checkout
-            </Link>
+              {isPending ? 'Processing...' : 'Proceed to Checkout'}
+            </button>
           </div>
         </div>
       </main>

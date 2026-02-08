@@ -41,7 +41,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   const headers = await createAuthorizationHeader()
 
   const response = await patch<ApiResponse<Order>>(
-    `${config.api.endpoint}${API_ROUTES.ORDER.UPDATE(orderId)}`,
+    `${config.api.endpoint}${API_ROUTES.ORDER.UPDATE_STATUS(orderId)}`,
     { status },
     headers,
   )

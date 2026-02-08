@@ -143,9 +143,7 @@ export function buildServices(
     ),
     checkoutService: new CheckoutService(
       userRepository,
-      cartRepository,
       orderRepository,
-      invoiceRepository,
       paymentGateway,
       emailProvider,
       fastify.log,

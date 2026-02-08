@@ -1,7 +1,8 @@
 import { API_ROUTES, get } from './api'
+import { createAuthorizationHeader } from './auth'
 import { fetchCategories } from './category'
 import { config } from './config'
-import { ApiPagination, ApiResponse, CartItem, Product } from './types'
+import { ApiPagination, ApiResponse, Cart, CartItem, Product } from './types'
 
 export interface GetProductsParams {
   search?: string
@@ -81,11 +82,9 @@ export async function getProductById(id: string) {
   )
 }
 
-export async function getCart(headers: HeadersInit = {}) {
-  return get<ApiResponse<CartItem[]>>(
-    `${config.api.endpoint}${API_ROUTES.CART.GET}`,
-    headers,
-  )
+export async function getCart() {
+  const headers = await createAuthorizationHeader()
+  return get<Cart>(`${config.api.endpoint}${API_ROUTES.CART.GET}`, headers)
 }
 
 export async function getCategories() {

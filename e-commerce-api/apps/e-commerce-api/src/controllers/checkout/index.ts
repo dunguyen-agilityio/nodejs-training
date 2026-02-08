@@ -5,8 +5,6 @@ import { ICheckoutService } from '#services/types'
 
 import { UnexpectedError } from '#types'
 
-import { CartItemDto } from '#dtos/cart-item'
-
 import {
   createPaymentIntentSchema,
   paymentSuccessSchema,
@@ -38,7 +36,7 @@ export class CheckoutController
       stripeId,
     )
 
-    const { confirmation_secret, items } = invoice
+    const { confirmation_secret } = invoice
 
     if (!confirmation_secret) {
       throw new UnexpectedError()
@@ -47,7 +45,6 @@ export class CheckoutController
     const { client_secret } = confirmation_secret
     this.sendItem(reply, {
       clientSecret: client_secret,
-      items: items.map((item) => new CartItemDto(item).toJSON()),
     })
   }
 

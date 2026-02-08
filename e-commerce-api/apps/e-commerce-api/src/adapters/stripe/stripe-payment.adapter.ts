@@ -63,13 +63,15 @@ export class StripePaymentAdapter implements PaymentGateway {
       amount: convertToSubcurrency(amount),
       automatic_payment_methods: { enabled: true },
     })
-    return paymentIntent
+    return paymentIntent as unknown as TResponse<PaymentIntent>
   }
 
   async getPaymentIntents(
     paymentIntentId: string,
   ): Promise<TResponse<PaymentIntent>> {
-    return await this.stripe.paymentIntents.retrieve(paymentIntentId)
+    return (await this.stripe.paymentIntents.retrieve(
+      paymentIntentId,
+    )) as unknown as TResponse<PaymentIntent>
   }
 
   async createInvoice({
@@ -112,15 +114,15 @@ export class StripePaymentAdapter implements PaymentGateway {
   }
 
   async getPaymentIntent(id: string): Promise<TResponse<PaymentIntent>> {
-    return await this.stripe.paymentIntents.retrieve(id, {
-      expand: ['payment_method.card'],
-    })
+    return (await this.stripe.paymentIntents.retrieve(id, {
+      expand: ['payment_method', 'latest_charge'],
+    })) as unknown as TResponse<PaymentIntent>
   }
 
   async getInvoice(id: string): Promise<TResponse<Invoice>> {
     try {
       const invoice = await this.stripe.invoices.retrieve(id, {
-        expand: ['payments', 'payment_intent.latest_charge'],
+        expand: ['payments.data.payment.payment_intent'],
       })
       return invoice as TResponse<Invoice>
     } catch (error) {
@@ -130,7 +132,7 @@ export class StripePaymentAdapter implements PaymentGateway {
   }
 
   async getCharge(id: string): Promise<Charge> {
-    return await this.stripe.charges.retrieve(id)
+    return (await this.stripe.charges.retrieve(id)) as unknown as Charge
   }
 
   async getInvoicePayment(
@@ -141,7 +143,7 @@ export class StripePaymentAdapter implements PaymentGateway {
         'payment.payment_intent.payment_method',
         'payment.payment_intent.latest_charge',
       ],
-    })) as TResponse<InvoicePaymentExpand>
+    })) as unknown as TResponse<InvoicePaymentExpand>
   }
 
   async getProducts(): Promise<TResponse<ApiList<IProduct>>> {

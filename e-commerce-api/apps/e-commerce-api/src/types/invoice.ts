@@ -75,7 +75,7 @@ export interface PaymentMethod {
   created: number
   customer: string | Customer | null
   customer_account: string | null
-  type: PaymentMethodType | string
+  type: PaymentMethodType
 }
 
 export interface Invoice {

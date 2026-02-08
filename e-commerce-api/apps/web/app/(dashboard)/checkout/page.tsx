@@ -1,49 +1,27 @@
 import Link from 'next/link'
 
-import { API_ROUTES, post } from '@/lib/api'
-import { createAuthorizationHeader } from '@/lib/auth'
-import { config } from '@/lib/config'
-import { PaymentIntent } from '@/lib/types'
+import { getCart } from '@/lib/data'
 import { formatCurrency, getCartTotal } from '@/lib/utils'
 
 import CheckoutForm from './CheckoutForm'
 import Provider from './Provider'
 
-export default async function CheckoutPage() {
-  const getPaymentIntent = async (
-    currency = 'usd',
-  ): Promise<
-    PaymentIntent & {
-      error?: string
-    }
-  > => {
-    try {
-      const headers = await createAuthorizationHeader()
-      return await post<PaymentIntent>(
-        `${config.api.endpoint}${API_ROUTES.CHECKOUT.CREATE}`,
-        { currency },
-        headers,
-      )
-    } catch (error) {
-      console.error('Error: ', error)
-      let message = 'Create Payment Intent failed'
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ clientSecret: string }>
+}) {
+  const { clientSecret } = await searchParams
 
-      if (error instanceof Error) {
-        message = error.message
-      }
+  const data = await getCart()
 
-      return { error: message, clientSecret: '', items: [] }
-    }
-  }
-  const { clientSecret, items, error } = await getPaymentIntent()
-
-  if (error) {
-    throw new Error(error)
+  if (!data) {
+    throw new Error('Cart not found')
   }
 
-  const cartTotal = getCartTotal(items)
+  const cartTotal = getCartTotal(data.items)
 
-  if (items.length === 0) {
+  if (data.items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -54,21 +32,6 @@ export default async function CheckoutPage() {
           className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90"
         >
           Continue Shopping
-        </Link>
-      </div>
-    )
-  }
-
-  // Handle error from checkout service
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-16 gap-4 text-center">
-        <h1 className="text-xl font-bold mb-4 text-foreground">{error}</h1>
-        <Link
-          href="/cart"
-          className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90"
-        >
-          Review Cart
         </Link>
       </div>
     )
@@ -89,7 +52,7 @@ export default async function CheckoutPage() {
             Order Summary
           </h2>
           <div className="space-y-4 mb-4">
-            {items.map((item) => (
+            {data.items.map((item) => (
               <div
                 key={item.productId}
                 className="flex justify-between items-center text-sm"

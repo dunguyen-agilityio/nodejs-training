@@ -27,7 +27,6 @@ export type CheckoutItem = Pick<
 
 export interface PaymentIntent {
   clientSecret: string
-  items: CheckoutItem[]
 }
 
 export interface Cart {

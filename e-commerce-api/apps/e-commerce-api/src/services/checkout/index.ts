@@ -7,7 +7,6 @@ import env from '#env'
 
 import type {
   TCartRepository,
-  TInvoiceRepository,
   TOrderRepository,
   TUserRepository,
 } from '#repositories'
@@ -22,37 +21,29 @@ import {
   BadRequestError,
   EmailProvider,
   Invoice,
-  InvoiceLineItem,
-  InvoiceStatus,
   NotFoundError,
-  PaymentDetails,
   PaymentGateway,
-  PaymentMethodType,
+  PaymentMethod,
   StockReservationStatus,
   TResponse,
   UnexpectedError,
 } from '#types'
 
-import { CartItemDto } from '#dtos/cart-item'
-
-import {
-  Cart,
-  CartItem,
-  Invoice as InvoiceEntity,
-  InvoiceItem,
-  OrderItem,
-  Product,
-  StockReservation,
-} from '#entities'
+import { Cart, CartItem, OrderItem, Product, StockReservation } from '#entities'
 
 import { ConfirmationEmailPayload, ICheckoutService } from './type'
+
+export type InvoiceItemData = {
+  productName: string
+  unitPrice: number
+  quantity: number
+  productId: string
+}
 
 export class CheckoutService implements ICheckoutService {
   constructor(
     private userRepository: TUserRepository,
-    private cartRepository: TCartRepository,
     private orderRepository: TOrderRepository,
-    private invoiceRepository: TInvoiceRepository,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
     private logger: FastifyBaseLogger,
@@ -66,7 +57,7 @@ export class CheckoutService implements ICheckoutService {
     payload: { currency: string },
     userId: string,
     userStripeId: string,
-  ): Promise<TResponse<Invoice & { items: CartItem[] }>> {
+  ): Promise<TResponse<Invoice>> {
     this.logger.debug(
       { userId, userStripeId, currency: payload.currency },
       'Generating payment intent',
@@ -125,10 +116,7 @@ export class CheckoutService implements ICheckoutService {
         'Payment intent generated successfully',
       )
       await queryRunner.commitTransaction()
-      return {
-        ...finalizeInvoice,
-        items: cart.items.map((item) => new CartItemDto(item)),
-      }
+      return finalizeInvoice
     } catch (error) {
       await queryRunner.rollbackTransaction()
       throw error
@@ -146,12 +134,10 @@ export class CheckoutService implements ICheckoutService {
     stripeId: string,
   ): Promise<Invoice> {
     this.logger.debug({ userId, stripeId }, 'Preparing order for payment')
-    const cart = await this._prepareCheckout(userId)
+    await this._prepareCheckout(userId)
 
     const invoice =
       await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId)
-
-    await this._createLocalInvoice(userId, cart, invoice)
 
     this.logger.info(
       { userId, invoiceId: invoice.id },
@@ -189,25 +175,25 @@ export class CheckoutService implements ICheckoutService {
         'User found for payment processing',
       )
 
-      const in1 = await this.invoiceRepository.findOne({
-        where: { id: invoiceId },
-        relations: { items: true },
-      })
-      this.logger.info(in1, 'Invoice found')
-
       const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
       if (!invoice || invoice.status !== 'paid') {
         throw new UnexpectedError('Invoice not paid or not found')
       }
 
+      const { payment_intent } = invoice.payments?.data[0]?.payment ?? {}
+
+      const payment_intentID =
+        typeof payment_intent === 'string' ? payment_intent : payment_intent?.id
+
+      const paymentIntent = await this.paymentGatewayProvider.getPaymentIntent(
+        payment_intentID ?? '',
+      )
+      const items = formatInvoiceItems(invoice)
+
       const cart = await this._getCart(queryRunner, user.id)
 
-      const { paymentDetails, invoiceItems } =
-        await this._getPaymentDetailsAndItems(invoiceId, invoice)
-
       await this._updateStockAndReservations(queryRunner, cart.id)
-      await this._createOrder(queryRunner, user.id, invoice, invoiceItems)
-      await this._updateLocalInvoice(queryRunner, invoice.id, paymentDetails)
+      await this._createOrder(queryRunner, user.id, invoice)
       await queryRunner.manager.delete(CartItem, { cartId: cart.id })
 
       await queryRunner.commitTransaction()
@@ -224,20 +210,18 @@ export class CheckoutService implements ICheckoutService {
         invoice_pdf,
       } = invoice
       const { email, name } = user
-      const { paid_at, payment_method, receipt_url } = paymentDetails
+      const payment_method =
+        paymentIntent.payment_method ?? ({} as PaymentMethod)
+      const { receipt_url } = paymentIntent.latest_charge ?? {}
+      const formattedPaymenMethod = formatPaymentMethod(payment_method)
 
-      const formattedPaymenMethod = formatPaymentMethod(
-        payment_method.type as PaymentMethodType,
-        payment_method,
-      )
-
-      await this._sendConfirmationEmail(invoiceItems, {
+      await this._sendConfirmationEmail(items, {
         currency,
         customer_email: email,
         customer_name: name,
         invoice_url: invoice_pdf!,
         invoice_number: invoice_number!,
-        paid_at,
+        paid_at: invoice.status_transitions.paid_at!,
         payment_method: formattedPaymenMethod,
         receipt_number: receipt_number!,
         receipt_url,
@@ -355,93 +339,6 @@ export class CheckoutService implements ICheckoutService {
   }
 
   /**
-   * @description Creates a local representation of the Stripe invoice in the application's database.
-   * It initiates a database transaction to ensure atomicity.
-   */
-  private async _createLocalInvoice(
-    userId: string,
-    cart: Cart,
-    paymentInvoice: Invoice,
-  ) {
-    this.logger.debug(
-      { userId, cartId: cart.id, invoiceId: paymentInvoice.id },
-      'Creating local invoice',
-    )
-    const { id: cartId } = cart
-    const { lines, currency, total, id: invoiceId } = paymentInvoice
-
-    const queryRunner = this.createQueryRunner()
-
-    try {
-      await queryRunner.connect()
-      await queryRunner.startTransaction()
-
-      const invoice = queryRunner.manager.create(InvoiceEntity, {
-        cartId,
-        currency,
-        status: InvoiceStatus.OPEN,
-        totalAmount: total,
-        userId,
-        id: invoiceId,
-      })
-
-      await this._createInvoiceItems(queryRunner, invoice.id, lines.data)
-
-      await queryRunner.manager.save(invoice)
-
-      await queryRunner.commitTransaction()
-      this.logger.info(
-        { userId, invoiceId },
-        'Local invoice created successfully',
-      )
-    } catch {
-      await queryRunner.rollbackTransaction()
-      throw new UnexpectedError('Failed to create local invoice')
-    } finally {
-      await queryRunner.release()
-    }
-  }
-
-  /**
-   * @description Create and save local invoice items within a transaction.
-   */
-  private async _createInvoiceItems(
-    queryRunner: QueryRunner,
-    invoiceId: string,
-    invoiceLineItems: InvoiceLineItem[],
-  ) {
-    this.logger.debug(
-      { invoiceId, itemCount: invoiceLineItems.length },
-      'Creating invoice items',
-    )
-    try {
-      for (const line of invoiceLineItems) {
-        const { product } = line.pricing?.price_details || {}
-
-        const total = line.subtotal
-
-        const invoiceItem = queryRunner.manager.create(InvoiceItem, {
-          invoiceId,
-          product: { id: product! },
-          quantity: line.quantity ?? 1,
-          total,
-          unitPrice: total / (line.quantity ?? 1),
-          id: line.id,
-        })
-
-        await queryRunner.manager.save(invoiceItem)
-      }
-
-      this.logger.info(
-        { invoiceId, itemCount: invoiceLineItems.length },
-        'Invoice items created successfully',
-      )
-    } catch {
-      throw new UnexpectedError('Failed to create local invoice items')
-    }
-  }
-
-  /**
    * @description Retrieve an active cart for a user within a transaction.
    */
   private async _getCart(
@@ -477,24 +374,24 @@ export class CheckoutService implements ICheckoutService {
    * @description Validate cart items availability and stock.
    */
   private _validateCart(cartItems: CartItem[]) {
-    const unavailableProduct = cartItems.find(
-      (item) => item.product.status !== 'published',
-    )
+    let error = ''
 
-    if (unavailableProduct) {
-      throw new UnexpectedError(
-        `Product ${unavailableProduct.product.name} is not available`,
-      )
-    }
+    cartItems.some((item) => {
+      if (item.product.status !== 'published') {
+        error = `Product ${item.product.name} is not available`
+        return true
+      }
 
-    const outOfStockProduct = cartItems.find(
-      (item) => item.quantity > item.product.stock,
-    )
+      if (item.quantity > item.product.stock) {
+        error = `Product ${item.product.name} is out of stock`
+        return true
+      }
 
-    if (outOfStockProduct) {
-      throw new UnexpectedError(
-        `Product ${outOfStockProduct.product.name} is out of stock`,
-      )
+      return false
+    })
+
+    if (error) {
+      throw new UnexpectedError(error)
     }
 
     const totalAmount = cartItems.reduce(
@@ -504,58 +401,6 @@ export class CheckoutService implements ICheckoutService {
 
     if (totalAmount < 1) {
       throw new UnexpectedError('Total amount is less than 1')
-    }
-  }
-
-  /**
-   * @description Fetch payment details and local invoice items from Stripe.
-   */
-  private async _getPaymentDetailsAndItems(
-    invoiceId: string,
-    invoice: TResponse<Invoice>,
-  ): Promise<{
-    paymentDetails: PaymentDetails
-    invoiceItems: InvoiceItem[]
-  }> {
-    this.logger.debug(
-      { invoiceId },
-      'Fetching payment details and invoice items',
-    )
-    const { payments } = invoice
-    const { id: invoicePaymentId } = payments?.data[0] || {}
-    if (!invoicePaymentId) {
-      throw new NotFoundError('Invoice Payment not found')
-    }
-
-    const invoicePayment =
-      await this.paymentGatewayProvider.getInvoicePayment(invoicePaymentId)
-    const { payment, status_transitions } = invoicePayment || {}
-    const {
-      latest_charge,
-      payment_method,
-      id: paymentIntentId,
-    } = payment.payment_intent || {}
-    if (!latest_charge) {
-      throw new UnexpectedError('Missing latest charge')
-    }
-
-    const invoiceItems = await this.cartRepository.manager.find(InvoiceItem, {
-      where: { invoice: { id: invoiceId } },
-      relations: { product: true },
-    })
-
-    this.logger.info(
-      { invoiceId, itemCount: invoiceItems.length },
-      'Payment details and items fetched successfully',
-    )
-    return {
-      paymentDetails: {
-        receipt_url: latest_charge.receipt_url!,
-        payment_method,
-        paymentIntentId,
-        paid_at: status_transitions.paid_at!,
-      },
-      invoiceItems,
     }
   }
 
@@ -613,16 +458,13 @@ export class CheckoutService implements ICheckoutService {
     queryRunner: QueryRunner,
     userId: string,
     invoice: TResponse<Invoice>,
-    invoiceItems: InvoiceItem[],
   ) {
+    const items = formatInvoiceItems(invoice)
     this.logger.debug(
-      { userId, invoiceId: invoice.id, itemCount: invoiceItems.length },
+      { userId, invoiceId: invoice.id, itemCount: items.length },
       'Creating order',
     )
-    const totalAmount = invoiceItems.reduce(
-      (prev, item) => prev + item.total,
-      0,
-    )
+    const totalAmount = items.reduce((prev, item) => prev + item.total, 0)
 
     const order = await this.orderRepository.createOrder(queryRunner, userId, {
       status: 'processing',
@@ -631,11 +473,11 @@ export class CheckoutService implements ICheckoutService {
     })
 
     const orderItems = await Promise.all(
-      invoiceItems.map(async ({ unitPrice, quantity, product }) => {
+      items.map(async ({ unitPrice, quantity, productId }) => {
         return queryRunner.manager.create(OrderItem, {
           order,
           priceAtPurchase: unitPrice,
-          product,
+          product: { id: productId },
           quantity,
         })
       }),
@@ -643,32 +485,14 @@ export class CheckoutService implements ICheckoutService {
 
     await queryRunner.manager.save(orderItems)
     this.logger.info(
-      { userId, invoiceId: invoice.id, itemCount: invoiceItems.length },
+      { userId, invoiceId: invoice.id, itemCount: items.length },
       'Order created successfully',
     )
     return order
   }
 
-  /**
-   * @description Update the status and payment details of the local invoice after a successful payment.
-   */
-  private async _updateLocalInvoice(
-    queryRunner: QueryRunner,
-    invoiceId: string,
-    paymentDetails: PaymentDetails,
-  ) {
-    this.logger.debug({ invoiceId }, 'Updating local invoice')
-
-    await queryRunner.manager.update(InvoiceEntity, invoiceId, {
-      status: InvoiceStatus.PAID,
-      paidAt: new Date((paymentDetails.paid_at || Date.now()) * 1000),
-      paymentIntentId: paymentDetails.paymentIntentId,
-    })
-    this.logger.info({ invoiceId }, 'Local invoice updated successfully')
-  }
-
   private async _sendConfirmationEmail(
-    invoiceItems: InvoiceItem[],
+    invoiceItems: InvoiceItemData[],
     {
       paid_at,
       receipt_url,
@@ -702,11 +526,11 @@ export class CheckoutService implements ICheckoutService {
         payment_method,
         invoice_url,
         receipt_url: receipt_url,
-        items: invoiceItems.map(({ unitPrice, quantity, total, product }) => ({
+        items: invoiceItems.map(({ unitPrice, quantity, productName }) => ({
           quantity,
           unit_price: formatStripeAmount(unitPrice, currency),
-          total: formatStripeAmount(total, currency),
-          name: product.name,
+          total: formatStripeAmount(unitPrice * quantity, currency),
+          name: productName,
         })),
       },
     }
@@ -717,4 +541,17 @@ export class CheckoutService implements ICheckoutService {
       'Confirmation email sent successfully',
     )
   }
+}
+
+const formatInvoiceItems = (invoice: Invoice) => {
+  const items = invoice.lines.data.map((item) => ({
+    productName: item.description ?? '',
+    unitPrice: parseFloat(item.pricing?.unit_amount_decimal || '0') / 100,
+    quantity: item.quantity ?? 0,
+    currency: item.currency,
+    total: item.amount,
+    productId: item.pricing?.price_details?.product ?? '',
+  }))
+
+  return items
 }

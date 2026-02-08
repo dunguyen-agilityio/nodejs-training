@@ -61,7 +61,8 @@ export interface PaymentIntent {
   customer_account: string | null
   description: string | null
   status: PaymentIntentStatus
-  payment_method: string | PaymentMethod | null
+  payment_method: PaymentMethod | null
+  latest_charge: Charge
 }
 
 export interface Charge {
@@ -80,10 +81,10 @@ export interface Charge {
   description: string | null
   paid: boolean
   payment_intent: string | PaymentIntent | null
-  payment_method: string | null
+  payment_method: PaymentMethod
   receipt_email: string | null
   receipt_number: string | null
-  receipt_url: string | null
+  receipt_url: string
 }
 
 /**
