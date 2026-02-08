@@ -68,6 +68,9 @@ export function ProductActionsDropdown({
       case 'draft':
         await updateStatus('draft')
         break
+      case 'restore':
+        await updateStatus('published')
+        break
       case 'delete':
         setConfirmAction('delete')
         break
@@ -143,21 +146,33 @@ export function ProductActionsDropdown({
           onAction={handleAction}
           variant="flat"
           className="shadow-lg bg-background z-50 rounded-md border border-default-200"
+          disabledKeys={
+            product.status === 'deleted' ? ['edit', 'duplicate'] : []
+          }
         >
           <DropdownSection title="Actions" showDivider>
             <DropdownItem
               key="edit"
               startContent={<Edit className="h-4 w-4" />}
               description="Edit details"
+              className="data-[disabled=true]:opacity-50 data-[disabled=true]:cursor-not-allowed"
             />
             <DropdownItem
               key="duplicate"
               startContent={<Copy className="h-4 w-4" />}
               description="Duplicate"
+              className="data-[disabled=true]:opacity-50 data-[disabled=true]:cursor-not-allowed"
             />
           </DropdownSection>
 
           <DropdownSection title="Status" showDivider>
+            {product.status === 'deleted' ? (
+              <DropdownItem
+                key="restore"
+                startContent={<Edit className="h-4 w-4" />}
+                description="Restore"
+              />
+            ) : null}
             {product.status !== 'published' ? (
               <DropdownItem
                 key="publish"
