@@ -51,7 +51,7 @@ export class StripePaymentAdapter implements PaymentGateway {
   async createProduct(
     params: ProductCreateParams,
   ): Promise<TResponse<IProduct>> {
-    return await this.stripe.products.create(params)
+    return (await this.stripe.products.create(params)) as TResponse<IProduct>
   }
 
   async createPaymentIntents({
@@ -146,8 +146,19 @@ export class StripePaymentAdapter implements PaymentGateway {
     })) as unknown as TResponse<InvoicePaymentExpand>
   }
 
-  async getProducts(): Promise<TResponse<ApiList<IProduct>>> {
-    const products = await this.stripe.products.list()
+  async getProducts({
+    starting_after,
+    limit = 10,
+  }: {
+    starting_after?: string
+    limit?: number
+  }): Promise<TResponse<ApiList<IProduct>>> {
+    const products = (await this.stripe.products.list({
+      active: true,
+      limit,
+      expand: ['data.default_price'],
+      ...(starting_after && { starting_after }),
+    })) as TResponse<ApiList<IProduct>>
     return products
   }
 

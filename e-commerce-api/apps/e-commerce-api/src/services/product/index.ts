@@ -7,7 +7,6 @@ import {
   BadRequestError,
   NotFoundError,
   Pagination,
-  PartialProduct,
   PaymentGateway,
   ProductQueryParams,
 } from '#types'
@@ -136,6 +135,12 @@ export class ProductService implements IProductService {
     if (!product) {
       this.logger.error({ productId: id }, 'Product not found for update')
       throw new NotFoundError(`Not found Product by ID: ${id}`)
+    }
+
+    if (body.stock !== undefined && body.stock < (product.reservedStock || 0)) {
+      throw new BadRequestError(
+        `Stock cannot be less than reserved stock (${product.reservedStock})`,
+      )
     }
 
     let category: Category | null = product.category

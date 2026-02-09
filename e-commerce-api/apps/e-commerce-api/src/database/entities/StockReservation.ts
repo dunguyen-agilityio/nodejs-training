@@ -28,4 +28,7 @@ export class StockReservation {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
+
+  @Column({ name: 'invoice_id', type: 'varchar', nullable: true })
+  invoiceId: string
 }

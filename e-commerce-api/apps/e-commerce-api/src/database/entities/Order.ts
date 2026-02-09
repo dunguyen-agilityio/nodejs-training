@@ -13,6 +13,7 @@ export type OrderStatus =
   | 'shipped'
   | 'delivered'
   | 'cancelled'
+  | 'paid'
 
 @Entity({ name: 'orders' })
 export class Order extends BaseWithCreatedAndUpdated {
@@ -29,10 +30,11 @@ export class Order extends BaseWithCreatedAndUpdated {
   @Column({ name: 'invoice_id', type: 'varchar', nullable: true })
   invoiceId: string
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
-    cascade: true,
-  })
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   items?: OrderItem[]
+
+  @Column({ name: 'payment_secret', type: 'varchar', nullable: true })
+  paymentSecret: string
 
   constructor(order: BaseWithCreatedAndUpdatedProps<Order>) {
     super()

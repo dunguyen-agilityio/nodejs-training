@@ -18,4 +18,6 @@ export abstract class AbstractOrderRepository extends BaseRepository<Order> {
     userId: string,
     order: Partial<Order>,
   ): Promise<Order>
+
+  abstract hasPendingOrder(userId: string): Promise<boolean>
 }

@@ -5,6 +5,4 @@ export { AbstractCartItemRepository as TCartItemRepository } from './cart-item/t
 export { AbstractCategoryRepository as TCategoryRepository } from './category/type'
 export { AbstractOrderRepository as TOrderRepository } from './order/type'
 export { AbstractOrderItemRepository as TOrderItemRepository } from './order-item/type'
-export { AbstractInvoiceItemRepository as TInvoiceItemRepository } from './invoice-item/type'
-export { AbstractInvoiceRepository as TInvoiceRepository } from './invoice/type'
 export { AbstractStockReservationRepository as TStockreservationRepository } from './stock-reservation/type'

@@ -178,7 +178,7 @@ describe('AuthService', () => {
       expect(mailProviderMock.sendWithTemplate).toHaveBeenCalledWith(
         expect.objectContaining({
           to: newUserBody.email,
-          templateId: env.sendgrid.templates.registerSuccess,
+          templateId: env.mail.templates.registerSuccess,
           dynamicTemplateData: expect.objectContaining({
             name: newUserBody.name,
             email: newUserBody.email,

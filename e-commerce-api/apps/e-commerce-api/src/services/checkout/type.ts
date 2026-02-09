@@ -1,13 +1,15 @@
 import { Invoice, TResponse } from '#types'
 
+import { Order } from '#entities'
+
 export interface ICheckoutService {
   generatePaymentIntent(
     payload: { currency: string },
     userId: string,
     userStripeId: string,
-  ): Promise<TResponse<Invoice>>
-  prepareOrderForPayment(userId: string, stripeId: string): Promise<boolean>
+  ): Promise<TResponse<Invoice> & { order: Order }>
   handleSuccessfulPayment(stripeId: string, invoiceId: string): Promise<void>
+  releaseExpiredStockReservations(): Promise<void>
 }
 
 export interface ConfirmationEmailPayload {

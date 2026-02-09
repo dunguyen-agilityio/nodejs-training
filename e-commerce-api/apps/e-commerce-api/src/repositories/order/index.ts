@@ -14,6 +14,13 @@ export class OrderRepository extends AbstractOrderRepository {
     })
   }
 
+  async hasPendingOrder(userId: string): Promise<boolean> {
+    const count = await this.count({
+      where: { user: { id: userId }, status: 'pending' },
+    })
+    return count > 0
+  }
+
   async findOrdersByUserId(
     userId: string,
     params: OrderQueryParams,
@@ -56,7 +63,7 @@ export class OrderRepository extends AbstractOrderRepository {
         ...dateCondition,
       },
       order: { updatedAt: 'DESC' },
-      relations: { items: { product: true } },
+      relations: { items: { product: true }, user: true },
       take: pageSize,
       skip: (page - 1) * pageSize,
     })

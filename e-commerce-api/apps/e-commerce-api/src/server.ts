@@ -14,6 +14,7 @@ import { authenticate, authorizeAdmin } from '#middlewares'
 import { env } from './configs/env'
 import { errorHandler } from './middlewares/error-handler'
 import { requestLogger, responseLogger } from './middlewares/request-logger'
+import cronPlugin from './plugins/cron.plugin'
 import sendgridPlugin from './plugins/sendgrid.plugin'
 import stripePlugin from './plugins/stripe.plugin'
 import swaggerPlugin from './plugins/swagger.plugin'
@@ -73,6 +74,8 @@ fastify.decorate('clerk', {
 AppDataSource.initialize()
   .then((dataSource) => {
     buildContainer(fastify, dataSource)
+
+    fastify.register(cronPlugin)
 
     fastify.register(
       (instance, _opts, done) => {

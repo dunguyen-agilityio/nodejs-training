@@ -12,7 +12,7 @@ export class CartItemDto extends CartItem {
       productName: this.product.name,
       productImage: this.product.images[0],
       productPrice: this.product.price,
-      productStock: this.product.stock,
+      productStock: this.product.stock - this.product.reservedStock,
       productStatus: this.product.status,
       quantity: this.quantity,
     }

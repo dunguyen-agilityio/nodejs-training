@@ -7,32 +7,6 @@ export const createPaymentIntentSchema = {
   },
 } as const
 
-export const checkoutSuccessSchema = {
-  type: 'object',
-  required: ['data', 'type'],
-  additionalProperties: true,
-  properties: {
-    data: {
-      type: 'object',
-      required: ['object'],
-      additionalProperties: true,
-      properties: {
-        object: {
-          type: 'object',
-          required: ['id', 'customer', 'customer_account'],
-          additionalProperties: true,
-          properties: {
-            id: { type: 'string' },
-            customer: { type: 'string' },
-            customer_account: { type: 'string' },
-          },
-        },
-      },
-    },
-    type: { type: 'string', enum: ['payment_intent.succeeded'] },
-  },
-} as const
-
 export const paymentSuccessSchema = {
   type: 'object',
   required: ['data', 'type'],

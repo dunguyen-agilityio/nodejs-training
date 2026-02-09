@@ -358,4 +358,61 @@ describe('CheckoutService', () => {
       expect(queryRunnerMock.rollbackTransaction).toHaveBeenCalled()
     })
   })
+  describe('releaseExpiredStockReservations', () => {
+    it('should release expired reservations and update product stock', async () => {
+      const expiredReservations = [
+        {
+          id: 1,
+          productId: 'p1',
+          quantity: 2,
+          status: 'reserved',
+        },
+      ]
+      const products = [{ id: 'p1', reservedStock: 5, stock: 10 }]
+
+      const mockQueryBuilder = {
+        setLock: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockReturnThis(),
+        getMany: vi
+          .fn()
+          .mockResolvedValueOnce(expiredReservations)
+          .mockResolvedValueOnce(products),
+      }
+      queryRunnerMock.manager.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      )
+
+      await checkoutService.releaseExpiredStockReservations()
+
+      expect(queryRunnerMock.startTransaction).toHaveBeenCalled()
+      expect(queryRunnerMock.commitTransaction).toHaveBeenCalled()
+
+      // Verify product reserved stock update
+      expect(products[0].reservedStock).toBe(3) // 5 - 2
+
+      // Verify reservation status update
+      expect(expiredReservations[0].status).toBe('released')
+
+      expect(queryRunnerMock.manager.save).toHaveBeenCalledTimes(2)
+    })
+
+    it('should do nothing if no expired reservations found', async () => {
+      const mockQueryBuilder = {
+        setLock: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockReturnThis(),
+        getMany: vi.fn().mockResolvedValue([]),
+      }
+      queryRunnerMock.manager.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      )
+
+      await checkoutService.releaseExpiredStockReservations()
+
+      expect(queryRunnerMock.startTransaction).toHaveBeenCalled()
+      expect(queryRunnerMock.commitTransaction).toHaveBeenCalled()
+      expect(queryRunnerMock.manager.save).not.toHaveBeenCalled()
+    })
+  })
 })

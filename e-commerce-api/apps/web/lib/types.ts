@@ -27,6 +27,7 @@ export type CheckoutItem = Pick<
 
 export interface PaymentIntent {
   clientSecret: string
+  orderId: number
 }
 
 export interface Cart {
@@ -54,12 +55,13 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: string
+  id: number
   userId: string
   date: string
   status: OrderStatus
   total: number
   items: OrderItem[]
+  paymentSecret: string
   shippingAddress: {
     name: string
     address: string

@@ -30,36 +30,21 @@ export class CheckoutController
     const { currency } = request.body
     const { stripeId, userId } = request.auth
 
-    const invoice = await this.service.generatePaymentIntent(
-      { currency },
-      userId,
-      stripeId,
-    )
-
-    const { confirmation_secret } = invoice
+    const { confirmation_secret, order } =
+      await this.service.generatePaymentIntent({ currency }, userId, stripeId)
 
     if (!confirmation_secret) {
       throw new UnexpectedError()
     }
 
     const { client_secret } = confirmation_secret
+
     this.sendItem(reply, {
       clientSecret: client_secret,
+      orderId: order.id,
+      status: order.status,
+      total: order.totalAmount,
     })
-  }
-
-  /**
-   * @description Prepares an order for checkout. This is a prerequisite step before confirming the payment.
-   * @param request
-   * @param reply
-   */
-  prepareOrderHandler = async (
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<void> => {
-    const { stripeId, userId } = request.auth
-    await this.service.prepareOrderForPayment(userId, stripeId)
-    this.sendNoContent(reply)
   }
 
   stripeWebhookHandler = async (

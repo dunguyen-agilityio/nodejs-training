@@ -14,7 +14,7 @@ import type { TContainer } from './utils/container'
 declare module 'fastify' {
   interface FastifyRequest {
     container: TContainer
-    auth: { userId: string; orgRole: string; stripeId: string }
+    auth: { userId: string; orgRole: string; stripeId: string; user: User }
     clerk: { getAuth: GetAuthFn<FastifyRequest>; clerkClient: ClerkClient }
   }
   interface FastifyReply {}

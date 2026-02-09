@@ -245,12 +245,38 @@ describe('ProductService', () => {
       })
     })
 
-    it('should throw NotFoundError when product does not exist', async () => {
+    it('should throw BadRequestError when product does not exist', async () => {
       productRepositoryMock.getById.mockResolvedValue(null)
 
       await expect(
         productService.updateProduct('999', { name: 'New Name' }),
       ).rejects.toThrow('Not found Product by ID: 999')
+    })
+
+    it('should throw BadRequestError when stock is less than reserved stock', async () => {
+      const existingProduct: Product = {
+        id: '1',
+        name: 'Product 1',
+        description: 'Description 1',
+        price: 10,
+        stock: 10,
+        reservedStock: 5,
+        images: [],
+        category: {
+          id: 1,
+          name: 'Category 1',
+          description: 'Category description',
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: 'published',
+      }
+
+      productRepositoryMock.getById.mockResolvedValue(existingProduct)
+
+      await expect(
+        productService.updateProduct('1', { stock: 4 }),
+      ).rejects.toThrow('Stock cannot be less than reserved stock')
     })
   })
 

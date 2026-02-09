@@ -9,8 +9,4 @@ export interface ICheckoutController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<void>
-  prepareOrderHandler(
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<void>
 }

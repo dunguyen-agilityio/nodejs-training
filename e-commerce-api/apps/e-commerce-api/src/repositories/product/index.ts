@@ -28,29 +28,22 @@ export class ProductRepository extends AbstractProductRepository {
 
     const queryBuilder = this.createQueryBuilder('product')
 
-    let where = ''
-
-    const queryParams = {} as Record<string, any>
+    if (categories.length >= 1) {
+      queryBuilder.where('LOWER(product.category) IN (:...categories)', {
+        categories: categories.map((c) => c.toLowerCase()),
+      })
+    }
 
     if (query) {
-      where += 'product.name ILIKE :query OR product.description ILIKE :query'
-      queryParams.query = `%${query}%`
+      queryBuilder.andWhere(
+        'product.name ILIKE :query OR product.description ILIKE :query',
+        { query: `%${query}%` },
+      )
     }
-
-    if (categories.length >= 1) {
-      if (query) {
-        where += ' AND '
-      }
-      where += 'LOWER(product.category) IN (:...categories)'
-      queryParams.categories = categories.map((c) => c.toLowerCase())
-    }
-
-    queryBuilder.where(where, queryParams)
 
     if (status && status !== 'all') {
       queryBuilder.andWhere('product.status = :status', { status })
     } else if (!status) {
-      // Default: published only if no status specified
       queryBuilder.andWhere('product.status = :status', {
         status: 'published',
       })

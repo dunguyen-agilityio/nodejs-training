@@ -24,8 +24,6 @@ import {
   CartItemRepository,
   CartRepository,
   CategoryRepository,
-  InvoiceItemRepository,
-  InvoiceRepository,
   OrderItemRepository,
   OrderRepository,
   ProductRepository,
@@ -53,8 +51,6 @@ import {
   Cart,
   CartItem,
   Category,
-  Invoice,
-  InvoiceItem,
   Order,
   OrderItem,
   Product,
@@ -116,7 +112,6 @@ export function buildServices(
     orderRepository,
     productRepository,
     userRepository,
-    invoiceRepository,
   } = repos
   const { emailProvider, paymentGateway } = adapters
 
@@ -135,12 +130,7 @@ export function buildServices(
       fastify.log,
     ),
     categoryService: new CategoryService(categoryRepository, fastify.log),
-    orderService: new OrderService(
-      orderRepository,
-      cartRepository,
-      productRepository,
-      fastify.log,
-    ),
+    orderService: new OrderService(orderRepository, fastify.log),
     checkoutService: new CheckoutService(
       userRepository,
       orderRepository,
@@ -173,10 +163,6 @@ export function buildRepositories(ds: DataSource): TRepositories {
     categoryRepository: new CategoryRepository(ds.getRepository(Category)),
     orderRepository: new OrderRepository(ds.getRepository(Order)),
     orderItemRepository: new OrderItemRepository(ds.getRepository(OrderItem)),
-    invoiceItemRepository: new InvoiceItemRepository(
-      ds.getRepository(InvoiceItem),
-    ),
-    invoiceRepository: new InvoiceRepository(ds.getRepository(Invoice)),
     stockReservationRepository: new StockReservationRepository(
       ds.getRepository(StockReservation),
     ),

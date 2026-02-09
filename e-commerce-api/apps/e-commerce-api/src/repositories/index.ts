@@ -2,8 +2,6 @@ import {
   TCartItemRepository,
   TCartRepository,
   TCategoryRepository,
-  TInvoiceItemRepository,
-  TInvoiceRepository,
   TOrderItemRepository,
   TOrderRepository,
   TProductRepository,
@@ -18,8 +16,6 @@ export * from './category'
 export * from './cart-item'
 export * from './order'
 export * from './order-item'
-export * from './invoice'
-export * from './invoice-item'
 export * from './stock-reservation'
 
 export * from './types'
@@ -32,7 +28,5 @@ export type TRepositories = {
   categoryRepository: TCategoryRepository
   orderRepository: TOrderRepository
   orderItemRepository: TOrderItemRepository
-  invoiceRepository: TInvoiceRepository
-  invoiceItemRepository: TInvoiceItemRepository
   stockReservationRepository: TStockreservationRepository
 }

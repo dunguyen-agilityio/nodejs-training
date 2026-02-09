@@ -32,27 +32,54 @@ export class OrderController
     const pageSize = request.query.pageSize
     const userId = request.auth.userId
     const status = request.query.status
-    const date = dayjs(request.query.date)
+    const user = request.auth.user
 
     const response = await this.service.getOrdersByUserId(userId, {
       page,
       pageSize,
       ...(status && { status: status as OrderStatus }),
-      ...(date && { date }),
+      ...(request.query.date && { date: dayjs(request.query.date) }),
     })
 
     if (response.meta?.pagination) {
       this.sendPaginated(
         reply,
-        response.data.map((order) => formatOrderDto(order)),
+        response.data.map((order) => formatOrderDto(order, user)),
         response.meta.pagination,
       )
     } else {
       this.sendSuccess(
         reply,
-        response.data.map((order) => formatOrderDto(order)),
+        response.data.map((order) => formatOrderDto(order, user)),
         response.meta,
       )
     }
+  }
+
+  cancelOrder = async (
+    request: FastifyRequest<{
+      Params: { id: number }
+    }>,
+    reply: FastifyReply,
+  ): Promise<void> => {
+    const orderId = request.params.id
+    const userId = request.auth.userId
+
+    await this.service.cancelOrder({ orderId, userId })
+
+    this.sendItem(reply, { success: true })
+  }
+
+  getOrderById = async (
+    request: FastifyRequest<{
+      Params: { id: number }
+    }>,
+    reply: FastifyReply,
+  ): Promise<void> => {
+    const orderId = request.params.id
+
+    const order = await this.service.getOrderById(orderId)
+
+    this.sendItem(reply, formatOrderDto(order, request.auth.user))
   }
 }

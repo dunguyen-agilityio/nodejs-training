@@ -10,14 +10,15 @@ export const env = {
     name: process.env.DATABASE_NAME,
   },
 
-  // SendGrid Email Service
-  sendgrid: {
+  // Email Service
+  mail: {
     apiKey: process.env.SENDGRID_API_KEY!,
     fromEmail: process.env.SENDGRID_FROM_EMAIL!,
     supportEmail: process.env.SENDGRID_SUPPORT_EMAIL!,
     templates: {
       registerSuccess: process.env.SENDGRID_TEMPLATE_REGISTER_SUCCESS!,
       orderSuccess: process.env.SENDGRID_TEMPLATE_ORDER_SUCCESS!,
+      invoice: process.env.SENDGRID_TEMPLATE_INVOICE!,
     },
   },
 

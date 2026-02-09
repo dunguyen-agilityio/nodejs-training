@@ -63,8 +63,8 @@ export class AuthService implements IAuthService {
     const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
 
     await this.mailProvider.sendWithTemplate({
-      from: env.sendgrid.fromEmail,
-      templateId: env.sendgrid.templates.registerSuccess,
+      from: env.mail.fromEmail,
+      templateId: env.mail.templates.registerSuccess,
       to: email,
       dynamicTemplateData: {
         name,
@@ -72,7 +72,7 @@ export class AuthService implements IAuthService {
         app_name: env.app.name,
         logo_url: env.app.logoUrl,
         login_url: loginPath,
-        support_email: env.sendgrid.supportEmail,
+        support_email: env.mail.supportEmail,
         year: env.app.year,
       },
     })

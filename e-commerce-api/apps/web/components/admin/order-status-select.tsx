@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { OrderStatus } from '@/lib/types'
 
 interface OrderStatusSelectProps {
-  orderId: string
+  orderId: number
   currentStatus: OrderStatus
 }
 
@@ -43,6 +43,7 @@ export function OrderStatusSelect({
       <option value="shipped">Shipped</option>
       <option value="delivered">Delivered</option>
       <option value="cancelled">Cancelled</option>
+      <option value="paid">Paid</option>
     </select>
   )
 }

@@ -66,7 +66,7 @@ export class AdminOrderController
     const orderId = parseInt(request.params.id)
     const { status } = request.body
 
-    const order = await this.service.updateOrderStatus(orderId, status)
+    const order = await this.service.updateOrderStatus({ orderId }, status)
 
     if (order) {
       this.sendItem(reply, formatOrderDto(order))
