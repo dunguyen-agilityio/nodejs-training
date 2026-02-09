@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
 
 import { Product } from '@/lib/types'
 
@@ -12,10 +13,15 @@ export interface ProductCardProps extends Product {}
 export default function ProductCard({
   addToCart,
   outStock,
+  quantity,
   ...product
 }: TWithCart<ProductCardProps>) {
-  const handleAddToCart = () => {
-    addToCart(product)
+  const [isAdding, setIsAdding] = useState(false)
+
+  const handleAddToCart = async () => {
+    setIsAdding(true)
+    await addToCart(product, quantity)
+    setIsAdding(false)
   }
 
   const { id, name, price, image, description } = product
@@ -47,10 +53,10 @@ export default function ProductCard({
           <span className="font-bold text-xl">${price}</span>
           <button
             onClick={handleAddToCart}
-            disabled={outStock}
+            disabled={outStock || isAdding}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {outStock ? 'Out of Stock' : 'Add to Cart'}
+            {isAdding ? 'Adding...' : 'Add to Cart'}
           </button>
         </div>
       </div>

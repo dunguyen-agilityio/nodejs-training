@@ -5,11 +5,7 @@ import dayjs from 'dayjs'
 
 import env from '#env'
 
-import type {
-  TCartRepository,
-  TOrderRepository,
-  TUserRepository,
-} from '#repositories'
+import type { TOrderRepository, TUserRepository } from '#repositories'
 
 import {
   formatPaymentMethod,
@@ -132,18 +128,11 @@ export class CheckoutService implements ICheckoutService {
   async prepareOrderForPayment(
     userId: string,
     stripeId: string,
-  ): Promise<Invoice> {
+  ): Promise<boolean> {
     this.logger.debug({ userId, stripeId }, 'Preparing order for payment')
-    await this._prepareCheckout(userId)
-
-    const invoice =
-      await this.paymentGatewayProvider.getOpenedInvoiceByUser(stripeId)
-
-    this.logger.info(
-      { userId, invoiceId: invoice.id },
-      'Order prepared for payment successfully',
-    )
-    return invoice
+    await this.prepareCheckout(userId)
+    this.logger.info({ userId }, 'Order prepared for payment successfully')
+    return true
   }
 
   /**
@@ -243,7 +232,7 @@ export class CheckoutService implements ICheckoutService {
    * @description Prepares the user's cart for checkout by reserving stock for each item.
    * This method initiates a database transaction to ensure atomicity.
    */
-  private async _prepareCheckout(userId: string): Promise<Cart> {
+  private async prepareCheckout(userId: string): Promise<Cart> {
     this.logger.debug({ userId }, 'Preparing checkout for user')
     const queryRuner = this.createQueryRunner()
 
@@ -261,7 +250,7 @@ export class CheckoutService implements ICheckoutService {
 
       this._validateCart(cartItems)
 
-      await this._reserveStock(queryRuner, cart.id, cartItems)
+      await this.createReserveStock(queryRuner, cart.id, cartItems)
 
       await queryRuner.commitTransaction()
       this.logger.info(
@@ -286,7 +275,7 @@ export class CheckoutService implements ICheckoutService {
    * @description Reserves stock for products in the cart. This is a private helper method for `prepareCheckout`.
    * It checks for available stock and creates stock reservations.
    */
-  private async _reserveStock(
+  private async createReserveStock(
     queryRuner: QueryRunner,
     cartId: number,
     cartItems: CartItem[],

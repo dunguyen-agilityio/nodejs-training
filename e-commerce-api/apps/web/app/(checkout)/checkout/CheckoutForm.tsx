@@ -8,13 +8,10 @@ import { API_ROUTES, post } from '@/lib/api'
 import { getClientEndpoint } from '@/lib/client'
 import { formatCurrency } from '@/lib/utils'
 
-import { useCart } from '@/context/CartContext'
-
 function CheckoutForm({ cartTotal }: { cartTotal: number }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
-  const { clearCart } = useCart()
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -29,13 +26,11 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
     try {
       await post(getClientEndpoint(API_ROUTES.CHECKOUT.PREPARE), {})
 
-      clearCart()
-
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           // Make sure to change this to your payment completion page
-          return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success`,
+          return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?p=true`,
         },
       })
 

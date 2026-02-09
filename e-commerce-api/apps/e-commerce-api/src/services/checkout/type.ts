@@ -6,7 +6,7 @@ export interface ICheckoutService {
     userId: string,
     userStripeId: string,
   ): Promise<TResponse<Invoice>>
-  prepareOrderForPayment(userId: string, stripeId: string): Promise<Invoice>
+  prepareOrderForPayment(userId: string, stripeId: string): Promise<boolean>
   handleSuccessfulPayment(stripeId: string, invoiceId: string): Promise<void>
 }
 

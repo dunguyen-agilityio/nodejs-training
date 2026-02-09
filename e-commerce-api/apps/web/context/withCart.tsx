@@ -18,11 +18,9 @@ export const withCart = <T,>(Comp: TChild<T>) => {
       () => cart.find((item) => item.productId === id)?.quantity || 0,
     )
 
-    const handleAddToCart = (product: Product) => {
-      setQuantity((prev) => {
-        addToCart(product, prev + 1)
-        return prev + 1
-      })
+    const handleAddToCart = async (product: Product, quantity: number) => {
+      await addToCart(product, quantity + 1)
+      setQuantity(quantity + 1)
     }
 
     return (
@@ -30,6 +28,7 @@ export const withCart = <T,>(Comp: TChild<T>) => {
         {...(props as JSX.IntrinsicAttributes & T)}
         addToCart={handleAddToCart}
         outStock={quantity >= props.stock}
+        quantity={quantity}
       />
     )
   }
@@ -38,6 +37,7 @@ export const withCart = <T,>(Comp: TChild<T>) => {
 }
 
 export type TWithCart<T> = T & {
-  addToCart: (product: Product) => void
+  addToCart: (product: Product, quantity: number) => Promise<void>
   outStock: boolean
+  quantity: number
 }

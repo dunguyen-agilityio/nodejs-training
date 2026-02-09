@@ -15,7 +15,7 @@ import { API_ROUTES, del, post, put } from '@/lib/api'
 import { getClientEndpoint } from '@/lib/client'
 import { UnauthorizedError } from '@/lib/errors'
 import { CartItem, Product } from '@/lib/types'
-import { debounce, getCartTotal } from '@/lib/utils'
+import { getCartTotal } from '@/lib/utils'
 
 interface CartContextType {
   cart: CartItem[]
@@ -70,53 +70,49 @@ export function CartProvider({
     }
   }
 
-  const addToCart = debounce(
-    async (product: Product, quantity: number = 1) => {
-      try {
-        if (!isSignedIn) {
-          redirectToSignIn({ redirectUrl: '/products' })
+  const addToCart = async (product: Product, quantity: number = 1) => {
+    try {
+      if (!isSignedIn) {
+        redirectToSignIn({ redirectUrl: '/products' })
+      }
+
+      const response = await post<CartAddResponse>(
+        getClientEndpoint(API_ROUTES.CART.ADD_ITEM),
+        {
+          productId: product.id,
+          quantity,
+        },
+      )
+      setCart((prevCart) => {
+        const existingItem = prevCart.find(
+          (item) => item.productId === product.id,
+        )
+        if (existingItem) {
+          return prevCart.map((item) =>
+            item.productId === product.id
+              ? { ...item, quantity: quantity }
+              : item,
+          )
         }
 
-        const response = await post<CartAddResponse>(
-          getClientEndpoint(API_ROUTES.CART.ADD_ITEM),
+        return [
+          ...prevCart,
           {
+            id: response.id,
             productId: product.id,
+            productName: product.name,
+            productImage: product.images[0]!,
+            productPrice: product.price,
+            productStock: product.stock,
             quantity,
           },
-        )
-        setCart((prevCart) => {
-          const existingItem = prevCart.find(
-            (item) => item.productId === product.id,
-          )
-          if (existingItem) {
-            return prevCart.map((item) =>
-              item.productId === product.id
-                ? { ...item, quantity: quantity }
-                : item,
-            )
-          }
-
-          return [
-            ...prevCart,
-            {
-              id: response.id,
-              productId: product.id,
-              productName: product.name,
-              productImage: product.images[0]!,
-              productPrice: product.price,
-              productStock: product.stock,
-              quantity,
-            },
-          ]
-        })
-        toast.success(`${product.name} added to cart`)
-      } catch (error) {
-        handleApiError(error)
-      }
-    },
-    (prev: [Product], current: [Product]) =>
-      prev[0]?.id === current[0]?.id ? 800 : 0,
-  )
+        ]
+      })
+      toast.success(`${product.name} added to cart`)
+    } catch (error) {
+      handleApiError(error)
+    }
+  }
 
   const removeFromCart = async (cartItemId: string) => {
     try {

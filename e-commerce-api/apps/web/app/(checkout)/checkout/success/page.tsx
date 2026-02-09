@@ -15,7 +15,7 @@ export default function CheckoutSuccessPage() {
         you a confirmation email shortly.
       </p>
       <Link
-        href="/"
+        href="/products"
         className="bg-primary text-primary-foreground px-8 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
       >
         Continue Shopping
