@@ -37,7 +37,7 @@ export async function getAllOrders(
   return response
 }
 
-export async function updateOrderStatus(orderId: string, status: OrderStatus) {
+export async function updateOrderStatus(orderId: number, status: OrderStatus) {
   const headers = await createAuthorizationHeader()
 
   const response = await patch<ApiResponse<Order>>(
@@ -47,4 +47,15 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   )
 
   return response.data
+}
+
+export async function getOrder(orderId: number) {
+  const headers = await createAuthorizationHeader()
+
+  const response = await get<Order>(
+    `${config.api.endpoint}${API_ROUTES.ORDER.GET_BY_ID(orderId)}`,
+    headers,
+  )
+
+  return response
 }

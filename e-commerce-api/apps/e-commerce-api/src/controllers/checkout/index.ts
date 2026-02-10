@@ -28,38 +28,21 @@ export class CheckoutController
     reply: FastifyReply,
   ) => {
     const { currency } = request.body
-    const { stripeId, userId } = request.auth
+    const { stripeId } = request.auth
 
-    const invoice = await this.service.generatePaymentIntent(
+    const { orderId, clientSecret } = await this.service.processPayment(
       { currency },
-      userId,
       stripeId,
     )
 
-    const { confirmation_secret } = invoice
-
-    if (!confirmation_secret) {
+    if (!clientSecret) {
       throw new UnexpectedError()
     }
 
-    const { client_secret } = confirmation_secret
     this.sendItem(reply, {
-      clientSecret: client_secret,
+      clientSecret,
+      orderId,
     })
-  }
-
-  /**
-   * @description Prepares an order for checkout. This is a prerequisite step before confirming the payment.
-   * @param request
-   * @param reply
-   */
-  prepareOrderHandler = async (
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<void> => {
-    const { stripeId, userId } = request.auth
-    await this.service.prepareOrderForPayment(userId, stripeId)
-    this.sendNoContent(reply)
   }
 
   stripeWebhookHandler = async (

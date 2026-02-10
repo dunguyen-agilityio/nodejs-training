@@ -5,6 +5,7 @@ import { HttpStatus } from '#types/http-status'
 import { getOrdersSchema } from '#schemas/order'
 import {
   OrderErrorResponseSchema,
+  OrderSchema,
   OrdersPaginatedResponseSchema,
 } from '#schemas/order-response'
 
@@ -29,6 +30,68 @@ export const orderRoutes: FastifyPluginCallback = (instance, _, done) => {
       },
     },
     controller.getOrders,
+  )
+
+  instance.patch(
+    '/:id/cancel',
+    {
+      preHandler: [instance.authenticate],
+      schema: {
+        description: 'Cancel an order',
+        tags: ['orders'],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+          },
+          required: ['id'],
+        },
+        response: {
+          [HttpStatus.OK]: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+            },
+          },
+          [HttpStatus.UNAUTHORIZED]: OrderErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: OrderErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: OrderErrorResponseSchema,
+        },
+      },
+    },
+    controller.cancelOrder,
+  )
+
+  instance.get(
+    '/:id',
+    {
+      preHandler: [instance.authenticate],
+      schema: {
+        description: 'Get an order by ID',
+        tags: ['orders'],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+          },
+          required: ['id'],
+        },
+        response: {
+          [HttpStatus.OK]: {
+            type: 'object',
+            properties: {
+              ...OrderSchema.properties,
+            },
+          },
+          [HttpStatus.UNAUTHORIZED]: OrderErrorResponseSchema,
+          [HttpStatus.INTERNAL_SERVER_ERROR]: OrderErrorResponseSchema,
+          [HttpStatus.TOO_MANY_REQUESTS]: OrderErrorResponseSchema,
+        },
+      },
+    },
+    controller.getOrderById,
   )
 
   done()

@@ -11,7 +11,6 @@ import { CreatedAndUpdated } from './Base'
 import { CartItem } from './CartItem'
 import { OrderItem } from './OrderItem'
 import { Category } from './Category'
-import { InvoiceItem } from './InvoiceItem'
 
 export type ProductStatus = 'draft' | 'published' | 'archived' | 'deleted'
 
@@ -54,12 +53,6 @@ export class Product extends CreatedAndUpdated {
     default: 'draft',
   })
   status: ProductStatus
-
-  @OneToMany(
-    () => InvoiceItem,
-    (invoiceItem: InvoiceItem) => invoiceItem.product,
-  )
-  invoiceItems?: InvoiceItem[]
 
   constructor(product: Product) {
     super()

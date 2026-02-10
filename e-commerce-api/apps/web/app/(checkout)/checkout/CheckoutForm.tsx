@@ -4,8 +4,6 @@ import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import React, { FormEvent, Suspense, useState } from 'react'
 import { toast } from 'sonner'
 
-import { API_ROUTES, post } from '@/lib/api'
-import { getClientEndpoint } from '@/lib/client'
 import { formatCurrency } from '@/lib/utils'
 
 function CheckoutForm({ cartTotal }: { cartTotal: number }) {
@@ -24,8 +22,6 @@ function CheckoutForm({ cartTotal }: { cartTotal: number }) {
     setIsLoading(true)
 
     try {
-      await post(getClientEndpoint(API_ROUTES.CHECKOUT.PREPARE), {})
-
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {

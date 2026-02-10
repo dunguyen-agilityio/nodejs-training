@@ -126,10 +126,11 @@ export const API_ROUTES = {
   },
   ORDER: {
     GET: '/orders',
-    GET_BY_ID: (id: string) => `/orders/${id}`,
+    GET_BY_ID: (id: number) => `/orders/${id}`,
     GET_ALL: '/admin/orders',
-    UPDATE_STATUS: (id: string) => `/admin/orders/${id}/status`,
-    DELETE: (id: string) => `/admin/orders/${id}`,
+    UPDATE_STATUS: (id: number) => `/admin/orders/${id}/status`,
+    DELETE: (id: number) => `/admin/orders/${id}`,
+    CANCEL: (id: number) => `/orders/${id}/cancel`,
   },
   CHECKOUT: {
     PREPARE: '/checkout/orders/prepare',

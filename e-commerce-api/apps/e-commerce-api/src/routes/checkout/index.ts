@@ -39,23 +39,7 @@ export const checkoutRoutes: FastifyPluginCallback = (
     },
     container.createPaymentIntentHandler,
   )
-  instance.post(
-    '/orders/prepare',
-    {
-      preHandler: [instance.authenticate],
-      schema: {
-        description: 'Prepare order for payment',
-        tags: ['checkout'],
-        security: [{ bearerAuth: [] }],
-        response: {
-          [HttpStatus.NO_CONTENT]: { type: 'null' },
-          [HttpStatus.UNAUTHORIZED]: CheckoutErrorResponseSchema,
-          [HttpStatus.INTERNAL_SERVER_ERROR]: CheckoutErrorResponseSchema,
-        },
-      },
-    },
-    container.prepareOrderHandler,
-  )
+
   instance.post(
     '/stripe-webhooks',
     {

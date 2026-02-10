@@ -19,7 +19,7 @@ export default fp(async function swaggerPlugin(fastify: FastifyInstance) {
         version: '1.0.0',
         contact: {
           name: 'API Support',
-          email: env.sendgrid.supportEmail,
+          email: env.mail.supportEmail,
         },
       },
       servers: [

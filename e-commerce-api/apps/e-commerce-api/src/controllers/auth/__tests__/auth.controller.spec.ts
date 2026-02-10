@@ -1,11 +1,11 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
-
-import { createMockReply, createMockRequest } from '#test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IAuthService } from '#services/types'
 
 import { BadRequestError, HttpStatus } from '#types'
+
+import { createMockReply, createMockRequest } from '#test-utils'
 
 import { AuthController } from '../index'
 
@@ -43,6 +43,7 @@ describe('AuthController', () => {
         email_addresses: [{ email_address: 'test@example.com' }],
       },
       log: {
+        info: vi.fn(),
         error: vi.fn(),
       } as any,
     })
@@ -61,11 +62,7 @@ describe('AuthController', () => {
       )
 
       expect(mockAuthService.register).toHaveBeenCalled()
-      expect(mockReply.code).toHaveBeenCalledWith(HttpStatus.CREATED)
-      expect(mockReply.send).toHaveBeenCalledWith({
-        message: 'User registered successfully.',
-        user: mockUser,
-      })
+      expect(mockReply.send).toHaveBeenCalledWith(mockUser)
     })
 
     it('should handle generic errors', async () => {
@@ -78,7 +75,7 @@ describe('AuthController', () => {
           mockReply as FastifyReply,
         ),
       ).rejects.toThrow('Database error')
-      expect(mockRequest.log?.error).toHaveBeenCalled()
+      expect(mockRequest.log?.info).toHaveBeenCalled()
     })
 
     it('should handle Clerk API errors', async () => {

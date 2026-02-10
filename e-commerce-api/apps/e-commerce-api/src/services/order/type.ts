@@ -6,7 +6,6 @@ export interface IOrderService {
   getOrders(
     params: OrderQueryParams,
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>
-  createOrder(userId: string): Promise<Order>
 
   getOrdersByUserId(
     userId: string,
@@ -14,7 +13,11 @@ export interface IOrderService {
   ): Promise<{ data: Order[]; meta: { pagination: Pagination } }>
 
   updateOrderStatus(
-    orderId: number,
+    params: { orderId: number; userId?: string },
     status: Order['status'],
-  ): Promise<Order | null>
+  ): Promise<Order>
+
+  cancelOrder(params: { orderId: number; userId: string }): Promise<Order>
+
+  getOrderById(orderId: number): Promise<Order>
 }

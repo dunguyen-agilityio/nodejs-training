@@ -4,7 +4,12 @@ import env from '#env'
 
 import type { TCartRepository, TUserRepository } from '#repositories'
 
-import { EmailProvider, IIdentityProvider, PaymentGateway } from '#types'
+import {
+  EmailProvider,
+  IIdentityProvider,
+  MailTemplate,
+  PaymentGateway,
+} from '#types'
 
 import { User } from '#entities'
 
@@ -63,16 +68,18 @@ export class AuthService implements IAuthService {
     const loginPath = `${env.client.baseUrl}${env.client.loginPath}`
 
     await this.mailProvider.sendWithTemplate({
-      from: env.sendgrid.fromEmail,
-      templateId: env.sendgrid.templates.registerSuccess,
+      from: env.mail.fromEmail,
+      templateId: env.mail.templates.registerSuccess,
       to: email,
+      subject: `Welcome to ${env.app.name} — Account Created!`,
+      templateName: MailTemplate.REGISTER,
       dynamicTemplateData: {
         name,
         email,
         app_name: env.app.name,
         logo_url: env.app.logoUrl,
         login_url: loginPath,
-        support_email: env.sendgrid.supportEmail,
+        support_email: env.mail.supportEmail,
         year: env.app.year,
       },
     })

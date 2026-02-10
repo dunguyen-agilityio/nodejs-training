@@ -6,7 +6,7 @@ import { updateOrderStatus } from '@/lib/orders'
 import { OrderStatus } from '@/lib/types'
 
 export async function updateOrderStatusAction(
-  orderId: string,
+  orderId: number,
   status: OrderStatus,
 ) {
   await updateOrderStatus(orderId, status)

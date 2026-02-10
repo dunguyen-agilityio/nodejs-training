@@ -10,6 +10,7 @@ export const OrderSchema = {
       enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
       example: 'pending',
     },
+    paymentSecret: { type: 'string', example: 'secret_123' },
     items: {
       type: ['array', 'null'],
       items: {

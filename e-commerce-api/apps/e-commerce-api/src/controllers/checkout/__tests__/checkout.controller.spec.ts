@@ -1,5 +1,4 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ICheckoutService } from '#services/types'
@@ -10,8 +9,7 @@ import { CheckoutController } from '../index'
 
 // Mock dependencies
 const mockCheckoutService = {
-  generatePaymentIntent: vi.fn(),
-  prepareOrderForPayment: vi.fn(),
+  processPayment: vi.fn(),
   handleSuccessfulPayment: vi.fn(),
 }
 
@@ -45,18 +43,17 @@ describe('CheckoutController', () => {
     it('should create payment intent successfully', async () => {
       mockRequest.body = { amount: 100, currency: 'usd' }
       const mockInvoice = {
-        confirmation_secret: { client_secret: 'sec_123' },
+        clientSecret: 'sec_123',
       }
-      mockCheckoutService.generatePaymentIntent.mockResolvedValue(mockInvoice)
+      mockCheckoutService.processPayment.mockResolvedValue(mockInvoice)
 
       await checkoutController.createPaymentIntentHandler(
         mockRequest as FastifyRequest<any>,
         mockReply as FastifyReply,
       )
 
-      expect(mockCheckoutService.generatePaymentIntent).toHaveBeenCalledWith(
-        { amount: 100, currency: 'usd' },
-        'user_123',
+      expect(mockCheckoutService.processPayment).toHaveBeenCalledWith(
+        { currency: 'usd' },
         'cus_123',
       )
       expect(mockReply.send).toHaveBeenCalledWith({ clientSecret: 'sec_123' })
@@ -64,7 +61,7 @@ describe('CheckoutController', () => {
 
     it('should throw UnexpectedError if confirmation_secret is missing', async () => {
       mockRequest.body = { amount: 100, currency: 'usd' }
-      mockCheckoutService.generatePaymentIntent.mockResolvedValue({})
+      mockCheckoutService.processPayment.mockResolvedValue({})
 
       await expect(
         checkoutController.createPaymentIntentHandler(
@@ -72,22 +69,6 @@ describe('CheckoutController', () => {
           mockReply as FastifyReply,
         ),
       ).rejects.toThrow(UnexpectedError)
-    })
-  })
-
-  describe('prepareOrderHandler', () => {
-    it('should prepare order successfully', async () => {
-      await checkoutController.prepareOrderHandler(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply,
-      )
-
-      expect(mockCheckoutService.prepareOrderForPayment).toHaveBeenCalledWith(
-        'user_123',
-        'cus_123',
-      )
-      expect(mockReply.status).toHaveBeenCalledWith(204)
-      expect(mockReply.send).toHaveBeenCalled()
     })
   })
 

@@ -28,9 +28,9 @@ export class UserService implements IUserService {
       this.logger.warn({ userId, role }, 'User not found for role assignment')
       throw new Error('User not found')
     }
-    await this.userRepository.save({ ...user, role })
+    const updatedUser = await this.userRepository.save({ ...user, role })
     this.logger.info({ userId, role }, 'Role added to user successfully')
-    return user
+    return updatedUser
   }
 
   async getById(id: string): Promise<User | null> {

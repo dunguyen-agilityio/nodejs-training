@@ -37,20 +37,22 @@ describe('format utils', () => {
     it('should format card payment method', () => {
       const pm: any = {
         card: { brand: 'visa', last4: '4242' },
+        type: 'card',
       }
-      expect(formatPaymentMethod('card', pm)).toBe('VISA •••• 4242')
+      expect(formatPaymentMethod(pm)).toBe('VISA •••• 4242')
     })
 
     it('should format link payment method', () => {
       const pm: any = {
         link: { email: 'test@example.com' },
+        type: 'link',
       }
-      expect(formatPaymentMethod('link', pm)).toBe('Link test@example.com')
+      expect(formatPaymentMethod(pm)).toBe('Link test@example.com')
     })
 
     it('should return empty string for unknown/missing types', () => {
-      expect(formatPaymentMethod('card', {} as any)).toBe('')
-      expect(formatPaymentMethod('alipay' as any, {} as any)).toBe('')
+      expect(formatPaymentMethod({} as any)).toBe('')
+      expect(formatPaymentMethod({} as any)).toBe('')
     })
   })
 })

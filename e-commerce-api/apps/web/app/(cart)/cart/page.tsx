@@ -4,19 +4,17 @@ import { useAuth } from '@clerk/nextjs'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { API_ROUTES, post } from '@/lib/api'
-import { createAuthorizationHeader } from '@/lib/auth'
 import { getClientEndpoint } from '@/lib/client'
-import { config } from '@/lib/config'
 import { PaymentIntent } from '@/lib/types'
 import { debounce, formatCurrency } from '@/lib/utils'
 
 import { useCart } from '@/context/CartContext'
 
-import Loading, { LoadingRef } from '@/components/Loading'
+import Loading, { LoadingIndicator, LoadingRef } from '@/components/Loading'
 import { CartItem } from '@/components/cart-item'
 
 export default function CartPage() {
@@ -24,7 +22,7 @@ export default function CartPage() {
   const [localCart, setLocalCart] = useState(cart)
   const loadingRef = useRef<LoadingRef | null>(null)
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
 
   const { isLoaded } = useAuth()
 
@@ -32,23 +30,28 @@ export default function CartPage() {
     setLocalCart(cart)
   }, [cart])
 
-  const handleCheckout = (e: React.MouseEvent<HTMLButtonElement>) => {
-    startTransition(async () => {
-      try {
-        if (status === 'out_of_stock') {
-          e.preventDefault()
-          return
-        }
-
-        const { clientSecret } = await post<PaymentIntent>(
-          getClientEndpoint(API_ROUTES.CHECKOUT.CREATE),
-          { currency: 'usd' },
-        )
-        router.push(`/checkout?clientSecret=${clientSecret}`)
-      } catch {
-        toast.error('Failed to checkout. Please try again later.')
+  const handleCheckout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    try {
+      setIsPending(true)
+      if (status === 'out_of_stock') {
+        e.preventDefault()
+        return
       }
-    })
+
+      const { clientSecret, orderId } = await post<PaymentIntent>(
+        getClientEndpoint(API_ROUTES.CHECKOUT.CREATE),
+        { currency: 'usd' },
+      )
+
+      router.push(`/checkout?clientSecret=${clientSecret}&orderId=${orderId}`)
+    } catch (error) {
+      setIsPending(false)
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to checkout. Please try again later.',
+      )
+    }
   }
 
   const handleUpdateQuantity = debounce(
@@ -68,7 +71,7 @@ export default function CartPage() {
   }
 
   if (!isLoaded) {
-    return <p>Please waiting...</p>
+    return <LoadingIndicator loading fullScreen />
   }
 
   if (localCart.length === 0) {
@@ -81,7 +84,7 @@ export default function CartPage() {
           Add some items to get started!
         </p>
         <Link
-          href="/"
+          href="/products"
           className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90"
         >
           Continue Shopping
@@ -130,7 +133,7 @@ export default function CartPage() {
             <button
               aria-disabled={status === 'out_of_stock'}
               onClick={handleCheckout}
-              className={`w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors ${status === 'out_of_stock' ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`w-full block text-center bg-primary text-primary-foreground py-3 rounded-md hover:bg-primary/90 transition-colors ${status === 'out_of_stock' ? 'opacity-50 cursor-not-allowed' : ''} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isPending ? 'Processing...' : 'Proceed to Checkout'}
             </button>

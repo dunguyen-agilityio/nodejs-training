@@ -5,6 +5,8 @@ import { getUserOrders } from '@/lib/orders'
 
 import { PaginationControls } from '@/components/pagination-controls'
 
+import CancelOrderButton from './CancelOrderButton'
+
 interface OrdersPageProps {
   searchParams: Promise<{ page?: string }>
 }
@@ -107,6 +109,17 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 </div>
               ))}
             </div>
+            {order.status === 'pending' && (
+              <div className="flex gap-3 justify-end p-2">
+                <Link
+                  href={`/checkout?clientSecret=${order.paymentSecret}&orderId=${order.id}`}
+                  className="bg-primary text-primary-foreground px-4 h-8 leading-8 rounded-md hover:bg-primary/90"
+                >
+                  Pay Now
+                </Link>
+                <CancelOrderButton orderId={order.id} />
+              </div>
+            )}
           </div>
         ))}
       </div>

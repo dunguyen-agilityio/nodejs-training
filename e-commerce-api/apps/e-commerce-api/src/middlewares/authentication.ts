@@ -36,19 +36,15 @@ export const authenticate = async (
     ...auth,
     userId: user.id,
     stripeId: user.stripeId,
+    user,
   })
 }
 
-export const authorizeAdmin = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
+export const authorizeAdmin = async (request: FastifyRequest) => {
   const auth = request.clerk.getAuth(request)
+
   if (!auth.userId) {
-    return reply.status(HttpStatus.UNAUTHORIZED).send({
-      error: 'Unauthenticated: Please log in.',
-      status: HttpStatus.UNAUTHORIZED,
-    })
+    throw new UnauthorizedError('Unauthenticated: Missing user')
   }
 
   const response =
@@ -59,9 +55,6 @@ export const authorizeAdmin = async (
   const isAdmin = response.data.find(({ role }) => role === 'org:admin')
 
   if (!isAdmin) {
-    return reply.status(HttpStatus.FORBIDDEN).send({
-      error: 'Access denied: Admin role required.',
-      status: HttpStatus.FORBIDDEN,
-    })
+    throw new UnauthorizedError('Access denied: Admin role required.')
   }
 }

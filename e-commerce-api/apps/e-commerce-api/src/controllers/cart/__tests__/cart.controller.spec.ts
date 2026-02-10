@@ -1,10 +1,15 @@
 import { FastifyRequest } from 'fastify'
-import { createMockReply, createMockRequest } from '#test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ICartService } from '#services/types'
 
 import { HttpStatus } from '#types'
+
+import { CartItemDto } from '#dtos/cart-item'
+
+import { createMockReply, createMockRequest } from '#test-utils'
+
+import { CartItem } from '#entities'
 
 import { CartController } from '../index'
 
@@ -38,22 +43,36 @@ describe('CartController', () => {
 
       expect(mockCartService.getCartByUserId).toHaveBeenCalledWith('user_123')
       expect(mockReply.send).toHaveBeenCalledWith({
-        data: mockCart,
-        success: true,
+        id: 1,
+        items: [],
+        status: undefined,
+        total: 0,
       })
     })
   })
 
   describe('addProductToCart', () => {
     it('should add product to cart successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Body: { productId: string; quantity: number }
-      }>>({
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Body: { productId: string; quantity: number }
+        }>
+      >({
         auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
         body: { productId: 'p1', quantity: 1 },
       })
       const mockReply = createMockReply()
-      const mockCartItem = { id: 1, quantity: 1 }
+      const mockCartItem: CartItem = {
+        id: 1,
+        quantity: 1,
+        product: {
+          name: 'product',
+          images: ['http://'],
+          stock: 2,
+          price: 32,
+          status: 'archived',
+        },
+      }
       mockCartService.addProductToCart.mockResolvedValue(mockCartItem)
 
       await cartController.addProductToCart(mockRequest, mockReply)
@@ -63,18 +82,19 @@ describe('CartController', () => {
         productId: 'p1',
         quantity: 1,
       })
-      expect(mockReply.send).toHaveBeenCalledWith({
-        data: mockCartItem,
-        success: true,
-      })
+      expect(mockReply.send).toHaveBeenCalledWith(
+        new CartItemDto(mockCartItem).toJSON(),
+      )
     })
   })
 
   describe('removeProductFromCart', () => {
     it('should remove product from cart successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Params: { id: string }
-      }>>({
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Params: { id: string }
+        }>
+      >({
         auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
         params: { id: '1' },
       })

@@ -25,7 +25,7 @@ export interface IProduct {
   object: 'product'
   active: boolean
   created: number
-  default_price?: string | Price | null
+  default_price: Price
 
   description: string | null
   images: Array<string>

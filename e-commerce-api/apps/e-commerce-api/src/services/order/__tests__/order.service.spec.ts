@@ -38,76 +38,10 @@ describe('OrderService', () => {
       getById: vi.fn(),
     })
 
-    orderService = new OrderService(
-      orderRepositoryMock as any,
-      cartRepositoryMock as any,
-      productRepositoryMock as any,
-      loggerMock,
-    )
+    orderService = new OrderService(orderRepositoryMock as any, loggerMock)
   })
 
-  describe('createOrder', () => {
-    const userId = 'user-1'
-    const mockCart = {
-      id: 1,
-      items: [{ product: { id: 'prod-1' }, quantity: 2 }],
-    }
-    const mockProduct = {
-      id: 'prod-1',
-      price: 100,
-      stock: 10,
-      name: 'Product 1',
-    }
-
-    beforeEach(() => {
-      cartRepositoryMock.getCartByUserId.mockResolvedValue(mockCart)
-      productRepositoryMock.getById.mockResolvedValue(mockProduct)
-      queryRunnerMock.manager.findOne.mockResolvedValue(mockProduct)
-    })
-
-    it('should successfully create an order from cart', async () => {
-      orderRepositoryMock.findOne.mockResolvedValue(null) // No existing pending order
-
-      const result = await orderService.createOrder(userId)
-
-      expect(queryRunnerMock.startTransaction).toHaveBeenCalled()
-      expect(queryRunnerMock.manager.save).toHaveBeenCalled() // Saved order and order items
-      expect(queryRunnerMock.commitTransaction).toHaveBeenCalled()
-      expect(result.totalAmount).toBe(200)
-      expect(result.status).toBe('pending')
-    })
-
-    it('should throw NotFoundError if cart is empty', async () => {
-      cartRepositoryMock.getCartByUserId.mockResolvedValue({ items: [] })
-
-      await expect(orderService.createOrder(userId)).rejects.toThrow(
-        NotFoundError,
-      )
-      expect(queryRunnerMock.rollbackTransaction).toHaveBeenCalled()
-    })
-
-    it('should throw Error if insufficient stock', async () => {
-      queryRunnerMock.manager.findOne.mockResolvedValue({
-        ...mockProduct,
-        stock: 1,
-      })
-
-      await expect(orderService.createOrder(userId)).rejects.toThrow(
-        'Insufficient stock for Product 1',
-      )
-      expect(queryRunnerMock.rollbackTransaction).toHaveBeenCalled()
-    })
-
-    it('should rollback and throw on generic error', async () => {
-      cartRepositoryMock.getCartByUserId.mockRejectedValue(
-        new Error('DB Error'),
-      )
-
-      await expect(orderService.createOrder(userId)).rejects.toThrow('DB Error')
-      expect(queryRunnerMock.rollbackTransaction).toHaveBeenCalled()
-      expect(queryRunnerMock.release).toHaveBeenCalled()
-    })
-  })
+  // createOrder tests removed as method does not exist in OrderService
 
   describe('getOrdersByUserId', () => {
     it('should fetch orders with pagination', async () => {
@@ -153,28 +87,87 @@ describe('OrderService', () => {
   describe('updateOrderStatus', () => {
     it('should update status and return order', async () => {
       const orderId = 1
+      const userId = 'user-1'
       const status = 'delivered'
       const mockOrder = { id: orderId, status: 'pending' }
-      orderRepositoryMock.findOne.mockResolvedValueOnce(mockOrder)
-      orderRepositoryMock.findOne.mockResolvedValueOnce({
-        ...mockOrder,
+      orderRepositoryMock.findOne.mockResolvedValue(mockOrder)
+
+      const result = await orderService.updateOrderStatus(
+        { orderId, userId },
         status,
-      })
-
-      const result = await orderService.updateOrderStatus(orderId, status)
-
-      expect(orderRepositoryMock.save).toHaveBeenCalledWith(
-        expect.objectContaining({ status }),
       )
+
+      expect(orderRepositoryMock.save).toHaveBeenCalled()
       expect(result?.status).toBe(status)
     })
 
     it('should throw NotFoundError if order not found', async () => {
+      const orderId = 1
+      const userId = 'user-1'
       orderRepositoryMock.findOne.mockResolvedValue(null)
 
       await expect(
-        orderService.updateOrderStatus(1, 'delivered'),
+        orderService.updateOrderStatus({ orderId, userId }, 'delivered'),
       ).rejects.toThrow(NotFoundError)
+    })
+
+    it('should prevent cancellation if order is not pending', async () => {
+      const orderId = 1
+      const userId = 'user-1'
+      const status = 'cancelled'
+      // Order is already delivered, cannot cancel
+      const mockOrder = { id: orderId, status: 'delivered' }
+      orderRepositoryMock.findOne.mockResolvedValue(mockOrder)
+
+      await expect(
+        orderService.updateOrderStatus({ orderId, userId }, status),
+      ).rejects.toThrow('Order cannot be cancelled')
+    })
+
+    it('should handle database errors during save', async () => {
+      const orderId = 1
+      const userId = 'user-1'
+      const status = 'delivered'
+      const mockOrder = { id: orderId, status: 'pending' }
+      orderRepositoryMock.findOne.mockResolvedValue(mockOrder)
+      const error = new Error('Save failed')
+      orderRepositoryMock.save.mockRejectedValue(error)
+
+      await expect(
+        orderService.updateOrderStatus({ orderId, userId }, status),
+      ).rejects.toThrow(error)
+    })
+  })
+
+  describe('getOrders', () => {
+    it('should fetch all orders with pagination (admin)', async () => {
+      const params = { page: 1, pageSize: 10, categories: [] }
+      const mockOrders = [
+        { id: 1, user: { id: 'user-1' } },
+        { id: 2, user: { id: 'user-2' } },
+      ]
+      orderRepositoryMock.findOrders.mockResolvedValue([2, mockOrders])
+
+      const result = await orderService.getOrders(params)
+
+      expect(result.data).toEqual(mockOrders)
+      expect(result.meta.pagination.totalItems).toBe(2)
+      expect(result.meta.pagination.currentPage).toBe(1)
+      expect(result.meta.pagination.totalPages).toBe(1)
+      expect(orderRepositoryMock.findOrders).toHaveBeenCalledWith(params)
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        { page: params.page, pageSize: params.pageSize },
+        'Fetching all orders (admin)',
+      )
+    })
+
+    it('should handle database errors in getOrders', async () => {
+      const params = { page: 1, pageSize: 10, categories: [] }
+      const error = new Error('DB Error')
+      orderRepositoryMock.findOrders.mockRejectedValue(error)
+
+      await expect(orderService.getOrders(params)).rejects.toThrow(error)
+      // Verify logger call if exists in catch block, or just that it bubbles up
     })
   })
 })

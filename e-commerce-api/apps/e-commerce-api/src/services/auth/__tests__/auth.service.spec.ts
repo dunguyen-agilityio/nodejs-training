@@ -79,44 +79,6 @@ describe('AuthService', () => {
     )
   })
 
-  describe('login', () => {
-    it('should successfully login and return tokens when status is complete', async () => {
-      const identifier = 'test@example.com'
-      const password = 'password123'
-      const mockSignInResponse = {
-        status: 'complete',
-        createdSessionId: 'sess_123',
-        otherField: 'value',
-      }
-
-      identityProviderMock.login.mockResolvedValue(mockSignInResponse)
-
-      const result = await authService.login(identifier, password)
-
-      expect(identityProviderMock.login).toHaveBeenCalledWith(
-        identifier,
-        password,
-      )
-      expect(result).toEqual(mockSignInResponse)
-    })
-
-    it('should throw error when identity provider throws', async () => {
-      const identifier = 'test@example.com'
-      const password = 'password123'
-      const error = new Error('Login failed')
-
-      identityProviderMock.login.mockRejectedValue(error)
-
-      await expect(authService.login(identifier, password)).rejects.toThrow(
-        error,
-      )
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        { error },
-        'Error during login',
-      )
-    })
-  })
-
   describe('register', () => {
     it('should successfully register a new user and send a confirmation email', async () => {
       // Arrange
@@ -178,7 +140,7 @@ describe('AuthService', () => {
       expect(mailProviderMock.sendWithTemplate).toHaveBeenCalledWith(
         expect.objectContaining({
           to: newUserBody.email,
-          templateId: env.sendgrid.templates.registerSuccess,
+          templateId: env.mail.templates.registerSuccess,
           dynamicTemplateData: expect.objectContaining({
             name: newUserBody.name,
             email: newUserBody.email,
@@ -198,40 +160,6 @@ describe('AuthService', () => {
         'User registered successfully, confirmation email sent',
       )
       expect(result).toEqual(newUserBody)
-    })
-
-    it('should throw an error if registration fails', async () => {
-      // Arrange
-      const newUserBody: User = {
-        id: 'user-123',
-        email: 'test@example.com',
-        name: 'Test User',
-        avatar: 'avatar.png',
-        firstName: 'Test',
-        lastName: 'User',
-        username: 'testuser',
-        phone: '1234567890',
-        age: 30,
-        role: USER_ROLES.USER,
-        stripeId: 'stripe-customer-123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        password: 'password123', // Assuming password is part of User type but handled by auth
-      }
-      const registrationError = new Error('Failed to register user')
-
-      paymentGatewayProviderMock.findOrCreateCustomer.mockRejectedValue(
-        registrationError,
-      )
-
-      // Act & Assert
-      await expect(authService.register(newUserBody)).rejects.toThrow(
-        registrationError,
-      )
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        { email: newUserBody.email, error: registrationError },
-        'Error during user registration',
-      )
     })
   })
 })

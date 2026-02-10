@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
-import { getCart } from '@/lib/data'
-import { formatCurrency, getCartTotal } from '@/lib/utils'
+import { getOrder } from '@/lib/orders'
+import { formatCurrency } from '@/lib/utils'
 
 import CheckoutForm from './CheckoutForm'
 import Provider from './Provider'
@@ -9,19 +9,26 @@ import Provider from './Provider'
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ clientSecret: string }>
+  searchParams: Promise<{ clientSecret: string; orderId: number }>
 }) {
-  const { clientSecret } = await searchParams
+  const { clientSecret, orderId } = await searchParams
 
-  const data = await getCart()
+  const order = await getOrder(orderId)
 
-  if (!data) {
-    throw new Error('Cart not found')
+  if (!order) {
+    throw new Error('Order not found')
   }
 
-  const cartTotal = getCartTotal(data.items)
+  if (order.status !== 'pending') {
+    throw new Error('Order is not pending')
+  }
 
-  if (data.items.length === 0) {
+  const total = order.items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0,
+  )
+
+  if (order.items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -43,7 +50,7 @@ export default async function CheckoutPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div>
           <Provider clientSecret={clientSecret}>
-            <CheckoutForm cartTotal={cartTotal} />
+            <CheckoutForm cartTotal={total} />
           </Provider>
         </div>
 
@@ -52,23 +59,23 @@ export default async function CheckoutPage({
             Order Summary
           </h2>
           <div className="space-y-4 mb-4">
-            {data.items.map((item) => (
+            {order.items.map((item) => (
               <div
                 key={item.productId}
                 className="flex justify-between items-center text-sm"
               >
                 <span className="text-muted-foreground">
-                  {item.productName} x {item.quantity}
+                  {item.name} x {item.quantity}
                 </span>
                 <span className="font-medium text-foreground">
-                  {formatCurrency(item.productPrice * item.quantity)}
+                  {formatCurrency(item.price * item.quantity)}
                 </span>
               </div>
             ))}
           </div>
           <div className="border-t border-border pt-4 flex justify-between font-bold text-lg">
             <span className="text-foreground">Total</span>
-            <span className="text-foreground">{formatCurrency(cartTotal)}</span>
+            <span className="text-foreground">{formatCurrency(total)}</span>
           </div>
         </div>
       </div>

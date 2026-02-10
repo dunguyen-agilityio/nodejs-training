@@ -58,6 +58,8 @@ export function PaginationControls({
     return pageNumbers
   }
 
+  if (totalPages <= 1) return null
+
   return (
     <div className="flex items-center justify-center gap-2 mt-8">
       <button

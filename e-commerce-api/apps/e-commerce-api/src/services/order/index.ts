@@ -1,146 +1,29 @@
 import { FastifyBaseLogger } from 'fastify'
+import { QueryRunner } from 'typeorm'
 
 import type {
-  TCartRepository,
   TOrderRepository,
   TProductRepository,
+  TStockreservationRepository,
 } from '#repositories'
 
-import { NotFoundError, OrderQueryParams, Pagination } from '#types'
+import {
+  BadRequestError,
+  NotFoundError,
+  OrderQueryParams,
+  Pagination,
+  StockReservationStatus,
+} from '#types'
 
-import { Order, OrderItem, Product } from '#entities'
+import { Order, Product, StockReservation } from '#entities'
 
 import { IOrderService } from './type'
 
 export class OrderService implements IOrderService {
   constructor(
     private orderRepository: TOrderRepository,
-    private cartRepository: TCartRepository,
-    private productRepository: TProductRepository,
     private logger: FastifyBaseLogger,
   ) {}
-
-  async createOrder(userId: string): Promise<Order> {
-    this.logger.info({ userId }, 'Creating order from cart')
-    // Start transaction
-    const queryRunner =
-      this.cartRepository.manager.connection.createQueryRunner()
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
-    this.logger.debug({ userId }, 'Transaction started for order creation')
-
-    try {
-      let order = await this.orderRepository.findOne({
-        where: { user: { id: userId }, status: 'pending' },
-        relations: { items: true },
-      })
-
-      const cart = await this.cartRepository.getCartByUserId(userId)
-
-      if (!cart || !cart.items || cart.items.length === 0) {
-        this.logger.error({ userId }, 'Cart is empty or not found')
-        throw new NotFoundError('Cart is empty')
-      }
-
-      this.logger.debug(
-        { userId, cartId: cart.id, itemCount: cart.items.length },
-        'Cart retrieved for order',
-      )
-
-      const totalAmount = await cart.items.reduce(async (sumPromise, item) => {
-        const sum = await sumPromise
-        const product = await this.productRepository.getById(item.product.id)
-
-        if (!product) {
-          this.logger.error(
-            { userId, productId: item.product.id },
-            'Product not found in cart',
-          )
-          throw new NotFoundError('Product not found')
-        }
-        return sum + item.quantity * product.price
-      }, Promise.resolve(0))
-
-      this.logger.debug({ userId, totalAmount }, 'Total amount calculated')
-
-      order = await queryRunner.manager.save(
-        queryRunner.manager.create(Order, {
-          user: { id: userId },
-          status: 'pending',
-          totalAmount,
-          id: order?.id,
-        }),
-      )
-
-      order.items = order.items || []
-
-      const orderItemByProduct = order.items.reduce(
-        (prev, item) => ({ ...prev, [item.product.id]: item.id }),
-        {} as Record<string, number>,
-      )
-
-      // Create order items and decrease stock
-      const orderItems = await Promise.all(
-        cart.items.map(async (cartItem) => {
-          const product = await queryRunner.manager.findOne(Product, {
-            where: { id: cartItem.product.id },
-          })
-
-          if (!product) {
-            this.logger.error(
-              { userId, productId: cartItem.product.id },
-              'Product not found during order creation',
-            )
-            throw new NotFoundError(`Product ${cartItem.product.id} not found`)
-          }
-
-          if (product.stock < cartItem.quantity) {
-            this.logger.error(
-              {
-                userId,
-                productId: product.id,
-                requested: cartItem.quantity,
-                available: product.stock,
-              },
-              'Insufficient stock for order',
-            )
-            throw new Error(`Insufficient stock for ${product.name}`)
-          }
-
-          // Create order item
-          return queryRunner.manager.save(OrderItem, {
-            order,
-            priceAtPurchase: product.price,
-            product,
-            quantity: cartItem.quantity,
-            id: orderItemByProduct[cartItem.product.id],
-          })
-        }),
-      )
-
-      await queryRunner.manager.save(orderItems)
-
-      // Commit transaction
-      await queryRunner.commitTransaction()
-      this.logger.info(
-        {
-          userId,
-          orderId: order.id,
-          totalAmount,
-          itemCount: orderItems.length,
-        },
-        'Order created successfully',
-      )
-      return order
-    } catch (error) {
-      // Rollback on error
-      this.logger.error({ userId, error }, 'Error creating order')
-      await queryRunner.rollbackTransaction()
-      throw error
-    } finally {
-      await queryRunner.release()
-    }
-  }
 
   async getOrdersByUserId(
     userId: string,
@@ -203,12 +86,16 @@ export class OrderService implements IOrderService {
   }
 
   async updateOrderStatus(
-    orderId: number,
+    params: { orderId: number; userId: string },
     status: Order['status'],
-  ): Promise<Order | null> {
+    queryRunner?: QueryRunner,
+  ): Promise<Order> {
+    const { orderId, userId } = params
     this.logger.info({ orderId, status }, 'Updating order status')
+
     const order = await this.orderRepository.findOne({
-      where: { id: orderId },
+      where: { id: orderId, ...(userId && { user: { id: userId } }) },
+      relations: { items: { product: true }, user: true },
     })
 
     if (!order) {
@@ -216,13 +103,104 @@ export class OrderService implements IOrderService {
       throw new NotFoundError('Order not found')
     }
 
+    if (status === 'cancelled' && order.status !== 'pending') {
+      this.logger.error({ orderId, status }, 'Order cannot be cancelled')
+      throw new BadRequestError('Order cannot be cancelled')
+    }
+
     order.status = status
-    await this.orderRepository.save(order)
+    if (queryRunner) {
+      await queryRunner.manager.save(order)
+    } else {
+      await this.orderRepository.save(order)
+    }
 
     this.logger.info({ orderId, status }, 'Order status updated successfully')
-    return await this.orderRepository.findOne({
+    return order
+  }
+
+  async cancelOrder(params: {
+    orderId: number
+    userId: string
+  }): Promise<Order> {
+    const { orderId, userId } = params
+    this.logger.info({ orderId, userId }, 'Cancelling order')
+
+    const queryRunner =
+      this.orderRepository.manager.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      const order = await this.updateOrderStatus(
+        { orderId, userId },
+        'cancelled',
+        queryRunner,
+      )
+
+      const reservation = await queryRunner.manager.findOne(StockReservation, {
+        where: { invoiceId: order.invoiceId },
+        lock: { mode: 'pessimistic_write' },
+      })
+
+      if (reservation) {
+        await queryRunner.manager.update(StockReservation, reservation.id, {
+          status: StockReservationStatus.RELEASED,
+        })
+
+        if (order.items) {
+          const quantityByProductId = {} as Record<string, number>
+
+          const productIds = order.items.map(({ product, quantity }) => {
+            quantityByProductId[product.id] = quantity
+            return product.id
+          })
+
+          const products = await queryRunner.manager
+            .createQueryBuilder(Product, 'product')
+            .setLock('pessimistic_write')
+            .where('id IN (:...productIds)', { productIds })
+            .getMany()
+
+          await Promise.all(
+            products.map((product) => {
+              queryRunner.manager.update(Product, product.id, {
+                reservedStock:
+                  product.reservedStock -
+                  (quantityByProductId[product.id] || 0),
+              })
+            }),
+          )
+        }
+      }
+
+      this.logger.info({ orderId }, 'Order cancelled successfully')
+
+      await queryRunner.commitTransaction()
+
+      return order
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      throw error
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
+  async getOrderById(orderId: number): Promise<Order> {
+    this.logger.info({ orderId }, 'Fetching order by ID')
+
+    const order = await this.orderRepository.findOne({
       where: { id: orderId },
       relations: { items: { product: true }, user: true },
     })
+
+    if (!order) {
+      this.logger.error({ orderId }, 'Order not found')
+      throw new NotFoundError('Order not found')
+    }
+
+    this.logger.info({ orderId }, 'Order fetched successfully')
+    return order
   }
 }

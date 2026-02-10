@@ -56,7 +56,7 @@ export default function ProductCard({
             disabled={outStock || isAdding}
             className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {isAdding ? 'Adding...' : 'Add to Cart'}
+            {isAdding ? 'Adding...' : outStock ? 'Out of Stock' : 'Add to Cart'}
           </button>
         </div>
       </div>

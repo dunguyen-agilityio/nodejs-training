@@ -1,12 +1,11 @@
 import { FastifyRequest } from 'fastify'
-import { createMockReply, createMockRequest } from '#test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IProductService } from '#services/types'
 
-import { Product } from '#entities'
-
 import { HttpStatus } from '#types'
+
+import { createMockReply, createMockRequest } from '#test-utils'
 
 import { ProductController } from '../index'
 
@@ -43,10 +42,12 @@ describe('ProductController', () => {
 
   describe('updateProduct', () => {
     it('should update product successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Params: { id: string }
-        Body: Partial<Pick<Product, 'name' | 'description' | 'price' | 'stock' | 'images' | 'category'>>
-      }>>({
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Params: { id: string }
+          Body: any // Use any to bypass schema strict type check for mock
+        }>
+      >({
         params: { id: 'p1' },
         body: { name: 'Updated' },
       })
@@ -58,17 +59,32 @@ describe('ProductController', () => {
       expect(mockProductService.updateProduct).toHaveBeenCalledWith('p1', {
         name: 'Updated',
       })
-      expect(mockReply.code).toHaveBeenCalledWith(HttpStatus.OK)
-      expect(mockReply.send).toHaveBeenCalledWith({ name: 'Updated' })
+      expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.OK)
+      expect(mockReply.send).toHaveBeenCalledWith({
+        name: 'Updated',
+        toObject: true,
+      })
     })
   })
 
   describe('addNewProduct', () => {
     it('should add new product successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Body: Omit<Product, 'id'>
-      }>>({
-        body: { name: 'New Product' } as Omit<Product, 'id'>,
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Body: any // Use any
+        }>
+      >({
+        body: {
+          name: 'New Product',
+          description: 'Desc',
+          price: 100,
+          stock: 10,
+          category: 'cat1',
+          status: 'published',
+          images: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
       })
       const mockReply = createMockReply()
       mockProductService.saveProduct.mockResolvedValue({
@@ -80,21 +96,37 @@ describe('ProductController', () => {
 
       expect(mockProductService.saveProduct).toHaveBeenCalledWith({
         name: 'New Product',
+        description: 'Desc',
+        price: 100,
+        stock: 10,
+        category: 'cat1',
+        status: 'published',
+        images: [],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       })
       expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.CREATED)
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
-        data: { id: 'p2', name: 'New Product' },
+        id: 'p2',
+        name: 'New Product',
+        toObject: true,
       })
     })
   })
 
   describe('getProducts', () => {
     it('should retrieve products successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Querystring: ProductQuery
-      }>>({
-        query: { page: '1', pageSize: '10', query: '', category: '' },
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Querystring: ProductQuery
+        }>
+      >({
+        query: {
+          page: '1',
+          pageSize: '10',
+          query: '',
+          category: undefined as unknown as string,
+        },
       })
       const mockReply = createMockReply()
       const mockResult = {
@@ -110,9 +142,11 @@ describe('ProductController', () => {
         pageSize: 10,
         query: '',
         categories: [],
+        status: undefined,
       })
+      // sendSuccess uses status(200)
+      expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.OK)
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
         data: [
           { id: 'p1', toObject: true },
           { id: 'p2', toObject: true },
@@ -124,9 +158,11 @@ describe('ProductController', () => {
 
   describe('getProduct', () => {
     it('should retrieve single product successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Params: { id: string }
-      }>>({ params: { id: 'p1' } })
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Params: { id: string }
+        }>
+      >({ params: { id: 'p1' } })
       const mockReply = createMockReply()
       const mockProduct = { id: 'p1', name: 'P1' }
       mockProductService.getProductById.mockResolvedValue(mockProduct)
@@ -134,16 +170,20 @@ describe('ProductController', () => {
       await productController.getProduct(mockRequest, mockReply)
 
       expect(mockProductService.getProductById).toHaveBeenCalledWith('p1')
+      expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.OK)
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
-        data: { id: 'p1', name: 'P1', toObject: true },
+        id: 'p1',
+        name: 'P1',
+        toObject: true,
       })
     })
 
     it('should return 404 if product not found', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Params: { id: string }
-      }>>({ params: { id: 'p1' } })
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Params: { id: string }
+        }>
+      >({ params: { id: 'p1' } })
       const mockReply = createMockReply()
       mockProductService.getProductById.mockResolvedValue(null)
 
@@ -151,27 +191,27 @@ describe('ProductController', () => {
 
       expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND)
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: false,
-        error: 'Product not found',
+        message: 'Product not found',
+        status: HttpStatus.NOT_FOUND,
       })
     })
   })
 
   describe('deleteProduct', () => {
     it('should delete product successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Params: { id: string }
-      }>>({ params: { id: 'p1' } })
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Params: { id: string }
+        }>
+      >({ params: { id: 'p1' } })
       const mockReply = createMockReply()
       mockProductService.deleteProduct.mockResolvedValue(undefined)
 
       await productController.deleteProduct(mockRequest, mockReply)
 
       expect(mockProductService.deleteProduct).toHaveBeenCalledWith('p1')
-      expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
-        message: 'Product deleted successfully',
-      })
+      expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.NO_CONTENT)
+      expect(mockReply.send).toHaveBeenCalledWith()
     })
   })
 })

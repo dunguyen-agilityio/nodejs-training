@@ -4,7 +4,9 @@ export const PaymentIntentResponseSchema = {
   type: 'object',
   properties: {
     clientSecret: { type: 'string', example: 'pi_123_secret_abc' },
-    // cart items
+    orderId: { type: 'number', example: 1 },
+    status: { type: 'string', example: 'pending' },
+    total: { type: 'number', example: 100 },
     items: {
       type: 'array',
       items: {
@@ -18,7 +20,7 @@ export const PaymentIntentResponseSchema = {
       },
     },
   },
-  required: ['clientSecret'],
+  required: ['clientSecret', 'orderId'],
   additionalProperties: false,
 } as const
 
