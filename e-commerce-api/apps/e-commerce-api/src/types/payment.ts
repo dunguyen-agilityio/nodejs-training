@@ -1,8 +1,6 @@
 import { MetadataParam } from './common'
 import {
   Invoice,
-  InvoiceCreateParams,
-  InvoiceItem,
   InvoiceItemCreateParams,
   InvoicePayment,
   PaymentMethod,

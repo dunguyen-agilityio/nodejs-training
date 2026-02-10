@@ -14,7 +14,6 @@ describe('OrderService', () => {
   let orderService: OrderService
   let orderRepositoryMock: ReturnType<typeof createMockRepository>
   let cartRepositoryMock: ReturnType<typeof createMockRepository>
-  let productRepositoryMock: ReturnType<typeof createMockRepository>
   let queryRunnerMock: ReturnType<typeof createMockQueryRunner>
 
   beforeEach(() => {
@@ -33,10 +32,6 @@ describe('OrderService', () => {
     cartRepositoryMock.manager.connection.createQueryRunner.mockReturnValue(
       queryRunnerMock,
     )
-
-    productRepositoryMock = createMockRepository({
-      getById: vi.fn(),
-    })
 
     orderService = new OrderService(orderRepositoryMock as any, loggerMock)
   })

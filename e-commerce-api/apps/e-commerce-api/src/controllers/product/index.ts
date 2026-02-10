@@ -7,7 +7,7 @@ import { productToObject } from '#dtos/product'
 
 import { addProductSchema, updateProductSchema } from '#schemas/product'
 
-import { Product, ProductStatus } from '#entities'
+import { ProductStatus } from '#entities'
 
 import { BaseController } from '../base'
 import { IProductController } from './type'

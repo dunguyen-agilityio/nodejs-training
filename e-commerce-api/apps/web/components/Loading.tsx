@@ -1,5 +1,6 @@
 'use client'
 
+import { Spinner } from '@heroui/spinner'
 import React, { useState } from 'react'
 
 export interface LoadingRef {
@@ -22,13 +23,11 @@ export const LoadingIndicator = ({
     <div
       className={
         fullScreen
-          ? 'fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm'
+          ? 'fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'
           : 'flex items-center justify-center bg-background/50'
       }
     >
-      <div className="animate-spin rounded-full h-28 w-28 border-b-6 border-t-4 border-blue-500 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-24 w-24 border-l-4 border-r-6 border-blue-500"></div>
-      </div>
+      <Spinner size="lg" label="Loading..." color="success" />
     </div>
   )
 }

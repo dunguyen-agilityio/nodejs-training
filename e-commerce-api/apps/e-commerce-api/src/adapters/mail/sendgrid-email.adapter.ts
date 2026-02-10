@@ -23,6 +23,7 @@ export class SendGridEmailAdapter implements EmailProvider {
         if (error) {
           if ('response' in error) {
             this.logger.error(
+              // eslint-disable-next-line @typescript-eslint/no-empty-object-type
               error.response.body as {},
               'Error - sendWithTemplate',
             )

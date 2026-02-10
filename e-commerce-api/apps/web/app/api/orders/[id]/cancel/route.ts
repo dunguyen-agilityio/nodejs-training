@@ -6,14 +6,14 @@ import { config } from '@/lib/config'
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: number }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params
     const headers = await createAuthorizationHeader()
 
     await patch(
-      `${config.api.endpoint}${API_ROUTES.ORDER.CANCEL(id)}`,
+      `${config.api.endpoint}${API_ROUTES.ORDER.CANCEL(parseInt(id))}`,
       {},
       headers,
     )

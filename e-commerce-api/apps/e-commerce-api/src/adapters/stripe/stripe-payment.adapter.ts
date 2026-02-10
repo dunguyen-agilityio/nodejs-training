@@ -15,7 +15,6 @@ import {
   InvoiceItemCreateParams,
   PaymentGateway,
   PaymentIntent,
-  PaymentIntentCreateParams,
   TResponse,
 } from '#types'
 

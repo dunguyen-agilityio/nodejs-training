@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { DataSource, DataSourceOptions } from 'typeorm'
 
-import { env } from '../configs/env'
+import { env } from '#configs/env'
 
 export const createPostgresDataSource = (
   options?: Omit<DataSourceOptions, 'type' | 'database' | 'poolSize'>,

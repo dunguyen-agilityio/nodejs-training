@@ -17,6 +17,7 @@ const mockLogger = {
   trace: () => {},
   fatal: () => {},
   child: () => mockLogger,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any
 
 const sync = true

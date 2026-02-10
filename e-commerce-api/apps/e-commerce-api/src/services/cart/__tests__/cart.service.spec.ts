@@ -6,15 +6,13 @@ import {
   TProductRepository,
 } from '#repositories'
 
-import { BadRequestError, NotFoundError } from '#types'
+import { NotFoundError } from '#types'
 
 import {
   createMockQueryRunner,
   createMockRepository,
   loggerMock,
 } from '#test-utils'
-
-import { CartItem } from '#entities'
 
 import { CartService } from '../index'
 

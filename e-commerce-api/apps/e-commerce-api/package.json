@@ -6,8 +6,9 @@
   "types": "index.d.ts",
   "main": "src/server.ts",
   "scripts": {
-    "dev": "tsx --watch src/server.ts",
+    "dev": "tsx --watch --conditions=development src/server.ts",
     "build": "tsc -p tsconfig.json",
+    "start": "node --import tsx --conditions=production build/server.js",
     "lint": "eslint src/ --max-warnings 0",
     "test:watch": "vitest",
     "test": "vitest run",
@@ -61,26 +62,165 @@
     "vitest": "^4.0.16"
   },
   "imports": {
-    "#entities": "./src/database/entities/index.ts",
-    "#env": "./src/configs/env.ts",
-    "#providers": "./src/providers/index.ts",
-    "#providers/*": "./src/providers/*.ts",
-    "#services": "./src/services/index.ts",
-    "#services/*": "./src/services/*.ts",
-    "#controllers/*": "./src/controllers/*.ts",
-    "#controllers": "./src/controllers/index.ts",
-    "#repositories": "./src/repositories/index.ts",
-    "#dtos/*": "./src/dtos/*.ts",
-    "#adapters": "./src/adapters/index.ts",
-    "#middlewares": "./src/middlewares/index.ts",
-    "#repositories/*": "./src/repositories/*.ts",
-    "#schemas/*": "./src/schemas/*.ts",
-    "#types/*": "./src/types/*.ts",
-    "#types": "./src/types/index.ts",
-    "#utils/*": "./src/utils/*.ts",
-    "#utils/response": "./src/utils/response.ts",
-    "#configs/*": "./src/configs/*.ts",
-    "#data-source": "./src/database/data-source.ts",
-    "#test-utils": "./src/test-utils.ts"
+    "#entities": {
+      "development": "./src/database/entities/index.ts",
+      "production": "./build/database/entities/index.js",
+      "default": "./src/database/entities/index.ts"
+    },
+    "#env": {
+      "development": "./src/configs/env.ts",
+      "production": "./build/configs/env.js",
+      "default": "./src/configs/env.ts"
+    },
+    "#providers": {
+      "development": "./src/providers/index.ts",
+      "production": "./build/providers/index.js",
+      "default": "./src/providers/index.ts"
+    },
+    "#providers/*": {
+      "development": "./src/providers/*.ts",
+      "production": "./build/providers/*.js",
+      "default": "./src/providers/*.ts"
+    },
+    "#services": {
+      "development": "./src/services/index.ts",
+      "production": "./build/services/index.js",
+      "default": "./src/services/index.ts"
+    },
+    "#services/*": {
+      "development": "./src/services/*.ts",
+      "production": "./build/services/*.js",
+      "default": "./src/services/*.ts"
+    },
+    "#controllers": {
+      "development": "./src/controllers/index.ts",
+      "production": "./build/controllers/index.js",
+      "default": "./src/controllers/index.ts"
+    },
+    "#controllers/*": {
+      "development": "./src/controllers/*.ts",
+      "production": "./build/controllers/*.js",
+      "default": "./src/controllers/*.ts"
+    },
+    "#repositories": {
+      "development": "./src/repositories/index.ts",
+      "production": "./build/repositories/index.js",
+      "default": "./src/repositories/index.ts"
+    },
+    "#repositories/*": {
+      "development": "./src/repositories/*.ts",
+      "production": "./build/repositories/*.js",
+      "default": "./src/repositories/*.ts"
+    },
+    "#dtos/*": {
+      "development": "./src/dtos/*.ts",
+      "production": "./build/dtos/*.js",
+      "default": "./src/dtos/*.ts"
+    },
+    "#adapters": {
+      "development": "./src/adapters/index.ts",
+      "production": "./build/adapters/index.js",
+      "default": "./src/adapters/index.ts"
+    },
+    "#middlewares": {
+      "development": "./src/middlewares/index.ts",
+      "production": "./build/middlewares/index.js",
+      "default": "./src/middlewares/index.ts"
+    },
+    "#middlewares/*": {
+      "development": "./src/middlewares/*.ts",
+      "production": "./build/middlewares/*.js",
+      "default": "./src/middlewares/*.ts"
+    },
+    "#schemas/*": {
+      "development": "./src/schemas/*.ts",
+      "production": "./build/schemas/*.js",
+      "default": "./src/schemas/*.ts"
+    },
+    "#types": {
+      "development": "./src/types/index.ts",
+      "production": "./build/types/index.js",
+      "default": "./src/types/index.ts"
+    },
+    "#types/*": {
+      "development": "./src/types/*.ts",
+      "production": "./build/types/*.js",
+      "default": "./src/types/*.ts"
+    },
+    "#utils/*": {
+      "development": "./src/utils/*.ts",
+      "production": "./build/utils/*.js",
+      "default": "./src/utils/*.ts"
+    },
+    "#utils/response": {
+      "development": "./src/utils/response.ts",
+      "production": "./build/utils/response.js",
+      "default": "./src/utils/response.ts"
+    },
+    "#configs/*": {
+      "development": "./src/configs/*.ts",
+      "production": "./build/configs/*.js",
+      "default": "./src/configs/*.ts"
+    },
+    "#data-source": {
+      "development": "./src/database/data-source.ts",
+      "production": "./build/database/data-source.js",
+      "default": "./src/database/data-source.ts"
+    },
+    "#database/*": {
+      "development": "./src/database/*.ts",
+      "production": "./build/database/*.js",
+      "default": "./src/database/*.ts"
+    },
+    "#test-utils": {
+      "development": "./src/test-utils.ts",
+      "production": "./build/test-utils.js",
+      "default": "./src/test-utils.ts"
+    },
+    "#plugins/*": {
+      "development": "./src/plugins/*.ts",
+      "production": "./build/plugins/*.js",
+      "default": "./src/plugins/*.ts"
+    },
+    "#routes": {
+      "development": "./src/routes/index.ts",
+      "production": "./build/routes/index.js",
+      "default": "./src/routes/index.ts"
+    },
+    "#routes/admin-order": {
+      "development": "./src/routes/admin-order/index.ts",
+      "production": "./build/routes/admin-order/index.js",
+      "default": "./src/routes/admin-order/index.ts"
+    },
+    "#routes/checkout": {
+      "development": "./src/routes/checkout/index.ts",
+      "production": "./build/routes/checkout/index.js",
+      "default": "./src/routes/checkout/index.ts"
+    },
+    "#routes/metric": {
+      "development": "./src/routes/metric/index.ts",
+      "production": "./build/routes/metric/index.js",
+      "default": "./src/routes/metric/index.ts"
+    },
+    "#routes/order": {
+      "development": "./src/routes/order/index.ts",
+      "production": "./build/routes/order/index.js",
+      "default": "./src/routes/order/index.ts"
+    },
+    "#routes/product": {
+      "development": "./src/routes/product/index.ts",
+      "production": "./build/routes/product/index.js",
+      "default": "./src/routes/product/index.ts"
+    },
+    "#routes/user": {
+      "development": "./src/routes/user/index.ts",
+      "production": "./build/routes/user/index.js",
+      "default": "./src/routes/user/index.ts"
+    },
+    "#routes/*": {
+      "development": "./src/routes/*.ts",
+      "production": "./build/routes/*.js",
+      "default": "./src/routes/*.ts"
+    }
   }
 }

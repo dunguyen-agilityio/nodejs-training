@@ -9,7 +9,7 @@ import { CartItemDto } from '#dtos/cart-item'
 
 import { createMockReply, createMockRequest } from '#test-utils'
 
-import { CartItem } from '#entities'
+import { CartItem, Product } from '#entities'
 
 import { CartController } from '../index'
 
@@ -33,7 +33,12 @@ describe('CartController', () => {
   describe('getCart', () => {
     it('should retrieve cart successfully', async () => {
       const mockRequest = createMockRequest<FastifyRequest>({
-        auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
+        auth: {
+          userId: 'user_123',
+          orgRole: 'user',
+          stripeId: 'stripe_123',
+          user: {},
+        },
       })
       const mockReply = createMockReply()
       const mockCart = { id: 1, items: [] }
@@ -58,11 +63,16 @@ describe('CartController', () => {
           Body: { productId: string; quantity: number }
         }>
       >({
-        auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
+        auth: {
+          userId: 'user_123',
+          orgRole: 'user',
+          stripeId: 'stripe_123',
+          user: {},
+        },
         body: { productId: 'p1', quantity: 1 },
       })
       const mockReply = createMockReply()
-      const mockCartItem: CartItem = {
+      const mockCartItem = {
         id: 1,
         quantity: 1,
         product: {
@@ -71,8 +81,8 @@ describe('CartController', () => {
           stock: 2,
           price: 32,
           status: 'archived',
-        },
-      }
+        } as Product,
+      } as CartItem
       mockCartService.addProductToCart.mockResolvedValue(mockCartItem)
 
       await cartController.addProductToCart(mockRequest, mockReply)
@@ -95,7 +105,12 @@ describe('CartController', () => {
           Params: { id: string }
         }>
       >({
-        auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
+        auth: {
+          userId: 'user_123',
+          orgRole: 'user',
+          stripeId: 'stripe_123',
+          user: {},
+        },
         params: { id: '1' },
       })
       const mockReply = createMockReply()

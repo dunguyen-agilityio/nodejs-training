@@ -34,7 +34,12 @@ describe('OrderController', () => {
           Querystring: { page: number; pageSize: number }
         }>
       >({
-        auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
+        auth: {
+          userId: 'user_123',
+          orgRole: 'user',
+          stripeId: 'stripe_123',
+          user: {},
+        },
         query: { page: 1, pageSize: 10 },
       })
       const mockReply = createMockReply()
@@ -69,7 +74,12 @@ describe('OrderController', () => {
           Querystring: { page: number; pageSize: number }
         }>
       >({
-        auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
+        auth: {
+          userId: 'user_123',
+          orgRole: 'user',
+          stripeId: 'stripe_123',
+          user: {},
+        },
         query: {} as any, // Missing params
       })
       const mockReply = createMockReply()

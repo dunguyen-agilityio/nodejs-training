@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { IAuthService } from '#services/types'
 
-import { BadRequestError, HttpStatus } from '#types'
+import { BadRequestError } from '#types'
 
 import { createMockReply, createMockRequest } from '#test-utils'
 

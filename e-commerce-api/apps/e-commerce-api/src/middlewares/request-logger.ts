@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { env } from '#env'
@@ -102,10 +103,7 @@ export const requestLogger = (
 ): ((request: FastifyRequest, _reply: FastifyReply) => Promise<void>) => {
   const finalConfig = { ...defaultConfig, ...config }
 
-  return async (
-    request: FastifyRequest,
-    _reply: FastifyReply,
-  ): Promise<void> => {
+  return async (request: FastifyRequest): Promise<void> => {
     // Skip logging for excluded paths
     if (
       finalConfig.excludePaths &&

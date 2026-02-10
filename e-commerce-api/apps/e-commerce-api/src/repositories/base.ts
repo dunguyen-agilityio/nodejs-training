@@ -125,6 +125,7 @@ export class BaseRepository<
     const findOptions: FindManyOptions<T> = {
       where,
       ...(relations && { relations }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(order && { order: order as any }),
       skip,
       take: pageSize,
@@ -164,6 +165,7 @@ export class BaseRepository<
     const findOptions: FindManyOptions<T> = {
       where,
       ...(relations && { relations }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(order && { order: order as any }),
       skip,
       take: pageSize,
@@ -186,6 +188,7 @@ export class BaseRepository<
     const findOptions: FindManyOptions<T> = {
       ...(options?.where && { where: options.where }),
       ...(options?.relations && { relations: options.relations }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(options?.order && { order: options.order as any }),
     }
     return await this.find(findOptions)

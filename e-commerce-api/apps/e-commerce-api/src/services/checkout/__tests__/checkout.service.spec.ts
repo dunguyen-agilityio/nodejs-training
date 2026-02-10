@@ -17,7 +17,6 @@ import { CheckoutService } from '../index'
 describe('CheckoutService', () => {
   let checkoutService: CheckoutService
   let userRepositoryMock: any
-  let cartRepositoryMock: any
   let orderRepositoryMock: any
   let queryRunnerMock: any
 
@@ -29,15 +28,7 @@ describe('CheckoutService', () => {
     userRepositoryMock = createMockRepository({
       getByStripeId: vi.fn(),
     })
-    cartRepositoryMock = createMockRepository({
-      getCartByUserId: vi.fn(),
-      manager: {
-        find: vi.fn(),
-        connection: {
-          createQueryRunner: vi.fn(() => queryRunnerMock),
-        },
-      },
-    })
+
     orderRepositoryMock = createMockRepository({
       createOrder: vi.fn(),
       hasPendingOrder: vi.fn(),
@@ -197,10 +188,10 @@ describe('CheckoutService', () => {
       expect(queryRunnerMock.commitTransaction).toHaveBeenCalled()
 
       // Verify product reserved stock update
-      expect(products[0].reservedStock).toBe(3) // 5 - 2
+      expect(products[0]?.reservedStock).toBe(3) // 5 - 2
 
       // Verify reservation status update
-      expect(expiredReservations[0].status).toBe('released')
+      expect(expiredReservations[0]?.status).toBe('released')
 
       expect(queryRunnerMock.manager.save).toHaveBeenCalledTimes(2)
     })

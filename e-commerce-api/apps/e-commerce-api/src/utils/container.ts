@@ -4,7 +4,6 @@ import { DataSource } from 'typeorm'
 
 import {
   ClerkIdentityProvider,
-  ResendEmailAdapter,
   SendGridEmailAdapter,
   StripePaymentAdapter,
 } from '#adapters'

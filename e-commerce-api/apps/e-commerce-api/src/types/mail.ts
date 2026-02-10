@@ -19,6 +19,7 @@ export interface MailData {
   templateName?: MailTemplate
   templateId?: string
   subject?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dynamicTemplateData?: { [key: string]: any }
 }
 

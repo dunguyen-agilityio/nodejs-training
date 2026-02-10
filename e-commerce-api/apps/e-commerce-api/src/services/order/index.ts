@@ -1,11 +1,7 @@
 import { FastifyBaseLogger } from 'fastify'
 import { QueryRunner } from 'typeorm'
 
-import type {
-  TOrderRepository,
-  TProductRepository,
-  TStockreservationRepository,
-} from '#repositories'
+import type { TOrderRepository } from '#repositories'
 
 import {
   BadRequestError,

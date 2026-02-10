@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { GetAuthFn } from '@clerk/backend/internal'
 import type { ClerkClient } from '@clerk/fastify'
 
