@@ -18,6 +18,7 @@ import {
   BadRequestError,
   EmailProvider,
   Invoice,
+  MailTemplate,
   NotFoundError,
   PaymentGateway,
   PaymentMethod,
@@ -55,21 +56,19 @@ export class CheckoutService implements ICheckoutService {
     private logger: FastifyBaseLogger,
   ) {}
 
-  /**
-   * @description Generates a Stripe Payment Intent for preview purposes.
-   * This involves preparing the checkout (reserving stock) and creating a Stripe invoice.
-   */
-  async generatePaymentIntent(
+  async processPayment(
     payload: { currency: string },
-    userId: string,
     userStripeId: string,
-  ): Promise<TResponse<Invoice> & { order: Order }> {
+  ): Promise<{ orderId: number; clientSecret: string }> {
+    const { currency } = payload
     const user = await this.userRepository.getByStripeId(userStripeId)
     if (!user) {
       throw new NotFoundError('User not found')
     }
 
-    const hasPendingOrder = await this.orderRepository.hasPendingOrder(user.id)
+    const { id: userId } = user
+
+    const hasPendingOrder = await this.orderRepository.hasPendingOrder(userId)
 
     if (hasPendingOrder) {
       throw new UnexpectedError(
@@ -84,7 +83,6 @@ export class CheckoutService implements ICheckoutService {
 
     const queryRunner = this.createQueryRunner()
     try {
-      const { currency } = payload
       await queryRunner.connect()
       await queryRunner.startTransaction()
 
@@ -121,9 +119,26 @@ export class CheckoutService implements ICheckoutService {
         })
         .getMany()
 
-      const invoice = await this.paymentGatewayProvider.createInvoice({
+      const items = cartItems.map((item) => ({
+        description: item.product.name,
+        customer: userStripeId,
+        quantity: item.quantity,
+        price_data: {
+          currency,
+          product: item.productId.toString(),
+          unit_amount: Math.round(item.product.price * 100),
+        },
+      }))
+
+      this.logger.info(
+        { currency, userStripeId, items },
+        'Processing payment intent',
+      )
+
+      const invoice = await this.paymentGatewayProvider.processPayment({
         currency,
         customer: userStripeId,
+        items,
       })
 
       await this.createReserveStock(
@@ -136,50 +151,32 @@ export class CheckoutService implements ICheckoutService {
 
       await queryRunner.manager.delete(CartItem, { cartId: cartId })
 
-      await Promise.all(
-        cartItems.map(({ quantity, product: { price, name, id: productId } }) =>
-          this.paymentGatewayProvider.createInvoiceItem({
-            invoice: invoice.id,
-            description: name,
-            customer: userStripeId,
-            quantity,
-            price_data: {
-              currency,
-              product: productId.toString(),
-              unit_amount: Math.round(price * 100),
-            },
-          }),
-        ),
-      )
-
-      const finalizeInvoice = await this.paymentGatewayProvider.finalizeInvoice(
-        invoice.id,
-      )
-
       const { email, name } = user
 
-      const { client_secret } = finalizeInvoice.confirmation_secret || {}
+      const { client_secret } = invoice.confirmation_secret || {}
 
-      const order = await this.createOrder(queryRunner, userId, finalizeInvoice)
+      const order = await this.createOrder(queryRunner, userId, invoice)
 
       await this.mailProvider.sendWithTemplate({
         from: env.mail.fromEmail,
         to: email,
+        templateName: MailTemplate.PAYMENT,
+        subject: `[${env.app.name}] - Invoice - #${invoice.number}`,
         dynamicTemplateData: {
           company_name: env.app.name,
-          invoice_id: finalizeInvoice.number,
+          invoice_id: invoice.number,
           customer_name: name,
           amount_due: formatAmount(
-            finalizeInvoice.amount_due / 100,
+            invoice.amount_due / 100,
             currency.toUpperCase(),
           ),
-          due_date: formatStripeDate(finalizeInvoice.created),
+          due_date: formatStripeDate(invoice.created),
           invoice_url: client_secret
             ? `${env.client.baseUrl}/checkout?clientSecret=${client_secret}&orderId=${order.id}`
-            : finalizeInvoice.hosted_invoice_url,
+            : invoice.hosted_invoice_url,
           support_email: env.mail.supportEmail,
           help_center_url: 'https://moderncloud.com/help',
-          subject: `Invoice ${finalizeInvoice.number} for ${name}`,
+          subject: `Invoice ${invoice.number} for ${name}`,
         },
         templateId: env.mail.templates.invoice,
       })
@@ -189,10 +186,18 @@ export class CheckoutService implements ICheckoutService {
         'Payment intent generated successfully',
       )
       await queryRunner.commitTransaction()
-      return { ...finalizeInvoice, order }
+
+      return {
+        orderId: order.id,
+        clientSecret: client_secret || '',
+      }
     } catch (error) {
       await queryRunner.rollbackTransaction()
-      throw error
+
+      throw new UnexpectedError(
+        'Failed to generate payment intent' +
+          (error instanceof Error ? error.message : String(error)),
+      )
     } finally {
       await queryRunner.release()
     }
@@ -582,6 +587,8 @@ export class CheckoutService implements ICheckoutService {
       from: env.mail.fromEmail,
       templateId: env.mail.templates.orderSuccess,
       to: customer_email,
+      templateName: MailTemplate.INVOICE,
+      subject: `Payment receipt from ${env.app.name} #${receipt_number}`,
       dynamicTemplateData: {
         name: customer_name,
         email: customer_email,

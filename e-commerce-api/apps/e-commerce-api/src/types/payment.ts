@@ -138,21 +138,15 @@ export type PaymentDetails = {
 }
 
 export interface PaymentGateway {
-  getPaymentIntents(id: string): Promise<TResponse<PaymentIntent>>
-  createPaymentIntents(
-    payload: PaymentIntentCreateParams,
-  ): Promise<TResponse<PaymentIntent>>
   findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>
   createCustomer(params: CustomerCreateParams): Promise<Customer>
-  createInvoice(params: InvoiceCreateParams): Promise<TResponse<Invoice>>
   createProduct(params: ProductCreateParams): Promise<TResponse<IProduct>>
-  createInvoiceItem(
-    params: InvoiceItemCreateParams,
-  ): Promise<TResponse<InvoiceItem>>
   finalizeInvoice(id: string): Promise<TResponse<Invoice>>
   getInvoice(id: string): Promise<TResponse<Invoice>>
-  getInvoicePayment(id: string): Promise<TResponse<InvoicePaymentExpand>>
   getPaymentIntent(id: string): Promise<TResponse<PaymentIntent>>
-  getCharge(id: string): Promise<Charge>
-  getOpenedInvoiceByUser(id: string): Promise<Invoice>
+  processPayment(params: {
+    items: InvoiceItemCreateParams[]
+    currency: string
+    customer: string
+  }): Promise<TResponse<Invoice>>
 }

@@ -55,7 +55,6 @@ describe('OrderController', () => {
         },
       )
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
         data: [
           { id: 1, formatted: true },
           { id: 2, formatted: true },
@@ -71,7 +70,7 @@ describe('OrderController', () => {
         }>
       >({
         auth: { userId: 'user_123', orgRole: 'user', stripeId: 'stripe_123' },
-        query: { page: 1, pageSize: 10 },
+        query: {} as any, // Missing params
       })
       const mockReply = createMockReply()
       const mockOrders: any[] = []

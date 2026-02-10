@@ -63,34 +63,6 @@ describe('CartItemRepository', () => {
     })
   })
 
-  describe('deleteCartItem', () => {
-    it('should delete cart item by id and user id', async () => {
-      mockQueryBuilder.execute.mockResolvedValue({ affected: 1 })
-
-      const result = await cartItemRepository.deleteCartItem(10, 'user-1')
-
-      expect(result).toBe(true)
-      expect(mockQueryBuilder.delete).toHaveBeenCalled()
-      expect(mockQueryBuilder.from).toHaveBeenCalledWith('cart_items')
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'cartItemId = :cartItemId',
-        { cartItemId: 10 },
-      )
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'userId = :userId',
-        { userId: 'user-1' },
-      )
-    })
-
-    it('should return false if no rows affected', async () => {
-      mockQueryBuilder.execute.mockResolvedValue({ affected: 0 })
-
-      const result = await cartItemRepository.deleteCartItem(10, 'user-1')
-
-      expect(result).toBe(false)
-    })
-  })
-
   describe('deleteByCartId', () => {
     it('should delete all cart items by cart id', async () => {
       mockQueryBuilder.execute.mockResolvedValue({ affected: 3 })

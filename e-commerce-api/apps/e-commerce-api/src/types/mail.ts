@@ -5,10 +5,18 @@ export interface MailContent {
   value: string
 }
 
+export enum MailTemplate {
+  PAYMENT = 'payment',
+  INVOICE = 'invoice',
+  REGISTER = 'register-welcome',
+}
+
 export interface MailData {
   to: EmailData | EmailData[]
   from: EmailData
   text?: string
+  html?: string
+  templateName?: MailTemplate
   templateId?: string
   subject?: string
   dynamicTemplateData?: { [key: string]: any }

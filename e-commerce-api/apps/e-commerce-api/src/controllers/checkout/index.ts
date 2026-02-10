@@ -28,22 +28,20 @@ export class CheckoutController
     reply: FastifyReply,
   ) => {
     const { currency } = request.body
-    const { stripeId, userId } = request.auth
+    const { stripeId } = request.auth
 
-    const { confirmation_secret, order } =
-      await this.service.generatePaymentIntent({ currency }, userId, stripeId)
+    const { orderId, clientSecret } = await this.service.processPayment(
+      { currency },
+      stripeId,
+    )
 
-    if (!confirmation_secret) {
+    if (!clientSecret) {
       throw new UnexpectedError()
     }
 
-    const { client_secret } = confirmation_secret
-
     this.sendItem(reply, {
-      clientSecret: client_secret,
-      orderId: order.id,
-      status: order.status,
-      total: order.totalAmount,
+      clientSecret,
+      orderId,
     })
   }
 

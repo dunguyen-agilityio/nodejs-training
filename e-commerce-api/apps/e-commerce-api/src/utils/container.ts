@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm'
 
 import {
   ClerkIdentityProvider,
+  ResendEmailAdapter,
   SendGridEmailAdapter,
   StripePaymentAdapter,
 } from '#adapters'
@@ -78,28 +79,6 @@ export function buildControllers(
   }
 }
 
-/**
- * Build controllers using registry
- * Alternative to manual buildControllers
- */
-export function buildControllersFromRegistry(
-  registry: import('#utils/container-registry').ContainerRegistry,
-  services: TServices,
-): TControllers {
-  const controllers: Record<string, unknown> = {}
-
-  for (const [name, controller] of registry.getControllers().entries()) {
-    const deps = controller.dependencies.map((dep: string) => {
-      const serviceKey =
-        `${dep.replace('Service', '')}Service` as keyof TServices
-      return services[serviceKey]
-    })
-    controllers[name] = new controller.constructor(...deps)
-  }
-
-  return controllers as TControllers
-}
-
 export function buildServices(
   repos: ReturnType<typeof buildRepositories>,
   adapters: { paymentGateway: PaymentGateway; emailProvider: EmailProvider },
@@ -170,24 +149,6 @@ export function buildRepositories(ds: DataSource): TRepositories {
 }
 
 /**
- * Build repositories using registry
- * Alternative to manual buildRepositories
- */
-export function buildRepositoriesFromRegistry(
-  registry: import('#utils/container-registry').ContainerRegistry,
-  ds: DataSource,
-): TRepositories {
-  const repos: Record<string, unknown> = {}
-
-  for (const [name, repo] of registry.getRepositories().entries()) {
-    const entity = ds.getRepository(repo.entityName)
-    repos[name] = new repo.constructor(entity)
-  }
-
-  return repos as TRepositories
-}
-
-/**
  * Build adapters from Fastify instance
  * Can be used with registry or standalone
  */
@@ -202,27 +163,12 @@ export function buildAdapters(fastify: FastifyInstance) {
     fastify.log,
   )
 
+  // const emailProvider: EmailProvider = new ResendEmailAdapter(
+  //   fastify.resend,
+  //   fastify.log,
+  // )
+
   return { paymentGateway, emailProvider }
-}
-
-/**
- * Build adapters using registry
- * Alternative to manual buildAdapters
- */
-export function buildAdaptersFromRegistry(
-  registry: import('#utils/container-registry').ContainerRegistry,
-  fastify: FastifyInstance,
-): { paymentGateway: PaymentGateway; emailProvider: EmailProvider } {
-  const adapters: Record<string, unknown> = {}
-
-  for (const [name, adapter] of registry.getAdapters().entries()) {
-    adapters[name] = adapter.factory(fastify)
-  }
-
-  return {
-    paymentGateway: adapters.paymentGateway as PaymentGateway,
-    emailProvider: adapters.emailProvider as EmailProvider,
-  }
 }
 
 export function buildContainer(

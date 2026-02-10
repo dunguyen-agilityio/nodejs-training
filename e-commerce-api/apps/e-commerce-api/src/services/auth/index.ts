@@ -4,7 +4,12 @@ import env from '#env'
 
 import type { TCartRepository, TUserRepository } from '#repositories'
 
-import { EmailProvider, IIdentityProvider, PaymentGateway } from '#types'
+import {
+  EmailProvider,
+  IIdentityProvider,
+  MailTemplate,
+  PaymentGateway,
+} from '#types'
 
 import { User } from '#entities'
 
@@ -66,6 +71,8 @@ export class AuthService implements IAuthService {
       from: env.mail.fromEmail,
       templateId: env.mail.templates.registerSuccess,
       to: email,
+      subject: `Welcome to ${env.app.name} — Account Created!`,
+      templateName: MailTemplate.REGISTER,
       dynamicTemplateData: {
         name,
         email,

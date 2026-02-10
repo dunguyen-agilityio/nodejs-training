@@ -23,7 +23,8 @@ export class SendGridEmailAdapter implements EmailProvider {
         if (error) {
           if ('response' in error) {
             this.logger.error(
-              `Error - sendWithTemplate: ${error.response.body}`,
+              error.response.body as {},
+              'Error - sendWithTemplate',
             )
           } else {
             this.logger.error(`Error - sendWithTemplate: ${error.message}`)

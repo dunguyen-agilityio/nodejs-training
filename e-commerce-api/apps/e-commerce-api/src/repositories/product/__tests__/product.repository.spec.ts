@@ -27,15 +27,8 @@ describe('ProductRepository', () => {
       getManyAndCount: vi.fn(),
       getRawOne: vi.fn(),
       cache: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
     }
-
-    // Initialize repository with mocked overrides
-    // Since we can't easily pass mocks to constructor because it expects a real Repository,
-    // we'll cast it and assign mocks directly to the instance,
-    // or use a partial implementation if possible.
-    // However, ProductRepository extends BaseRepository, which extends TypeORM Repository.
-    // A clean way is to instantiate it with a mock manager/target, but TypeORM implementation is complex.
-    // We will instantiate it and mock the methods we use.
 
     const fakeRepo = new Repository(Product, mockManager)
     productRepository = new ProductRepository(fakeRepo)
@@ -82,7 +75,7 @@ describe('ProductRepository', () => {
       expect(productRepository.createQueryBuilder).toHaveBeenCalledWith(
         'product',
       )
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         expect.stringContaining('product.name ILIKE :query'),
         expect.objectContaining({ query: '%test%' }),
       )

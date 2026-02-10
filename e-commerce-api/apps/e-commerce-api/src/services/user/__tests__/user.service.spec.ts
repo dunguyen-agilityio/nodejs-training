@@ -1,11 +1,12 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { USER_ROLES } from '#types'
+
 import {
   createMockRepository,
   loggerMock,
   mockPaymentGateway,
 } from '#test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { USER_ROLES } from '#types'
 
 import { UserService } from '../index'
 
@@ -33,12 +34,13 @@ describe('UserService', () => {
       const userId = 'user-1'
       const role = USER_ROLES.ADMIN
       const mockUser = { id: userId, role: USER_ROLES.USER }
+      const updatedUser = { ...mockUser, role }
       userRepositoryMock.getById.mockResolvedValue(mockUser)
-      userRepositoryMock.save.mockResolvedValue({ ...mockUser, role })
+      userRepositoryMock.save.mockResolvedValue(updatedUser)
 
       const result = await userService.addRoleForUser(userId, role)
 
-      expect(result).toBe(true)
+      expect(result).toEqual(updatedUser)
       expect(userRepositoryMock.save).toHaveBeenCalledWith(
         expect.objectContaining({ role }),
       )
@@ -48,16 +50,28 @@ describe('UserService', () => {
       )
     })
 
-    it('should return false if user not found', async () => {
+    it('should throw error if user not found', async () => {
       const userId = 'user-1'
       const role = USER_ROLES.ADMIN
       userRepositoryMock.getById.mockResolvedValue(null)
 
-      const result = await userService.addRoleForUser(userId, role)
-
-      expect(result).toBe(false)
+      await expect(userService.addRoleForUser(userId, role)).rejects.toThrow(
+        'User not found',
+      )
       expect(userRepositoryMock.save).not.toHaveBeenCalled()
       expect(loggerMock.warn).toHaveBeenCalled()
+    })
+
+    it('should handle repository errors', async () => {
+      const userId = 'user-1'
+      const role = USER_ROLES.ADMIN
+      const mockUser = { id: userId, role: USER_ROLES.USER }
+      userRepositoryMock.getById.mockResolvedValue(mockUser)
+      userRepositoryMock.save.mockRejectedValue(new Error('DB Error'))
+
+      await expect(userService.addRoleForUser(userId, role)).rejects.toThrow(
+        'DB Error',
+      )
     })
   })
 
@@ -97,6 +111,17 @@ describe('UserService', () => {
 
       expect(result).toEqual(mockCustomer)
       expect(mockPaymentGateway.createCustomer).toHaveBeenCalledWith(params)
+    })
+
+    it('should handle errors in createStripeCustomer', async () => {
+      const params = { email: 'test@example.com', name: 'Test' }
+      const error = new Error('Stripe Error')
+      mockPaymentGateway.createCustomer = vi.fn()
+      mockPaymentGateway.createCustomer.mockRejectedValue(error)
+
+      await expect(userService.createStripeCustomer(params)).rejects.toThrow(
+        error,
+      )
     })
   })
 })

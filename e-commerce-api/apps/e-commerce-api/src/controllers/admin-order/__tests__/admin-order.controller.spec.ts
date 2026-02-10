@@ -30,9 +30,11 @@ describe('AdminOrderController', () => {
 
   describe('getAllOrders', () => {
     it('should retrieve all orders successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Querystring: { page: number; pageSize: number }
-      }>>({
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Querystring: { page: number; pageSize: number }
+        }>
+      >({
         query: { page: 1, pageSize: 10 },
       })
       const mockReply = createMockReply()
@@ -49,7 +51,6 @@ describe('AdminOrderController', () => {
         pageSize: 10,
       })
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
         data: [
           { id: 1, formatted: true },
           { id: 2, formatted: true },
@@ -61,10 +62,19 @@ describe('AdminOrderController', () => {
 
   describe('updateOrderStatus', () => {
     it('should update order status successfully', async () => {
-      const mockRequest = createMockRequest<FastifyRequest<{
-        Params: { id: string }
-        Body: { status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }
-      }>>({
+      const mockRequest = createMockRequest<
+        FastifyRequest<{
+          Params: { id: string }
+          Body: {
+            status:
+              | 'pending'
+              | 'processing'
+              | 'shipped'
+              | 'delivered'
+              | 'cancelled'
+          }
+        }>
+      >({
         params: { id: '1' },
         body: { status: 'shipped' },
       })
@@ -75,12 +85,15 @@ describe('AdminOrderController', () => {
       await adminOrderController.updateOrderStatus(mockRequest, mockReply)
 
       expect(mockOrderService.updateOrderStatus).toHaveBeenCalledWith(
-        1,
+        {
+          orderId: 1,
+        },
         'shipped',
       )
       expect(mockReply.send).toHaveBeenCalledWith({
-        success: true,
-        data: { id: 1, status: 'shipped', formatted: true },
+        id: 1,
+        status: 'shipped',
+        formatted: true,
       })
     })
   })

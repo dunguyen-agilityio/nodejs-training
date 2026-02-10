@@ -42,6 +42,7 @@
     "node-cron": "^4.2.1",
     "pg-query-stream": "^4.11.2",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.9.1",
     "stripe": "^20.2.0",
     "typeorm": "^0.3.28"
   },

@@ -5,7 +5,6 @@ import { SendGridEmailAdapter, StripePaymentAdapter } from '#adapters'
 
 import {
   AuthService,
-  CartItemService,
   CartService,
   CategoryService,
   CheckoutService,
@@ -20,8 +19,6 @@ import {
   CartItemRepository,
   CartRepository,
   CategoryRepository,
-  InvoiceItemRepository,
-  InvoiceRepository,
   OrderItemRepository,
   OrderRepository,
   ProductRepository,
@@ -42,7 +39,6 @@ import {
   AdminOrderController,
   AuthController,
   CartController,
-  CartItemController,
   CategoryController,
   CheckoutController,
   MetricController,
@@ -98,20 +94,6 @@ export function initializeRegistry(): ContainerRegistry {
   )
   registry.registerRepository(
     createRepositoryRegistration(
-      'invoiceRepository',
-      InvoiceRepository,
-      'Invoice',
-    ),
-  )
-  registry.registerRepository(
-    createRepositoryRegistration(
-      'invoiceItemRepository',
-      InvoiceItemRepository,
-      'InvoiceItem',
-    ),
-  )
-  registry.registerRepository(
-    createRepositoryRegistration(
       'stockReservationRepository',
       StockReservationRepository,
       'StockReservation',
@@ -150,12 +132,6 @@ export function initializeRegistry(): ContainerRegistry {
       'cartRepository',
       'cartItemRepository',
       'productRepository',
-      'logger',
-    ]),
-  )
-  registry.registerService(
-    createServiceRegistration('cartItemService', CartItemService, [
-      'cartItemRepository',
       'logger',
     ]),
   )
@@ -218,11 +194,6 @@ export function initializeRegistry(): ContainerRegistry {
   registry.registerController(
     createControllerRegistration('cartController', CartController, [
       'cartService',
-    ]),
-  )
-  registry.registerController(
-    createControllerRegistration('cartItemController', CartItemController, [
-      'cartItemService',
     ]),
   )
   registry.registerController(

@@ -2,22 +2,17 @@ import { FastifyBaseLogger } from 'fastify'
 
 import Stripe from 'stripe'
 
-import { convertToSubcurrency } from '#utils/convertToSubcurrency'
-
 import '#types/error'
 import { IProduct, ProductCreateParams } from '#types/product'
 
 import {
   ApiList,
-  Charge,
   Customer,
   CustomerCreateParams,
   Invoice,
   InvoiceCreateParams,
   InvoiceItem,
   InvoiceItemCreateParams,
-  InvoicePaymentExpand,
-  NotFoundError,
   PaymentGateway,
   PaymentIntent,
   PaymentIntentCreateParams,
@@ -52,26 +47,6 @@ export class StripePaymentAdapter implements PaymentGateway {
     params: ProductCreateParams,
   ): Promise<TResponse<IProduct>> {
     return (await this.stripe.products.create(params)) as TResponse<IProduct>
-  }
-
-  async createPaymentIntents({
-    amount,
-    ...payload
-  }: PaymentIntentCreateParams): Promise<TResponse<PaymentIntent>> {
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      ...payload,
-      amount: convertToSubcurrency(amount),
-      automatic_payment_methods: { enabled: true },
-    })
-    return paymentIntent as unknown as TResponse<PaymentIntent>
-  }
-
-  async getPaymentIntents(
-    paymentIntentId: string,
-  ): Promise<TResponse<PaymentIntent>> {
-    return (await this.stripe.paymentIntents.retrieve(
-      paymentIntentId,
-    )) as unknown as TResponse<PaymentIntent>
   }
 
   async createInvoice({
@@ -131,21 +106,6 @@ export class StripePaymentAdapter implements PaymentGateway {
     }
   }
 
-  async getCharge(id: string): Promise<Charge> {
-    return (await this.stripe.charges.retrieve(id)) as unknown as Charge
-  }
-
-  async getInvoicePayment(
-    id: string,
-  ): Promise<TResponse<InvoicePaymentExpand>> {
-    return (await this.stripe.invoicePayments.retrieve(id, {
-      expand: [
-        'payment.payment_intent.payment_method',
-        'payment.payment_intent.latest_charge',
-      ],
-    })) as unknown as TResponse<InvoicePaymentExpand>
-  }
-
   async getProducts({
     starting_after,
     limit = 10,
@@ -162,17 +122,27 @@ export class StripePaymentAdapter implements PaymentGateway {
     return products
   }
 
-  async getOpenedInvoiceByUser(id: string): Promise<Invoice> {
-    const { data: invoices } = await this.stripe.invoices.list({
-      customer: id,
-      status: 'open',
-      limit: 1,
+  async processPayment({
+    currency,
+    customer,
+    items,
+  }: {
+    items: InvoiceItemCreateParams[]
+    currency: string
+    customer: string
+  }): Promise<TResponse<Invoice>> {
+    const invoice = await this.createInvoice({
+      currency,
+      customer,
     })
 
-    const invoice = invoices[0]
+    await Promise.all(
+      items.map((item) =>
+        this.createInvoiceItem({ ...item, invoice: invoice.id }),
+      ),
+    )
 
-    if (!invoice) throw new NotFoundError('Invoice not found')
-
-    return invoice as Invoice
+    const finalizeInvoice = await this.finalizeInvoice(invoice.id)
+    return finalizeInvoice
   }
 }

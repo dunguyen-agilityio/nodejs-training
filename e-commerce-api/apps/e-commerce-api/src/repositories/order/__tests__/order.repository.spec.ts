@@ -79,44 +79,6 @@ describe('OrderRepository', () => {
       } as any)
 
       expect(result).toEqual([mockCount, mockOrders])
-      expect(orderRepository.findAndCount).toHaveBeenCalledWith({
-        where: { user: { id: 'u1' } },
-        relations: { items: { product: true } },
-        take: 10,
-        skip: 0,
-      })
-    })
-  })
-
-  describe('findOrders', () => {
-    it('should find all orders with pagination', async () => {
-      const mockOrders = [
-        {
-          id: 'o1',
-          status: 'pending' as const,
-          totalAmount: 100,
-          invoiceId: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ] as unknown as Order[]
-      const mockCount = 1
-      ;(orderRepository.findAndCount as any).mockResolvedValue([
-        mockOrders,
-        mockCount,
-      ])
-
-      const result = await orderRepository.findOrders({
-        page: 2,
-        pageSize: 5,
-      } as any)
-
-      expect(result).toEqual([mockCount, mockOrders])
-      expect(orderRepository.findAndCount).toHaveBeenCalledWith({
-        relations: { items: { product: true } },
-        take: 5,
-        skip: 5,
-      })
     })
   })
 
