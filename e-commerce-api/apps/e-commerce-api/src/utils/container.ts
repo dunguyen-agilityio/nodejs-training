@@ -162,11 +162,6 @@ export function buildAdapters(fastify: FastifyInstance) {
     fastify.log,
   )
 
-  // const emailProvider: EmailProvider = new ResendEmailAdapter(
-  //   fastify.resend,
-  //   fastify.log,
-  // )
-
   return { paymentGateway, emailProvider }
 }
 

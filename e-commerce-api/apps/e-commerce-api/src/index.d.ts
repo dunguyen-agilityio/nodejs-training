@@ -4,7 +4,6 @@ import type { ClerkClient } from '@clerk/fastify'
 
 import { authenticate, authorizeAdmin } from '#middlewares'
 import type { MailService } from '@sendgrid/mail'
-import { Resend } from 'resend'
 import type { Stripe } from 'stripe'
 
 import type { USER_ROLES } from '#types'
@@ -25,7 +24,6 @@ declare module 'fastify' {
     container: TContainer
     stripe: Stripe
     sendgrid: MailService
-    resend: Resend
     clerk: { getAuth: GetAuthFn<FastifyRequest>; clerkClient: ClerkClient }
     authenticate: typeof authenticate
     authorizeAdmin: typeof authorizeAdmin

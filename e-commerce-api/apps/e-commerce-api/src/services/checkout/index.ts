@@ -157,14 +157,14 @@ export class CheckoutService implements ICheckoutService {
 
       const order = await this.createOrder(queryRunner, userId, invoice)
 
-      await this.mailProvider.sendWithTemplate({
+      await this.mailProvider.send({
         from: env.mail.fromEmail,
         to: email,
         templateName: MailTemplate.PAYMENT,
         subject: `[${env.app.name}] - Invoice - #${invoice.number}`,
         dynamicTemplateData: {
           company_name: env.app.name,
-          invoice_id: invoice.number,
+          invoice_id: invoice.number!,
           customer_name: name,
           amount_due: formatAmount(
             invoice.amount_due / 100,
@@ -173,12 +173,11 @@ export class CheckoutService implements ICheckoutService {
           due_date: formatStripeDate(invoice.created),
           invoice_url: client_secret
             ? `${env.client.baseUrl}/checkout?clientSecret=${client_secret}&orderId=${order.id}`
-            : invoice.hosted_invoice_url,
+            : invoice.hosted_invoice_url!,
           support_email: env.mail.supportEmail,
           help_center_url: 'https://moderncloud.com/help',
           subject: `Invoice ${invoice.number} for ${name}`,
         },
-        templateId: env.mail.templates.invoice,
       })
 
       this.logger.info(
@@ -583,9 +582,9 @@ export class CheckoutService implements ICheckoutService {
       { customer_email, invoice_number },
       'Sending confirmation email',
     )
-    const message = {
+
+    await this.mailProvider.send({
       from: env.mail.fromEmail,
-      templateId: env.mail.templates.orderSuccess,
       to: customer_email,
       templateName: MailTemplate.INVOICE,
       subject: `Payment receipt from ${env.app.name} #${receipt_number}`,
@@ -608,9 +607,7 @@ export class CheckoutService implements ICheckoutService {
           name: productName,
         })),
       },
-    }
-
-    await this.mailProvider.sendWithTemplate(message)
+    })
     this.logger.info(
       { customer_email, invoice_number },
       'Confirmation email sent successfully',

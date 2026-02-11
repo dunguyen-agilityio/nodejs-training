@@ -1,3 +1,5 @@
+import { TemplateData } from '#utils/mail'
+
 export type EmailData = string | { name?: string; email: string }
 
 export interface MailContent {
@@ -11,12 +13,11 @@ export enum MailTemplate {
   REGISTER = 'register-welcome',
 }
 
-export interface MailData {
+export type MailData = {
   to: EmailData | EmailData[]
   from: EmailData
   text?: string
   html?: string
-  templateName?: MailTemplate
   templateId?: string
   subject?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,4 +51,7 @@ export class EmailResponseError extends Error {
  */
 export interface EmailProvider {
   sendWithTemplate(data: MailData): Promise<void>
+  send(
+    data: Omit<MailData, 'dynamicTemplateData'> & TemplateData,
+  ): Promise<void>
 }
