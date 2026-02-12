@@ -66,15 +66,19 @@ await Promise.all([
 fastify.decorateRequest('clerk', { getter: () => ({ clerkClient, getAuth }) })
 fastify.decorate('clerk', { getter: () => ({ clerkClient, getAuth }) })
 
-AppDataSource.initialize()
-  .then((dataSource) => {
+const start = async () => {
+  try {
+    const dataSource = await AppDataSource.initialize()
+
     buildContainer(fastify, dataSource)
 
-    fastify.register(cronPlugin)
+    fastify.decorate('authenticate', { getter: () => authenticate })
+    fastify.decorate('authorizeAdmin', { getter: () => authorizeAdmin })
 
-    fastify.register(
+    await fastify.register(cronPlugin)
+
+    await fastify.register(
       (instance, _opts, done) => {
-        // Register request logging middleware
         instance.addHook(
           'onRequest',
           requestLogger({
@@ -86,16 +90,12 @@ AppDataSource.initialize()
           }),
         )
 
-        // Register response logging middleware
         instance.addHook(
           'onSend',
           responseLogger({
             logResponseBody: false,
           }),
         )
-
-        instance.decorate('authenticate', { getter: () => authenticate })
-        instance.decorate('authorizeAdmin', { getter: () => authorizeAdmin })
 
         instance.register(authRoutes, { prefix: '/auth' })
         instance.register(userRoutes, { prefix: '/users' })
@@ -138,10 +138,12 @@ AppDataSource.initialize()
         // close third paty
       })
     })
-  })
-  .catch((error) => {
-    fastify.log.error('Database connection failed', error)
+  } catch (error) {
+    fastify.log.error(error, 'Database connection failed')
     fastify.close(() => {
       process.exit(0)
     })
-  })
+  }
+}
+
+start()

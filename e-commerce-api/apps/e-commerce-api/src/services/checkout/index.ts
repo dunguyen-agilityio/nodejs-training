@@ -5,14 +5,20 @@ import dayjs from 'dayjs'
 
 import env from '#env'
 
-import type { TOrderRepository, TUserRepository } from '#repositories'
+import type {
+  TCartRepository,
+  TOrderRepository,
+  TUserRepository,
+} from '#repositories'
 
+import { formatCartItems } from '#utils/cart'
 import {
   formatAmount,
   formatPaymentMethod,
   formatStripeAmount,
   formatStripeDate,
 } from '#utils/format'
+import { formatInvoiceItems } from '#utils/invoice'
 
 import {
   BadRequestError,
@@ -35,6 +41,7 @@ import {
   OrderStatus,
   Product,
   StockReservation,
+  User,
 } from '#entities'
 
 import { ConfirmationEmailPayload, ICheckoutService } from './type'
@@ -57,11 +64,11 @@ export class CheckoutService implements ICheckoutService {
   ) {}
 
   async processPayment(
-    payload: { currency: string },
+    { currency }: { currency: string },
     userStripeId: string,
   ): Promise<{ orderId: number; clientSecret: string }> {
-    const { currency } = payload
     const user = await this.userRepository.getByStripeId(userStripeId)
+
     if (!user) {
       throw new NotFoundError('User not found')
     }
@@ -77,7 +84,7 @@ export class CheckoutService implements ICheckoutService {
     }
 
     this.logger.debug(
-      { userId, userStripeId, currency: payload.currency },
+      { userId, userStripeId, currency },
       'Generating payment intent',
     )
 
@@ -87,39 +94,14 @@ export class CheckoutService implements ICheckoutService {
       await queryRunner.startTransaction()
 
       this.logger.debug(
-        { userId, userStripeId, currency: payload.currency },
+        { userId, userStripeId, currency },
         'Transaction started for payment intent generation',
       )
 
-      const cart = await queryRunner.manager
-        .createQueryBuilder(Cart, 'cart')
-        .setLock('pessimistic_write')
-        .where('cart.user_id = :userId', { userId })
-        .getOne()
-
-      if (!cart || cart.status !== 'active') {
-        throw new UnexpectedError('Cart not active or not found')
-      }
-
+      const { cart, products } = await this.locking(queryRunner, userId)
       const { id: cartId } = cart
 
-      const cartItems = await queryRunner.manager
-        .createQueryBuilder(CartItem, 'cartItem')
-        .where('cartItem.cart_id = :cartId', { cartId })
-        .leftJoinAndSelect('cartItem.product', 'product')
-        .getMany()
-
-      this.validateCartItems(cartItems)
-
-      const products = await queryRunner.manager
-        .createQueryBuilder(Product, 'product')
-        .setLock('pessimistic_write')
-        .where('product.id IN (:...ids)', {
-          ids: cartItems.map((i) => i.productId),
-        })
-        .getMany()
-
-      const items = cartItems.map((item) => ({
+      const items = cart.items.map((item) => ({
         description: item.product.name,
         customer: userStripeId,
         quantity: item.quantity,
@@ -144,41 +126,17 @@ export class CheckoutService implements ICheckoutService {
       await this.createReserveStock(
         queryRunner,
         cartId,
-        formatCartItems(cartItems, currency),
+        formatCartItems(cart.items, currency),
         invoice.id,
         products,
       )
 
       await queryRunner.manager.delete(CartItem, { cartId: cartId })
 
-      const { email, name } = user
-
       const { client_secret } = invoice.confirmation_secret || {}
-
       const order = await this.createOrder(queryRunner, userId, invoice)
 
-      await this.mailProvider.send({
-        from: env.mail.fromEmail,
-        to: email,
-        templateName: MailTemplate.PAYMENT,
-        subject: `[${env.app.name}] - Invoice - #${invoice.number}`,
-        dynamicTemplateData: {
-          company_name: env.app.name,
-          invoice_id: invoice.number!,
-          customer_name: name,
-          amount_due: formatAmount(
-            invoice.amount_due / 100,
-            currency.toUpperCase(),
-          ),
-          due_date: formatStripeDate(invoice.created),
-          invoice_url: client_secret
-            ? `${env.client.baseUrl}/checkout?clientSecret=${client_secret}&orderId=${order.id}`
-            : invoice.hosted_invoice_url!,
-          support_email: env.mail.supportEmail,
-          help_center_url: 'https://moderncloud.com/help',
-          subject: `Invoice ${invoice.number} for ${name}`,
-        },
-      })
+      await this.sendInvoice(user, invoice, order, currency)
 
       this.logger.info(
         { userId, invoiceId: invoice.id },
@@ -200,6 +158,75 @@ export class CheckoutService implements ICheckoutService {
     } finally {
       await queryRunner.release()
     }
+  }
+
+  async sendInvoice(
+    user: User,
+    invoice: TResponse<Invoice>,
+    order: Order,
+    currency: string,
+  ) {
+    const { email, name } = user
+    const { client_secret } = invoice.confirmation_secret || {}
+
+    await this.mailProvider.send({
+      from: env.mail.fromEmail,
+      to: email,
+      templateName: MailTemplate.PAYMENT,
+      subject: `[${env.app.name}] - Invoice - #${invoice.number}`,
+      dynamicTemplateData: {
+        company_name: env.app.name,
+        invoice_id: invoice.number!,
+        customer_name: name,
+        amount_due: formatAmount(
+          invoice.amount_due / 100,
+          currency.toUpperCase(),
+        ),
+        due_date: formatStripeDate(invoice.created),
+        invoice_url: client_secret
+          ? `${env.client.baseUrl}/checkout?clientSecret=${client_secret}&orderId=${order.id}`
+          : invoice.hosted_invoice_url!,
+        support_email: env.mail.supportEmail,
+        help_center_url: 'https://moderncloud.com/help',
+        subject: `Invoice ${invoice.number} for ${name}`,
+      },
+    })
+
+    return order
+  }
+
+  async locking(queryRunner: QueryRunner, userId: string) {
+    const cart = await queryRunner.manager
+      .createQueryBuilder(Cart, 'cart')
+      .setLock('pessimistic_write')
+      .where('cart.user_id = :userId', { userId })
+      .getOne()
+
+    if (!cart || cart.status !== 'active') {
+      throw new UnexpectedError('Cart not active or not found')
+    }
+
+    const { id: cartId } = cart
+
+    const cartItems = await queryRunner.manager
+      .createQueryBuilder(CartItem, 'cartItem')
+      .where('cartItem.cart_id = :cartId', { cartId })
+      .leftJoinAndSelect('cartItem.product', 'product')
+      .getMany()
+
+    this.validateCartItems(cartItems)
+
+    cart.items = cartItems
+
+    const products = await queryRunner.manager
+      .createQueryBuilder(Product, 'product')
+      .setLock('pessimistic_write')
+      .where('product.id IN (:...ids)', {
+        ids: cartItems.map((i) => i.productId),
+      })
+      .getMany()
+
+    return { cart, products }
   }
 
   /**
@@ -232,21 +259,25 @@ export class CheckoutService implements ICheckoutService {
       )
 
       const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
-      if (!invoice || invoice.status !== 'paid') {
+      if (
+        !invoice ||
+        invoice.status !== 'paid' ||
+        !invoice.payments?.data[0]?.payment?.payment_intent
+      ) {
         throw new UnexpectedError('Invoice not paid or not found')
       }
 
-      const { payment_intent } = invoice.payments?.data[0]?.payment ?? {}
+      const { payment_intent } = invoice.payments.data[0].payment
 
       const payment_intentID =
-        typeof payment_intent === 'string' ? payment_intent : payment_intent?.id
+        typeof payment_intent === 'string' ? payment_intent : payment_intent.id
 
-      const paymentIntent = await this.paymentGatewayProvider.getPaymentIntent(
-        payment_intentID ?? '',
-      )
+      const paymentIntent =
+        await this.paymentGatewayProvider.getPaymentIntent(payment_intentID)
+
       const items = formatInvoiceItems(invoice)
 
-      await this._updateStockAndReservations(queryRunner, invoiceId)
+      await this.updateStockAndReservations(queryRunner, invoiceId)
 
       const order = await this.updateOrderStatus(queryRunner, invoiceId, 'paid')
 
@@ -460,7 +491,7 @@ export class CheckoutService implements ICheckoutService {
   /**
    * @description Update product stock and convert stock reservations to a 'converted' status after a successful order.
    */
-  private async _updateStockAndReservations(
+  private async updateStockAndReservations(
     queryRunner: QueryRunner,
     invoiceId: string,
   ) {
@@ -613,31 +644,4 @@ export class CheckoutService implements ICheckoutService {
       'Confirmation email sent successfully',
     )
   }
-}
-
-const formatInvoiceItems = (invoice: Invoice): InvoiceItemData[] => {
-  const items = invoice.lines.data.map((item) => ({
-    productName: item.description ?? '',
-    unitPrice: parseFloat(item.pricing?.unit_amount_decimal || '0') / 100,
-    quantity: item.quantity ?? 0,
-    currency: item.currency,
-    total: item.amount,
-    productId: item.pricing?.price_details?.product ?? '',
-  }))
-
-  return items
-}
-
-const formatCartItems = (
-  items: CartItem[],
-  currency: string,
-): InvoiceItemData[] => {
-  return items.map(({ product, quantity }) => ({
-    productName: product.name,
-    unitPrice: product.price,
-    quantity: quantity ?? 0,
-    currency: currency,
-    total: product.price * quantity,
-    productId: product.id,
-  }))
 }

@@ -1,18 +1,13 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import { getAuth } from '@clerk/fastify'
+import type { FastifyRequest } from 'fastify'
 
-import { HttpStatus, UnauthorizedError } from '#types'
+import { UnauthorizedError } from '#types'
 
-export const authenticate = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const auth = request.clerk.getAuth(request)
+export const authenticate = async (request: FastifyRequest) => {
+  const auth = getAuth(request)
 
   if (!auth.isAuthenticated) {
-    return reply.status(HttpStatus.UNAUTHORIZED).send({
-      error: 'Unauthenticated: Please log in.',
-      status: HttpStatus.UNAUTHORIZED,
-    })
+    throw new UnauthorizedError('Unauthenticated: Please log in.')
   }
 
   const { userService } = request.container.services

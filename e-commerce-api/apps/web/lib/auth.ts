@@ -12,7 +12,7 @@ export const generateToken = async (customs?: GenerateTokenInput) => {
 
   const token = await getToken({
     template: customs?.template || config.clerk.tokenTemplate,
-    expiresInSeconds: customs?.expiresInSeconds || 3,
+    expiresInSeconds: customs?.expiresInSeconds || 60,
   })
 
   return token

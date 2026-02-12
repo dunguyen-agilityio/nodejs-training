@@ -5,6 +5,7 @@ import { HttpStatus } from './http-status'
  */
 export class ApiError extends Error {
   statusCode: number
+  status: number
   details?: unknown
 
   constructor(statusCode: number, message: string, details?: unknown) {
@@ -12,6 +13,7 @@ export class ApiError extends Error {
     this.name = this.constructor.name
     this.statusCode = statusCode
     this.details = details
+    this.status = statusCode
   }
 }
 
