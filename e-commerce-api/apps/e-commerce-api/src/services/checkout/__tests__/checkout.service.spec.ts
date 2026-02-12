@@ -5,11 +5,11 @@ import { TOrderRepository, TUserRepository } from '#repositories'
 import { EmailProvider, PaymentGateway } from '#types'
 
 import {
+  createMockMailProvider,
+  createMockPaymentGateway,
   createMockQueryRunner,
   createMockRepository,
   loggerMock,
-  mockMailProvider,
-  mockPaymentGateway,
 } from '#test-utils'
 
 import { CheckoutService } from '../index'
@@ -19,6 +19,8 @@ describe('CheckoutService', () => {
   let userRepositoryMock: any
   let orderRepositoryMock: any
   let queryRunnerMock: any
+  let paymentGatewayProviderMock: any
+  let mailProviderMock: any
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -39,11 +41,14 @@ describe('CheckoutService', () => {
       },
     })
 
+    paymentGatewayProviderMock = createMockPaymentGateway()
+    mailProviderMock = createMockMailProvider()
+
     checkoutService = new CheckoutService(
       userRepositoryMock as unknown as TUserRepository,
       orderRepositoryMock as unknown as TOrderRepository,
-      mockPaymentGateway as unknown as PaymentGateway,
-      mockMailProvider as unknown as EmailProvider,
+      paymentGatewayProviderMock as unknown as PaymentGateway,
+      mailProviderMock as unknown as EmailProvider,
       loggerMock,
     )
   })

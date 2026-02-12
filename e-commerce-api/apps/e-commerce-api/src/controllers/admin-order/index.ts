@@ -5,6 +5,8 @@ import dayjs from 'dayjs'
 
 import { IOrderService } from '#services/types'
 
+import { BaseController } from '#controllers/base'
+
 import { formatOrderDto } from '#dtos/order'
 
 import { updateOrderStatusSchema } from '#schemas/admin-order'
@@ -12,7 +14,6 @@ import { getOrdersSchema } from '#schemas/order'
 
 import { OrderStatus } from '#entities'
 
-import { BaseController } from '../base'
 import { IAdminOrderController } from './type'
 
 export class AdminOrderController

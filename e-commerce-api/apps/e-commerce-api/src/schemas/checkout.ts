@@ -1,3 +1,5 @@
+import { ErrorResponseSchema } from './response'
+
 export const createPaymentIntentSchema = {
   type: 'object',
   required: ['currency'],
@@ -33,39 +35,29 @@ export const paymentSuccessSchema = {
           properties: {
             id: { type: 'string' },
             object: { type: 'string', enum: ['invoice'] },
-
             account_country: { type: 'string' },
             account_name: { type: 'string' },
-
             amount_paid: { type: 'integer' },
             currency: {
               type: 'string',
               minLength: 3,
               maxLength: 3,
             },
-
             customer: { type: 'string' },
             customer_email: { type: 'string', format: 'email' },
             customer_name: { type: ['string', 'null'] },
-
             hosted_invoice_url: { type: 'string', format: 'uri' },
             invoice_pdf: { type: 'string', format: 'uri' },
-
             number: { type: 'string' },
-
             status: {
               type: 'string',
               enum: ['draft', 'open', 'paid', 'void', 'uncollectible'],
             },
-
             total: { type: 'integer' },
             total_excluding_tax: { type: 'integer' },
-
             period_start: { type: 'integer' },
             period_end: { type: 'integer' },
-
             webhooks_delivered_at: { type: 'integer' },
-
             status_transitions: {
               type: 'object',
               properties: {
@@ -74,9 +66,7 @@ export const paymentSuccessSchema = {
               },
               additionalProperties: false,
             },
-
             next_payment_attempt: { type: ['integer', 'null'] },
-
             lines: {
               type: 'object',
               required: ['object', 'data'],
@@ -85,7 +75,6 @@ export const paymentSuccessSchema = {
                 has_more: { type: 'boolean' },
                 total_count: { type: 'integer' },
                 url: { type: 'string' },
-
                 data: {
                   type: 'array',
                   items: {
@@ -108,7 +97,6 @@ export const paymentSuccessSchema = {
                       description: { type: 'string' },
                       quantity: { type: 'integer' },
                       subtotal: { type: 'integer' },
-
                       pricing: {
                         type: 'object',
                         properties: {
@@ -147,3 +135,38 @@ export const paymentSuccessSchema = {
     type: { type: 'string', enum: ['invoice.payment_succeeded'] },
   },
 } as const
+
+export const PaymentIntentResponseSchema = {
+  type: 'object',
+  properties: {
+    clientSecret: { type: 'string', example: 'pi_123_secret_abc' },
+    orderId: { type: 'number', example: 1 },
+    status: { type: 'string', example: 'pending' },
+    total: { type: 'number', example: 100 },
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string', example: 'prod_123' },
+          productName: { type: 'string', example: 'Product Name' },
+          productPrice: { type: 'number', example: 100 },
+          quantity: { type: 'number', example: 1 },
+        },
+      },
+    },
+  },
+  required: ['clientSecret', 'orderId'],
+  additionalProperties: false,
+} as const
+
+export const StripeWebhookAckSchema = {
+  type: 'object',
+  properties: {
+    received: { type: 'boolean', example: true },
+  },
+  required: ['received'],
+  additionalProperties: false,
+} as const
+
+export const CheckoutErrorResponseSchema = ErrorResponseSchema

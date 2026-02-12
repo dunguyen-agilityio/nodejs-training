@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  createMockPaymentGateway,
   createMockRepository,
   loggerMock,
-  mockPaymentGateway,
 } from '#test-utils'
 
 import { Product } from '#entities'
@@ -14,17 +14,19 @@ describe('ProductService', () => {
   let productService: ProductService
   let productRepositoryMock: ReturnType<typeof createMockRepository>
   let categoryRepositoryMock: ReturnType<typeof createMockRepository>
+  let paymentGatewayProviderMock: ReturnType<typeof createMockPaymentGateway>
 
   beforeEach(() => {
     vi.clearAllMocks()
 
     productRepositoryMock = createMockRepository()
     categoryRepositoryMock = createMockRepository()
+    paymentGatewayProviderMock = createMockPaymentGateway()
 
     productService = new ProductService(
       productRepositoryMock as any,
       categoryRepositoryMock as any,
-      mockPaymentGateway as any,
+      paymentGatewayProviderMock as any,
       loggerMock,
     )
   })
@@ -179,8 +181,7 @@ describe('ProductService', () => {
       categoryRepositoryMock.findOneBy.mockResolvedValue(mockCategory)
 
       const stripeProduct = { id: 'stripe_123' }
-      mockPaymentGateway.createProduct = vi.fn()
-      mockPaymentGateway.createProduct.mockResolvedValue(stripeProduct)
+      paymentGatewayProviderMock.createProduct.mockResolvedValue(stripeProduct)
 
       const savedProduct = {
         ...payload,
@@ -194,7 +195,7 @@ describe('ProductService', () => {
       expect(categoryRepositoryMock.findOneBy).toHaveBeenCalledWith({
         name: payload.category,
       })
-      expect(mockPaymentGateway.createProduct).toHaveBeenCalledWith({
+      expect(paymentGatewayProviderMock.createProduct).toHaveBeenCalledWith({
         name: payload.name,
         description: payload.description,
         images: payload.images,
@@ -229,8 +230,7 @@ describe('ProductService', () => {
         name: 'Category',
       })
 
-      mockPaymentGateway.createProduct = vi.fn()
-      mockPaymentGateway.createProduct.mockRejectedValue(
+      paymentGatewayProviderMock.createProduct.mockRejectedValue(
         new Error('Stripe error'),
       )
 

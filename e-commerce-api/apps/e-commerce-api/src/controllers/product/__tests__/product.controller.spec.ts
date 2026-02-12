@@ -10,10 +10,12 @@ import { createMockReply, createMockRequest } from '#test-utils'
 import { ProductController } from '../index'
 
 type ProductQuery = {
-  page: string
-  pageSize: string
+  page: number
+  pageSize: number
   query: string
   category: string
+  order: 'DESC' | 'ASC'
+  orderBy: 'name'
 }
 
 // Mock dependencies
@@ -122,10 +124,12 @@ describe('ProductController', () => {
         }>
       >({
         query: {
-          page: '1',
-          pageSize: '10',
+          page: 1,
+          pageSize: 10,
           query: '',
           category: undefined as unknown as string,
+          order: 'DESC',
+          orderBy: 'name',
         },
       })
       const mockReply = createMockReply()
@@ -143,6 +147,8 @@ describe('ProductController', () => {
         query: '',
         categories: [],
         status: undefined,
+        order: 'DESC',
+        orderBy: 'name',
       })
       // sendSuccess uses status(200)
       expect(mockReply.status).toHaveBeenCalledWith(HttpStatus.OK)

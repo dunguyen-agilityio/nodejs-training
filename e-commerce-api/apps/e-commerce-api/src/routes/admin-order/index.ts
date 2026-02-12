@@ -3,11 +3,11 @@ import { FastifyPluginCallback } from 'fastify'
 import { HttpStatus } from '#types/http-status'
 
 import { updateOrderStatusSchema } from '#schemas/admin-order'
-import { getOrdersSchema } from '#schemas/order'
 import {
   OrderSchema,
   OrdersPaginatedResponseSchema,
-} from '#schemas/order-response'
+  getOrdersSchema,
+} from '#schemas/order'
 import { ErrorResponseSchema } from '#schemas/response'
 
 export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {

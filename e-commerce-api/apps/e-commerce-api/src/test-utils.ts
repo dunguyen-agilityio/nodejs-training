@@ -133,7 +133,7 @@ export const loggerMock = {
   child: vi.fn().mockReturnThis(),
 } as unknown as FastifyBaseLogger
 
-export const mockPaymentGateway = {
+export const createMockPaymentGateway = (overrides = {}) => ({
   createInvoice: vi.fn(),
   getInvoice: vi.fn(),
   getPaymentDetails: vi.fn(),
@@ -144,13 +144,15 @@ export const mockPaymentGateway = {
   getOpenedInvoiceByUser: vi.fn(),
   createProduct: vi.fn(),
   createCustomer: vi.fn(),
-  getPaymentIntents: vi.fn(), // Added missing methods from interface
+  getPaymentIntents: vi.fn(),
   createPaymentIntents: vi.fn(),
   findOrCreateCustomer: vi.fn(),
   getPaymentIntent: vi.fn(),
   getCharge: vi.fn(),
-}
+  ...overrides,
+})
 
-export const mockMailProvider = {
-  sendWithTemplate: vi.fn(),
-}
+export const createMockMailProvider = (overrides = {}) => ({
+  send: vi.fn(),
+  ...overrides,
+})

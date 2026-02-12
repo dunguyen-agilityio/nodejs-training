@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { USER_ROLES } from '#types'
 
 import {
+  createMockPaymentGateway,
   createMockRepository,
   loggerMock,
-  mockPaymentGateway,
 } from '#test-utils'
 
 import { UserService } from '../index'
@@ -13,6 +13,7 @@ import { UserService } from '../index'
 describe('UserService', () => {
   let userService: UserService
   let userRepositoryMock: ReturnType<typeof createMockRepository>
+  let paymentGatewayProviderMock: ReturnType<typeof createMockPaymentGateway>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -21,10 +22,11 @@ describe('UserService', () => {
       getById: vi.fn(),
       findOneBy: vi.fn(),
     })
+    paymentGatewayProviderMock = createMockPaymentGateway()
 
     userService = new UserService(
       userRepositoryMock as any,
-      mockPaymentGateway as any,
+      paymentGatewayProviderMock as any,
       loggerMock,
     )
   })
@@ -104,20 +106,20 @@ describe('UserService', () => {
     it('should create stripe customer', async () => {
       const params = { email: 'test@example.com', name: 'Test' }
       const mockCustomer = { id: 'cus-1', ...params }
-      mockPaymentGateway.createCustomer = vi.fn()
-      mockPaymentGateway.createCustomer.mockResolvedValue(mockCustomer)
+      paymentGatewayProviderMock.createCustomer.mockResolvedValue(mockCustomer)
 
       const result = await userService.createStripeCustomer(params)
 
       expect(result).toEqual(mockCustomer)
-      expect(mockPaymentGateway.createCustomer).toHaveBeenCalledWith(params)
+      expect(paymentGatewayProviderMock.createCustomer).toHaveBeenCalledWith(
+        params,
+      )
     })
 
     it('should handle errors in createStripeCustomer', async () => {
       const params = { email: 'test@example.com', name: 'Test' }
       const error = new Error('Stripe Error')
-      mockPaymentGateway.createCustomer = vi.fn()
-      mockPaymentGateway.createCustomer.mockRejectedValue(error)
+      paymentGatewayProviderMock.createCustomer.mockRejectedValue(error)
 
       await expect(userService.createStripeCustomer(params)).rejects.toThrow(
         error,

@@ -13,12 +13,13 @@ export default async function ProductList({
   searchParams: ProductSearchParams
 }) {
   const search = searchParams.search ?? undefined
-  const sort = searchParams.sort ?? undefined
+  const orderBy = searchParams.orderBy ?? undefined
+  const order = searchParams.order ?? undefined
   const category = searchParams.category ?? undefined
   const page = parseInt(searchParams.page ?? '1', 10)
 
   const [data, categories] = await Promise.all([
-    getProducts({ search, sort, category, page, limit: 8 }),
+    getProducts({ search, orderBy, order, category, page, limit: 8 }),
     getCategories(),
   ])
 

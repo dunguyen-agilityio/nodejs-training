@@ -6,7 +6,7 @@ import { OrderStatus, Product, ProductStatus } from '#entities'
  * Query parameters for filtering and paginating products
  */
 export type ProductQueryParams = {
-  query: string
+  query?: string
   page: number
   pageSize: number
   categories: string[]
@@ -15,7 +15,7 @@ export type ProductQueryParams = {
     Product,
     'name' | 'price' | 'stock' | 'createdAt' | 'updatedAt'
   >
-  order?: 'ASC' | 'DESC'
+  order?: 'ASC' | 'DESC' | 'asc' | 'desc'
 }
 
 /**

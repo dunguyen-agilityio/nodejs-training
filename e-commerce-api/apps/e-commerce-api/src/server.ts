@@ -63,13 +63,8 @@ await Promise.all([
   }),
 ])
 
-fastify.decorateRequest('clerk', {
-  getter: () => ({ clerkClient, getAuth }),
-})
-
-fastify.decorate('clerk', {
-  getter: () => ({ clerkClient, getAuth }),
-})
+fastify.decorateRequest('clerk', { getter: () => ({ clerkClient, getAuth }) })
+fastify.decorate('clerk', { getter: () => ({ clerkClient, getAuth }) })
 
 AppDataSource.initialize()
   .then((dataSource) => {
@@ -99,13 +94,8 @@ AppDataSource.initialize()
           }),
         )
 
-        instance.decorate('authenticate', {
-          getter: () => authenticate,
-        })
-
-        instance.decorate('authorizeAdmin', {
-          getter: () => authorizeAdmin,
-        })
+        instance.decorate('authenticate', { getter: () => authenticate })
+        instance.decorate('authorizeAdmin', { getter: () => authorizeAdmin })
 
         instance.register(authRoutes, { prefix: '/auth' })
         instance.register(userRoutes, { prefix: '/users' })
@@ -114,9 +104,7 @@ AppDataSource.initialize()
         instance.register(categoryRoutes, { prefix: '/categories' })
         instance.register(cartRoutes, { prefix: '/cart' })
         instance.register(orderRoutes, { prefix: '/orders' })
-        instance.register(adminOrderRoutes, {
-          prefix: '/admin/orders',
-        })
+        instance.register(adminOrderRoutes, { prefix: '/admin/orders' })
         instance.register(checkoutRoutes, { prefix: '/checkout' })
         instance.register(metricRoutes, { prefix: '/metrics' })
 

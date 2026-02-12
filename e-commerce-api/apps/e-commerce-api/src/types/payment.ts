@@ -139,7 +139,6 @@ export interface PaymentGateway {
   findOrCreateCustomer(params: CustomerCreateParams): Promise<Customer>
   createCustomer(params: CustomerCreateParams): Promise<Customer>
   createProduct(params: ProductCreateParams): Promise<TResponse<IProduct>>
-  finalizeInvoice(id: string): Promise<TResponse<Invoice>>
   getInvoice(id: string): Promise<TResponse<Invoice>>
   getPaymentIntent(id: string): Promise<TResponse<PaymentIntent>>
   processPayment(params: {

@@ -2,11 +2,11 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { HttpStatus } from '#types/http-status'
 
-import { PaginationSchema } from '#schemas/pagination'
 import {
   ProductDetailResponseSchema,
   ProductErrorResponseSchema,
   ProductListResponseSchema,
+  ProductQuerySchema,
 } from '#schemas/product'
 
 export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
@@ -17,25 +17,7 @@ export const productRoutes: FastifyPluginCallback = (instance, _, done) => {
       schema: {
         description: 'Get paginated list of products',
         tags: ['products'],
-        querystring: {
-          type: 'object',
-          properties: {
-            ...PaginationSchema.properties,
-            query: {
-              type: 'string',
-              description: 'Search query',
-            },
-            category: {
-              type: 'string',
-              description: 'Filter by category (comma-separated)',
-            },
-            status: {
-              type: 'string',
-              description:
-                'Filter by status (draft, published, archived, deleted, all)',
-            },
-          },
-        },
+        querystring: ProductQuerySchema,
         response: {
           [HttpStatus.OK]: ProductListResponseSchema,
           [HttpStatus.BAD_REQUEST]: ProductErrorResponseSchema,

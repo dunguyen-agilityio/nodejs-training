@@ -19,6 +19,8 @@ interface ProductFormProps {
   categories: Category[]
 }
 
+faker.seed(10000)
+
 export function ProductForm({ initialData, categories }: ProductFormProps) {
   const router = useRouter()
   const isEditing = !!initialData
@@ -245,7 +247,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
       </div>
 
       <div className="flex gap-4">
-        {process.env.NODE_ENV === 'development' && !isEditing && (
+        {process.env.NEXT_PUBLIC_APP_ENV === 'development' && !isEditing && (
           <button
             type="button"
             onClick={generateMockData}

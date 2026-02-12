@@ -2,12 +2,12 @@ import { FastifyPluginCallback } from 'fastify'
 
 import { HttpStatus } from '#types/http-status'
 
-import { getOrdersSchema } from '#schemas/order'
 import {
   OrderErrorResponseSchema,
   OrderSchema,
   OrdersPaginatedResponseSchema,
-} from '#schemas/order-response'
+  getOrdersSchema,
+} from '#schemas/order'
 
 export const orderRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.controllers.orderController

@@ -28,7 +28,7 @@ export class ProductService implements IProductService {
   async getProducts(
     params: ProductQueryParams,
   ): Promise<{ data: Product[]; meta: { pagination: Pagination } }> {
-    const { query, page, pageSize, categories, status } = params
+    const { query, page, pageSize, categories, status, orderBy, order } = params
     this.logger.info(
       { query, page, pageSize, categories, status },
       'Fetching products',
@@ -41,6 +41,8 @@ export class ProductService implements IProductService {
       skip,
       categories,
       status,
+      orderBy,
+      order,
     })
 
     const result = {

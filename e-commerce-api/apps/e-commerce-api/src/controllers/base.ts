@@ -9,7 +9,7 @@ type SuccessMeta = {
   [key: string]: unknown
 }
 
-export abstract class BaseController {
+export class BaseController {
   protected sendSuccess<T>(
     reply: FastifyReply,
     data: T,

@@ -5,20 +5,16 @@ import { IProductService } from '#services/types'
 
 import { productToObject } from '#dtos/product'
 
-import { addProductSchema, updateProductSchema } from '#schemas/product'
+import {
+  ProductQuerySchema,
+  addProductSchema,
+  updateProductSchema,
+} from '#schemas/product'
 
 import { ProductStatus } from '#entities'
 
 import { BaseController } from '../base'
 import { IProductController } from './type'
-
-type ProductQuery = {
-  page: string
-  pageSize: string
-  query: string
-  category: string
-  status?: string
-}
 
 export class ProductController
   extends BaseController
@@ -54,23 +50,20 @@ export class ProductController
 
   getProducts = async (
     request: FastifyRequest<{
-      Querystring: ProductQuery
+      Querystring: FromSchema<typeof ProductQuerySchema>
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const {
-      page = '1',
-      pageSize = '10',
-      query = '',
-      category,
-      status,
-    } = request.query
+    const { page, pageSize, query, category, status, orderBy, order } =
+      request.query
     const { data, meta } = await this.service.getProducts({
-      page: parseInt(page),
-      pageSize: parseInt(pageSize),
+      page,
+      pageSize,
       query,
       categories: category?.split(',') || [],
       status: status as ProductStatus | 'all',
+      orderBy,
+      order,
     })
 
     if (meta?.pagination) {

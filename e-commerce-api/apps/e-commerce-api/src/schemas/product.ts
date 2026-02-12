@@ -1,3 +1,4 @@
+import { PaginationSchema } from './pagination'
 import { ErrorResponseSchema, createPaginatedResponseSchema } from './response'
 
 export const ProductSchema = {
@@ -88,3 +89,33 @@ export const ProductCreateResponseSchema = addProductSchema
 export const ProductUpdateResponseSchema = updateProductSchema
 
 export const ProductErrorResponseSchema = ErrorResponseSchema
+
+export const ProductQuerySchema = {
+  type: 'object',
+  properties: {
+    ...PaginationSchema.properties,
+    query: {
+      type: 'string',
+      description: 'Search query',
+    },
+    category: {
+      type: 'string',
+      description: 'Filter by category (comma-separated)',
+    },
+    status: {
+      type: 'string',
+      description:
+        'Filter by status (draft, published, archived, deleted, all)',
+    },
+    orderBy: {
+      type: 'string',
+      enum: ['name', 'price', 'stock', 'createdAt', 'updatedAt'],
+      description: 'Sort by field',
+    },
+    order: {
+      type: 'string',
+      enum: ['ASC', 'DESC', 'asc', 'desc'],
+      description: 'Sort order (ASC, DESC)',
+    },
+  },
+} as const

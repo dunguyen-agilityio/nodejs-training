@@ -1,18 +1,15 @@
 import { FastifyPluginCallback } from 'fastify'
 
 import { validateRequest } from '#middlewares'
-
-import { HttpStatus } from '#types/http-status'
-
-import {
-  createPaymentIntentSchema,
-  paymentSuccessSchema,
-} from '#schemas/checkout'
 import {
   CheckoutErrorResponseSchema,
   PaymentIntentResponseSchema,
   StripeWebhookAckSchema,
-} from '#schemas/checkout-response'
+  createPaymentIntentSchema,
+  paymentSuccessSchema,
+} from '#schemas'
+
+import { HttpStatus } from '#types/http-status'
 
 export const checkoutRoutes: FastifyPluginCallback = (
   instance,
@@ -21,7 +18,7 @@ export const checkoutRoutes: FastifyPluginCallback = (
 ) => {
   const container = instance.container.controllers.checkoutController
   instance.post(
-    '/payment-intents',
+    '/',
     {
       schema: {
         description: 'Create Stripe payment intent',

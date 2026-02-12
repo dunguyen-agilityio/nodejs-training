@@ -138,6 +138,11 @@
       "production": "./build/schemas/*.js",
       "default": "./src/schemas/*.ts"
     },
+    "#schemas": {
+      "development": "./src/schemas/index.ts",
+      "production": "./build/schemas/index.js",
+      "default": "./src/schemas/index.ts"
+    },
     "#types": {
       "development": "./src/types/index.ts",
       "production": "./build/types/index.js",

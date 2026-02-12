@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm'
+import { Brackets, Repository } from 'typeorm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Product } from '#entities'
@@ -75,11 +75,12 @@ describe('ProductRepository', () => {
       expect(productRepository.createQueryBuilder).toHaveBeenCalledWith(
         'product',
       )
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(expect.any(Brackets))
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining('product.name ILIKE :query'),
-        expect.objectContaining({ query: '%test%' }),
+        expect.stringContaining('product.status = :status'),
+        expect.objectContaining({ status: 'published' }),
       )
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         expect.stringContaining('LOWER(product.category) IN (:...categories)'),
         expect.objectContaining({ categories: ['cat1'] }),
       )

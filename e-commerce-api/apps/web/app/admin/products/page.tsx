@@ -15,7 +15,8 @@ interface AdminProductsPageProps {
   searchParams: Promise<{
     search?: string
     category?: string
-    sort?: string
+    orderBy?: string
+    order?: string
     page?: string
     status?: string
   }>
@@ -24,14 +25,15 @@ interface AdminProductsPageProps {
 export default async function AdminProductsPage({
   searchParams,
 }: AdminProductsPageProps) {
-  const { search, category, sort, page, status } = await searchParams
+  const { search, category, orderBy, order, page, status } = await searchParams
   const currentPage = Number(page) || 1
   const limit = 10
 
   const { products, pagination } = await getProducts({
     search,
     category,
-    sort,
+    orderBy,
+    order,
     page: currentPage,
     limit,
     status,

@@ -86,7 +86,8 @@ export type ApiPagination = {
 
 export type ProductSearchParams = {
   search?: string
-  sort?: string
+  orderBy?: string
+  order?: string
   category?: string
   page?: string
 }

@@ -7,6 +7,13 @@ import { TCartRepository, TUserRepository } from '#repositories'
 
 import { EmailProvider, PaymentGateway, USER_ROLES } from '#types'
 
+import {
+  createMockMailProvider,
+  createMockPaymentGateway,
+  createMockRepository,
+  loggerMock,
+} from '#test-utils'
+
 import { User } from '#entities'
 
 import { AuthService } from '../index'
@@ -15,47 +22,47 @@ describe('AuthService', () => {
   let authService: AuthService
   let userRepositoryMock: ReturnType<typeof vi.mocked<TUserRepository>>
   let cartRepositoryMock: ReturnType<typeof vi.mocked<TCartRepository>>
-  let paymentGatewayProviderMock: ReturnType<typeof vi.mocked<PaymentGateway>>
-  let mailProviderMock: ReturnType<typeof vi.mocked<EmailProvider>>
-  let loggerMock: ReturnType<typeof vi.mocked<FastifyBaseLogger>>
+  let paymentGatewayProviderMock: PaymentGateway
+  let mailProviderMock: EmailProvider
+  let logger: FastifyBaseLogger
   let identityProviderMock: any
 
+  const mockUser: User = {
+    id: 'user-123',
+    email: 'test@example.com',
+    name: 'Test User',
+    avatar: 'avatar.png',
+    firstName: 'Test',
+    lastName: 'User',
+    username: 'testuser',
+    phone: '1234567890',
+    age: 30,
+    role: USER_ROLES.USER,
+    stripeId: 'stripe-customer-123',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    password: 'password123',
+  }
+
   beforeEach(() => {
-    userRepositoryMock = {
-      save: vi.fn(),
-    } as unknown as ReturnType<typeof vi.mocked<TUserRepository>>
+    userRepositoryMock = createMockRepository() as any
+    cartRepositoryMock = createMockRepository() as any
 
-    cartRepositoryMock = {
-      save: vi.fn(),
-    } as unknown as ReturnType<typeof vi.mocked<TCartRepository>>
+    paymentGatewayProviderMock = createMockPaymentGateway() as any
+    mailProviderMock = createMockMailProvider() as any
 
-    paymentGatewayProviderMock = {
-      findOrCreateCustomer: vi.fn(),
-    } as unknown as ReturnType<typeof vi.mocked<PaymentGateway>>
+    logger = loggerMock as any
 
-    mailProviderMock = {
-      sendWithTemplate: vi.fn(),
-    } as unknown as ReturnType<typeof vi.mocked<EmailProvider>>
+    vi.clearAllMocks()
 
-    loggerMock = {
-      info: vi.fn(),
-      debug: vi.fn(),
-      error: vi.fn(),
-    } as unknown as ReturnType<typeof vi.mocked<FastifyBaseLogger>>
-
-    // Mock env variables if necessary, or ensure they are set for tests
-    // For simplicity, we'll assume env is properly set up in test environment
-    // If env.client.baseUrl or other properties were dynamic, you'd mock env as well.
+    // Mock env variables
     Object.assign(env, {
       client: {
         baseUrl: 'http://localhost:3000',
         loginPath: '/login',
       },
-      sendgrid: {
+      mail: {
         fromEmail: 'no-reply@example.com',
-        templates: {
-          registerSuccess: 'register-success-template-id',
-        },
         supportEmail: 'support@example.com',
       },
       app: {
@@ -74,7 +81,7 @@ describe('AuthService', () => {
       cartRepositoryMock,
       paymentGatewayProviderMock,
       mailProviderMock,
-      loggerMock,
+      logger,
       identityProviderMock,
     )
   })
@@ -82,84 +89,102 @@ describe('AuthService', () => {
   describe('register', () => {
     it('should successfully register a new user and send a confirmation email', async () => {
       // Arrange
-      const newUserBody: User = {
-        id: 'user-123',
-        email: 'test@example.com',
-        name: 'Test User',
-        avatar: 'avatar.png',
-        firstName: 'Test',
-        lastName: 'User',
-        username: 'testuser',
-        phone: '1234567890',
-        age: 30,
-        role: USER_ROLES.USER,
-        stripeId: 'stripe-customer-123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        password: 'password123', // Assuming password is part of User type but handled by auth
-      }
-
       const mockCustomer = { id: 'stripe-customer-123' } as any
-      paymentGatewayProviderMock.findOrCreateCustomer.mockResolvedValue(
-        mockCustomer,
-      )
-      userRepositoryMock.save.mockResolvedValue(newUserBody)
-      cartRepositoryMock.save.mockResolvedValue({
+      vi.mocked(
+        paymentGatewayProviderMock.findOrCreateCustomer,
+      ).mockResolvedValue(mockCustomer)
+      vi.mocked(userRepositoryMock.save).mockResolvedValue(mockUser)
+      vi.mocked(cartRepositoryMock.save).mockResolvedValue({
         id: 1,
-        user: newUserBody,
+        user: mockUser,
         status: 'active',
         items: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
       } as any)
-      mailProviderMock.sendWithTemplate.mockResolvedValue(undefined) // sendWithTemplate doesn't return anything specific
+      vi.mocked(mailProviderMock.send).mockResolvedValue(undefined)
 
       // Act
-      const result = await authService.register(newUserBody)
+      const result = await authService.register(mockUser)
 
       // Assert
       expect(
         paymentGatewayProviderMock.findOrCreateCustomer,
       ).toHaveBeenCalledWith({
-        email: newUserBody.email,
-        name: newUserBody.name,
+        email: mockUser.email,
+        name: mockUser.name,
       })
       expect(userRepositoryMock.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          email: newUserBody.email,
+          email: mockUser.email,
           stripeId: mockCustomer.id,
         }),
       )
       expect(cartRepositoryMock.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          user: newUserBody,
+          user: mockUser,
           status: 'active',
-          items: [],
         }),
       )
-      expect(mailProviderMock.sendWithTemplate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: newUserBody.email,
-          templateId: env.mail.templates.registerSuccess,
-          dynamicTemplateData: expect.objectContaining({
-            name: newUserBody.name,
-            email: newUserBody.email,
-          }),
-        }),
-      )
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        { email: newUserBody.email, name: newUserBody.name },
+
+      expect(mailProviderMock.send).toHaveBeenCalled()
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.any(Object),
         'Registering new user',
       )
-      expect(loggerMock.debug).toHaveBeenCalledWith(
-        { userId: newUserBody.id },
-        'Cart created for user',
+      expect(result).toEqual(mockUser)
+    })
+
+    it('should throw an error if payment gateway fails', async () => {
+      vi.mocked(
+        paymentGatewayProviderMock.findOrCreateCustomer,
+      ).mockRejectedValue(new Error('Stripe error'))
+
+      await expect(authService.register(mockUser)).rejects.toThrow(
+        'Stripe error',
       )
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        { userId: newUserBody.id, email: newUserBody.email },
-        'User registered successfully, confirmation email sent',
+    })
+  })
+
+  describe('login', () => {
+    it('should successfully login and return user with jwt', async () => {
+      // Arrange
+      const mockJwt = 'mock-jwt-token'
+      identityProviderMock.login.mockResolvedValue({
+        jwt: mockJwt,
+        userId: mockUser.id,
+      })
+      vi.mocked(userRepositoryMock.getById).mockResolvedValue(mockUser)
+
+      // Act
+      const result = await authService.login('test@example.com', 'password123')
+
+      // Assert
+      expect(identityProviderMock.login).toHaveBeenCalledWith(
+        'test@example.com',
+        'password123',
       )
-      expect(result).toEqual(newUserBody)
+      expect(userRepositoryMock.getById).toHaveBeenCalledWith(mockUser.id)
+      expect(result).toEqual({ user: mockUser, jwt: mockJwt })
+    })
+
+    it('should throw error if identity provider login fails', async () => {
+      identityProviderMock.login.mockRejectedValue(
+        new Error('Invalid credentials'),
+      )
+
+      await expect(
+        authService.login('test@example.com', 'wrong-password'),
+      ).rejects.toThrow('Invalid credentials')
+    })
+
+    it('should handle case where user is not found in repository after identity provider login', async () => {
+      identityProviderMock.login.mockResolvedValue({
+        jwt: 'jwt',
+        userId: 'non-existent',
+      })
+      vi.mocked(userRepositoryMock.getById).mockResolvedValue(null)
+
+      const result = await authService.login('test@example.com', 'password')
+      expect(result.user).toBeNull()
     })
   })
 })

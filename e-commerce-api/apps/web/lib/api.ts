@@ -133,8 +133,7 @@ export const API_ROUTES = {
     CANCEL: (id: number) => `/orders/${id}/cancel`,
   },
   CHECKOUT: {
-    PREPARE: '/checkout/orders/prepare',
-    CREATE: '/checkout/payment-intents',
+    CREATE: '/checkout',
   },
   METRIC: {
     PRODUCT: '/metrics/product',
