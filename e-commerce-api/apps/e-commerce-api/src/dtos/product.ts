@@ -1,15 +1,16 @@
 import { Product } from '#entities'
 
-export class ProductResponseDto extends Product {
-  constructor(product: Product) {
-    super(product)
-  }
+export class ProductResponseDto {
+  category: string
+  image: string
 
-  toJSON() {
-    return { ...this, category: this.category.name, image: this.images[0] }
+  constructor(product: Product) {
+    Object.assign(this, product)
+    this.category = product.category.name
+    this.image = product.images[0]!
   }
 }
 
 export const productToObject = (product: Product) => {
-  return new ProductResponseDto(product).toJSON()
+  return new ProductResponseDto(product)
 }

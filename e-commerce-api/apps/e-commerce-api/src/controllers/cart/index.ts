@@ -19,7 +19,7 @@ export class CartController extends BaseController implements ICartController {
   ): Promise<void> => {
     const { userId } = request.auth
     const cart = await this.service.getCartByUserId(userId!)
-    this.sendItem(reply, new CartDto(cart).toJSON())
+    this.sendItem(reply, new CartDto(cart))
   }
 
   addProductToCart = async (
@@ -37,7 +37,7 @@ export class CartController extends BaseController implements ICartController {
       quantity,
     })
 
-    this.sendCreatedItem(reply, new CartItemDto(cartItem).toJSON())
+    this.sendCreatedItem(reply, new CartItemDto(cartItem))
   }
 
   removeProductFromCart = async (

@@ -1,28 +1,36 @@
 import { CartItem } from '#entities'
 
-export class CartItemDto extends CartItem {
-  constructor(cartItem: CartItem) {
-    super(cartItem)
-  }
+export class CartItemDto {
+  id: number
+  productName: string
+  productId: string
+  productImage: string
+  productPrice: number
+  productStock: number
+  quantity: number
+  productStatus: string
 
-  toJSON() {
-    return {
-      id: this.id,
-      productId: this.product.id,
-      productName: this.product.name,
-      productImage: this.product.images[0],
-      productPrice: this.product.price,
-      productStock: this.product.stock - this.product.reservedStock,
-      productStatus: this.product.status,
-      quantity: this.quantity,
-    }
+  constructor({
+    product,
+    quantity,
+    id,
+  }: Pick<CartItem, 'id' | 'product' | 'quantity'>) {
+    this.id = id
+
+    this.productId = product.id
+    this.productImage = product.images[0]!
+    this.productName = product.name
+    this.productPrice = product.price
+    this.productStock = product.stock
+    this.productStatus = product.status
+    this.quantity = quantity
   }
 
   toCheckoutItem() {
     return {
-      productId: this.product.id,
-      productName: this.product.name,
-      productPrice: this.product.price,
+      productId: this.productId,
+      productName: this.productName,
+      productPrice: this.productPrice,
       quantity: this.quantity,
     }
   }
