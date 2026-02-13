@@ -89,11 +89,7 @@ export class CartService implements ICartService {
         relations: { product: true },
       })
 
-      if (quantity === 0) {
-        if (cartItem) {
-          await manager.remove(cartItem)
-        }
-      } else {
+      if (!cartItem || quantity > 0) {
         cartItem = await manager.save(CartItem, {
           ...cartItem,
           product,
@@ -104,9 +100,9 @@ export class CartService implements ICartService {
           { userId, productId, quantity, cartId },
           'Cart item saved with quantity',
         )
+      } else {
+        await manager.remove(cartItem)
       }
-
-      if (!cartItem) throw new UnexpectedError()
 
       await queryRunner.commitTransaction()
       this.logger.info(

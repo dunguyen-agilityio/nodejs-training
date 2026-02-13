@@ -27,6 +27,7 @@ import {
   MailTemplate,
   NotFoundError,
   PaymentGateway,
+  PaymentIntent,
   PaymentMethod,
   StockReservationStatus,
   TResponse,
@@ -44,7 +45,7 @@ import {
   User,
 } from '#entities'
 
-import { ConfirmationEmailPayload, ICheckoutService } from './type'
+import { ICheckoutService } from './type'
 
 export type InvoiceItemData = {
   productName: string
@@ -243,22 +244,15 @@ export class CheckoutService implements ICheckoutService {
     try {
       await queryRunner.connect()
       await queryRunner.startTransaction()
-      this.logger.debug(
-        { stripeId, invoiceId },
-        'Transaction started for payment handling',
-      )
 
       const user = await this.userRepository.getByStripeId(stripeId)
+
       if (!user) {
         throw new NotFoundError('User not found')
       }
 
-      this.logger.debug(
-        { userId: user.id, stripeId },
-        'User found for payment processing',
-      )
-
       const invoice = await this.paymentGatewayProvider.getInvoice(invoiceId)
+
       if (
         !invoice ||
         invoice.status !== 'paid' ||
@@ -269,55 +263,83 @@ export class CheckoutService implements ICheckoutService {
 
       const { payment_intent } = invoice.payments.data[0].payment
 
-      const payment_intentID =
-        typeof payment_intent === 'string' ? payment_intent : payment_intent.id
-
-      const paymentIntent =
-        await this.paymentGatewayProvider.getPaymentIntent(payment_intentID)
-
-      const items = formatInvoiceItems(invoice)
+      const paymentIntent = await this.paymentGatewayProvider.getPaymentIntent(
+        typeof payment_intent === 'string' ? payment_intent : payment_intent.id,
+      )
 
       await this.updateStockAndReservations(queryRunner, invoiceId)
 
       const order = await this.updateOrderStatus(queryRunner, invoiceId, 'paid')
 
       await queryRunner.commitTransaction()
+
       this.logger.info(
         { userId: user.id, invoiceId, orderId: order.id },
         'Payment handled successfully',
       )
 
-      const {
-        currency,
-        total,
-        number: invoice_number,
-        receipt_number,
-        invoice_pdf,
-      } = invoice
-      const { email, name } = user
-      const payment_method =
-        paymentIntent.payment_method ?? ({} as PaymentMethod)
-      const { receipt_url } = paymentIntent.latest_charge ?? {}
-      const formattedPaymenMethod = formatPaymentMethod(payment_method)
-
-      await this.sendConfirmationEmail(items, {
-        currency,
-        customer_email: email,
-        customer_name: name,
-        invoice_url: invoice_pdf!,
-        invoice_number: invoice_number!,
-        paid_at: invoice.status_transitions.paid_at!,
-        payment_method: formattedPaymenMethod,
-        receipt_number: receipt_number!,
-        receipt_url,
-        total,
-      })
+      await this.sendConfirmationEmail(invoice, user, paymentIntent)
     } catch (error) {
       await queryRunner.rollbackTransaction()
       throw error
     } finally {
       await queryRunner.release()
     }
+  }
+
+  private async sendConfirmationEmail(
+    invoice: Invoice,
+    user: User,
+    paymentIntent: PaymentIntent,
+  ) {
+    const items = formatInvoiceItems(invoice)
+    const {
+      currency,
+      total,
+      number: invoice_number,
+      receipt_number,
+      invoice_pdf,
+      status_transitions,
+    } = invoice
+    const { email: customer_email, name: customer_name } = user
+    const payment_method = paymentIntent.payment_method ?? ({} as PaymentMethod)
+    const { receipt_url } = paymentIntent.latest_charge ?? {}
+    const formattedPaymenMethod = formatPaymentMethod(payment_method)
+
+    this.logger.debug(
+      { customer_email, invoice_number },
+      'Sending confirmation email',
+    )
+
+    await this.mailProvider.send({
+      from: env.mail.fromEmail,
+      to: customer_email,
+      templateName: MailTemplate.INVOICE,
+      subject: `Payment receipt from ${env.app.name} #${receipt_number}`,
+      dynamicTemplateData: {
+        name: customer_name,
+        email: customer_email,
+        company_name: env.app.name,
+        support_email: env.mail.supportEmail,
+        amount_paid: formatStripeAmount(total, currency),
+        paid_date: formatStripeDate(status_transitions.paid_at || Date.now()),
+        receipt_number: receipt_number!,
+        invoice_number: invoice_number!,
+        payment_method: formattedPaymenMethod,
+        invoice_url: invoice_pdf!,
+        receipt_url: receipt_url,
+        items: items.map(({ unitPrice, quantity, productName }) => ({
+          quantity,
+          unit_price: formatAmount(unitPrice, currency),
+          total: formatAmount(unitPrice * quantity, currency),
+          name: productName,
+        })),
+      },
+    })
+    this.logger.info(
+      { customer_email, invoice_number },
+      'Confirmation email sent successfully',
+    )
   }
 
   private createQueryRunner() {
@@ -518,7 +540,13 @@ export class CheckoutService implements ICheckoutService {
       productMap[p.id] = p
     }
     for (const r of reservations) {
-      const product = productMap[r.productId]!
+      const product = productMap[r.productId]
+      if (!product) {
+        throw new UnexpectedError('Product not found')
+      }
+      if (product.stock < r.quantity) {
+        throw new UnexpectedError('Product is out of stock')
+      }
       product.stock -= r.quantity
       product.reservedStock -= r.quantity
       r.status = StockReservationStatus.CONVERTED
@@ -592,56 +620,5 @@ export class CheckoutService implements ICheckoutService {
     await queryRunner.manager.save(orderItems)
 
     return order
-  }
-
-  private async sendConfirmationEmail(
-    invoiceItems: InvoiceItemData[],
-    {
-      paid_at,
-      receipt_url,
-      customer_email,
-      customer_name,
-      invoice_url,
-      payment_method,
-      receipt_number,
-      invoice_number,
-      currency,
-      total,
-    }: ConfirmationEmailPayload,
-  ) {
-    this.logger.debug(
-      { customer_email, invoice_number },
-      'Sending confirmation email',
-    )
-
-    await this.mailProvider.send({
-      from: env.mail.fromEmail,
-      to: customer_email,
-      templateName: MailTemplate.INVOICE,
-      subject: `Payment receipt from ${env.app.name} #${receipt_number}`,
-      dynamicTemplateData: {
-        name: customer_name,
-        email: customer_email,
-        company_name: env.app.name,
-        support_email: env.mail.supportEmail,
-        amount_paid: formatStripeAmount(total, currency),
-        paid_date: formatStripeDate(paid_at || Date.now()),
-        receipt_number,
-        invoice_number,
-        payment_method,
-        invoice_url,
-        receipt_url: receipt_url,
-        items: invoiceItems.map(({ unitPrice, quantity, productName }) => ({
-          quantity,
-          unit_price: formatAmount(unitPrice, currency),
-          total: formatAmount(unitPrice * quantity, currency),
-          name: productName,
-        })),
-      },
-    })
-    this.logger.info(
-      { customer_email, invoice_number },
-      'Confirmation email sent successfully',
-    )
   }
 }
