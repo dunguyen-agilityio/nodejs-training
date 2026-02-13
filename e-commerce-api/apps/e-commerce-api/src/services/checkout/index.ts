@@ -1,17 +1,10 @@
 import { FastifyBaseLogger } from 'fastify'
 import { QueryRunner } from 'typeorm'
 
-import dayjs from 'dayjs'
-
 import env from '#env'
 
-import type {
-  TCartRepository,
-  TOrderRepository,
-  TUserRepository,
-} from '#repositories'
+import type { TOrderRepository, TUserRepository } from '#repositories'
 
-import { formatCartItems } from '#utils/cart'
 import {
   formatAmount,
   formatPaymentMethod,
@@ -21,7 +14,6 @@ import {
 import { formatInvoiceItems } from '#utils/invoice'
 
 import {
-  BadRequestError,
   EmailProvider,
   Invoice,
   MailTemplate,
@@ -29,22 +21,13 @@ import {
   PaymentGateway,
   PaymentIntent,
   PaymentMethod,
-  StockReservationStatus,
   TResponse,
   UnexpectedError,
 } from '#types'
 
-import {
-  Cart,
-  CartItem,
-  Order,
-  OrderItem,
-  OrderStatus,
-  Product,
-  StockReservation,
-  User,
-} from '#entities'
+import { Cart, CartItem, Order, OrderItem, OrderStatus, User } from '#entities'
 
+import { IInventoryService } from '../inventory/type'
 import { ICheckoutService } from './type'
 
 export type InvoiceItemData = {
@@ -59,6 +42,7 @@ export class CheckoutService implements ICheckoutService {
   constructor(
     private userRepository: TUserRepository,
     private orderRepository: TOrderRepository,
+    private inventoryService: IInventoryService,
     private paymentGatewayProvider: PaymentGateway,
     private mailProvider: EmailProvider,
     private logger: FastifyBaseLogger,
@@ -99,7 +83,7 @@ export class CheckoutService implements ICheckoutService {
         'Transaction started for payment intent generation',
       )
 
-      const { cart, products } = await this.locking(queryRunner, userId)
+      const { cart } = await this.locking(queryRunner, userId)
       const { id: cartId } = cart
 
       const items = cart.items.map((item) => ({
@@ -124,12 +108,14 @@ export class CheckoutService implements ICheckoutService {
         items,
       })
 
-      await this.createReserveStock(
+      await this.inventoryService.reserveStock(
         queryRunner,
-        cartId,
-        formatCartItems(cart.items, currency),
+        cart.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
         invoice.id,
-        products,
+        cartId,
       )
 
       await queryRunner.manager.delete(CartItem, { cartId: cartId })
@@ -215,19 +201,16 @@ export class CheckoutService implements ICheckoutService {
       .leftJoinAndSelect('cartItem.product', 'product')
       .getMany()
 
-    this.validateCartItems(cartItems)
+    await this.inventoryService.checkAvailability(
+      cartItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+      })),
+    )
 
     cart.items = cartItems
 
-    const products = await queryRunner.manager
-      .createQueryBuilder(Product, 'product')
-      .setLock('pessimistic_write')
-      .where('product.id IN (:...ids)', {
-        ids: cartItems.map((i) => i.productId),
-      })
-      .getMany()
-
-    return { cart, products }
+    return { cart }
   }
 
   /**
@@ -267,7 +250,7 @@ export class CheckoutService implements ICheckoutService {
         typeof payment_intent === 'string' ? payment_intent : payment_intent.id,
       )
 
-      await this.updateStockAndReservations(queryRunner, invoiceId)
+      await this.inventoryService.commitStock(queryRunner, invoiceId)
 
       const order = await this.updateOrderStatus(queryRunner, invoiceId, 'paid')
 
@@ -344,223 +327,6 @@ export class CheckoutService implements ICheckoutService {
 
   private createQueryRunner() {
     return this.orderRepository.manager.connection.createQueryRunner()
-  }
-
-  /**
-   * @description Reserves stock for products in the cart. This is a private helper method for `prepareCheckout`.
-   * It checks for available stock and creates stock reservations.
-   */
-  private async createReserveStock(
-    queryRunner: QueryRunner,
-    cartId: number,
-    cartItems: InvoiceItemData[],
-    invoiceId: string,
-    products: Product[],
-  ) {
-    this.logger.debug(
-      { cartId, itemCount: cartItems.length },
-      'Reserving stock for cart items',
-    )
-
-    const quantityMap: Record<string, number> = {}
-
-    for (const item of cartItems) {
-      const productId = item.productId
-      quantityMap[productId] = (quantityMap[productId] ?? 0) + item.quantity
-    }
-
-    const reservations: StockReservation[] = []
-
-    for (const product of products) {
-      const need = quantityMap[product.id]!
-      const available = product.stock - product.reservedStock
-
-      if (available < need) {
-        throw new BadRequestError('Insufficient stock for reservation')
-      }
-
-      product.reservedStock += need
-
-      const reservation = queryRunner.manager.create(StockReservation, {
-        cartId,
-        productId: product.id,
-        quantity: need,
-        status: StockReservationStatus.RESERVED,
-        expiresAt: dayjs().add(15, 'minute').toDate(),
-        invoiceId,
-      })
-
-      reservations.push(reservation)
-    }
-
-    await queryRunner.manager.save(products)
-    await queryRunner.manager.save(reservations)
-    this.logger.info({ cartId }, 'Stock reserved successfully')
-  }
-
-  /**
-   * @description Releases expired stock reservations.
-   * This method finds all reservations that have expired and are still in 'reserved' status.
-   * It then updates the product stock and marks the reservation as 'released'.
-   */
-  async releaseExpiredStockReservations() {
-    const queryRunner = this.createQueryRunner()
-    try {
-      await queryRunner.connect()
-      await queryRunner.startTransaction()
-
-      const expiredReservations = await queryRunner.manager
-        .createQueryBuilder(StockReservation, 'sr')
-        .setLock('pessimistic_write')
-        .where('sr.status = :status', {
-          status: StockReservationStatus.RESERVED,
-        })
-        .andWhere('sr.expires_at <= :now', { now: new Date() })
-        .getMany()
-
-      if (expiredReservations.length === 0) {
-        await queryRunner.commitTransaction()
-        return
-      }
-
-      this.logger.info(
-        { count: expiredReservations.length },
-        'Found expired reservations to release',
-      )
-
-      const productIds = [
-        ...new Set(expiredReservations.map((r) => r.productId)),
-      ]
-
-      const products = await queryRunner.manager
-        .createQueryBuilder(Product, 'product')
-        .setLock('pessimistic_write')
-        .where('product.id IN (:...ids)', { ids: productIds })
-        .getMany()
-
-      const productMap: Record<string, Product> = {}
-      for (const p of products) {
-        productMap[p.id] = p
-      }
-
-      for (const reservation of expiredReservations) {
-        const product = productMap[reservation.productId]
-        if (product) {
-          product.reservedStock -= reservation.quantity
-          // Ensure reservedStock doesn't go below 0 (sanity check)
-          if (product.reservedStock < 0) product.reservedStock = 0
-        }
-        reservation.status = StockReservationStatus.RELEASED
-      }
-
-      await queryRunner.manager.save(products)
-      await queryRunner.manager.save(expiredReservations)
-
-      await queryRunner.commitTransaction()
-      this.logger.info(
-        { count: expiredReservations.length },
-        'Released expired stock reservations',
-      )
-    } catch (error) {
-      this.logger.error(
-        { error },
-        'Failed to release expired stock reservations',
-      )
-      await queryRunner.rollbackTransaction()
-    } finally {
-      await queryRunner.release()
-    }
-  }
-
-  validateCartItems = (cartItems: CartItem[]) => {
-    if (cartItems.length === 0) {
-      throw new UnexpectedError('Cart is empty')
-    }
-
-    let error = ''
-
-    cartItems.some((item) => {
-      if (item.product.status !== 'published') {
-        error = `Product ${item.product.name} is not available`
-        return true
-      }
-
-      const availableStock = item.product.stock - item.product.reservedStock
-      this.logger.info({ availableStock }, 'availableStock')
-
-      if (item.quantity > availableStock) {
-        error = `Product ${item.product.name} is out of stock`
-        return true
-      }
-
-      return false
-    })
-
-    if (error) {
-      throw new UnexpectedError(error)
-    }
-
-    const totalAmount = cartItems.reduce(
-      (total, item) => total + Math.round(item.product.price * item.quantity),
-      0,
-    )
-
-    if (totalAmount < 1) {
-      throw new UnexpectedError('Total amount is less than 1')
-    }
-  }
-
-  /**
-   * @description Update product stock and convert stock reservations to a 'converted' status after a successful order.
-   */
-  private async updateStockAndReservations(
-    queryRunner: QueryRunner,
-    invoiceId: string,
-  ) {
-    this.logger.debug({ invoiceId }, 'Updating stock and reservations')
-    const reservations = await queryRunner.manager
-      .createQueryBuilder(StockReservation, 'sr')
-      .setLock('pessimistic_write')
-      .where('sr.invoice_id = :invoiceId', { invoiceId })
-      .andWhere("sr.status = 'reserved'")
-      .getMany()
-
-    const productIds = reservations.map((r: StockReservation) => r.productId)
-
-    if (productIds.length < 1) return
-
-    const products = await queryRunner.manager
-      .createQueryBuilder(Product, 'product')
-      .setLock('pessimistic_write')
-      .where('product.id IN (:...ids)', { ids: productIds })
-      .getMany()
-
-    const productMap: Record<string, Product> = {}
-    for (const p of products) {
-      productMap[p.id] = p
-    }
-    for (const r of reservations) {
-      const product = productMap[r.productId]
-      if (!product) {
-        throw new UnexpectedError('Product not found')
-      }
-      if (product.stock < r.quantity) {
-        throw new UnexpectedError('Product is out of stock')
-      }
-      product.stock -= r.quantity
-      product.reservedStock -= r.quantity
-      r.status = StockReservationStatus.CONVERTED
-    }
-    await queryRunner.manager.save(products)
-    await queryRunner.manager.save(reservations)
-    this.logger.info(
-      {
-        invoiceId,
-        productCount: products.length,
-        reservationCount: reservations.length,
-      },
-      'Stock and reservations updated successfully',
-    )
   }
 
   private updateOrderStatus = async (

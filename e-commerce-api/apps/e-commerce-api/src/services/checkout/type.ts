@@ -4,7 +4,6 @@ export interface ICheckoutService {
     userStripeId: string,
   ): Promise<{ orderId: number; clientSecret: string }>
   handleSuccessfulPayment(stripeId: string, invoiceId: string): Promise<void>
-  releaseExpiredStockReservations(): Promise<void>
 }
 
 export interface ConfirmationEmailPayload {

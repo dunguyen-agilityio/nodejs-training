@@ -1,5 +1,3 @@
-import { QueryRunner } from 'typeorm'
-
 import { ProductMetric, ProductQueryParams } from '#types'
 
 import { Product } from '#entities'
@@ -12,10 +10,5 @@ export abstract class AbstractProductRepository extends BaseRepository<Product> 
     params: Omit<ProductQueryParams, 'page'> & { skip: number },
   ): Promise<[Product[], number]>
 
-  abstract decreaseStock(
-    queryRunner: QueryRunner,
-    productId: string,
-    quantity: number,
-  ): Promise<void>
   abstract getAdminMetrics(): Promise<ProductMetric | undefined>
 }

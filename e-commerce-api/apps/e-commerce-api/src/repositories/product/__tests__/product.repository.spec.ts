@@ -132,54 +132,6 @@ describe('ProductRepository', () => {
     })
   })
 
-  describe('decreaseStock', () => {
-    it('should decrease stock successfully', async () => {
-      const mockQueryRunner = {
-        manager: {
-          findOne: vi.fn(),
-          save: vi.fn(),
-        },
-      } as any
-
-      const mockProduct = { id: 'p1', stock: 10 }
-      mockQueryRunner.manager.findOne.mockResolvedValue(mockProduct)
-
-      await productRepository.decreaseStock(mockQueryRunner, 'p1', 5)
-
-      expect(mockProduct.stock).toBe(5)
-      expect(mockQueryRunner.manager.save).toHaveBeenCalledWith(mockProduct)
-    })
-
-    it('should throw error if product not found', async () => {
-      const mockQueryRunner = {
-        manager: {
-          findOne: vi.fn(),
-        },
-      } as any
-
-      mockQueryRunner.manager.findOne.mockResolvedValue(null)
-
-      await expect(
-        productRepository.decreaseStock(mockQueryRunner, 'p1', 5),
-      ).rejects.toThrow('Product not found')
-    })
-
-    it('should throw error if insufficient stock', async () => {
-      const mockQueryRunner = {
-        manager: {
-          findOne: vi.fn(),
-        },
-      } as any
-
-      const mockProduct = { id: 'p1', stock: 2 }
-      mockQueryRunner.manager.findOne.mockResolvedValue(mockProduct)
-
-      await expect(
-        productRepository.decreaseStock(mockQueryRunner, 'p1', 5),
-      ).rejects.toThrow('Insufficient stock')
-    })
-  })
-
   describe('getAdminMetrics', () => {
     it('should return metrics', async () => {
       const mockMetrics = { totalProducts: 10 }

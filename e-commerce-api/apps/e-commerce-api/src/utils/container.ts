@@ -13,6 +13,7 @@ import {
   CartService,
   CategoryService,
   CheckoutService,
+  InventoryService,
   MetricService,
   OrderService,
   ProductService,
@@ -93,6 +94,12 @@ export function buildServices(
   } = repos
   const { emailProvider, paymentGateway } = adapters
 
+  const inventoryService = new InventoryService(
+    productRepository,
+    repos.stockReservationRepository,
+    fastify.log,
+  )
+
   return {
     productService: new ProductService(
       productRepository,
@@ -112,6 +119,7 @@ export function buildServices(
     checkoutService: new CheckoutService(
       userRepository,
       orderRepository,
+      inventoryService,
       paymentGateway,
       emailProvider,
       fastify.log,
@@ -125,6 +133,7 @@ export function buildServices(
       new ClerkIdentityProvider(clerkClient, fastify.log),
     ),
     adminService: new MetricService(productRepository, fastify.log),
+    inventoryService,
   }
 }
 
