@@ -14,6 +14,7 @@ import {
   CategoryService,
   CheckoutService,
   InventoryService,
+  InvoiceMail,
   MetricService,
   OrderService,
   ProductService,
@@ -94,6 +95,8 @@ export function buildServices(
   } = repos
   const { emailProvider, paymentGateway } = adapters
 
+  const invoiceMail = new InvoiceMail(emailProvider, fastify.log)
+
   const inventoryService = new InventoryService(
     productRepository,
     repos.stockReservationRepository,
@@ -121,7 +124,7 @@ export function buildServices(
       orderRepository,
       inventoryService,
       paymentGateway,
-      emailProvider,
+      invoiceMail,
       fastify.log,
     ),
     authService: new AuthService(
@@ -134,6 +137,7 @@ export function buildServices(
     ),
     adminService: new MetricService(productRepository, fastify.log),
     inventoryService,
+    invoiceMail,
   }
 }
 

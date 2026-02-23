@@ -16,13 +16,16 @@ const mockShippingAddress = (user?: User): ShippingAddress => ({
   country: 'USA',
 })
 
-export const formatOrderDto = (order: Order, user?: User) => {
+export const formatOrderDto = (
+  { id, status, paymentSecret, items, totalAmount, updatedAt }: Order,
+  user?: User,
+) => {
   return {
-    id: order.id,
-    userId: order.user?.id,
-    status: order.status,
-    paymentSecret: order.paymentSecret,
-    items: order.items?.map(({ id, priceAtPurchase, product, quantity }) => ({
+    id,
+    userId: user?.id,
+    status: status,
+    paymentSecret: paymentSecret,
+    items: items?.map(({ id, priceAtPurchase, product, quantity }) => ({
       id,
       productId: product.id,
       quantity: quantity,
@@ -31,10 +34,10 @@ export const formatOrderDto = (order: Order, user?: User) => {
       image: product.images[0],
       description: product.description,
     })),
-    total: order.totalAmount,
-    date: order.updatedAt,
+    total: totalAmount,
+    date: updatedAt,
 
     // TODO: get shipping address from user
-    shippingAddress: mockShippingAddress(user || order.user),
+    shippingAddress: mockShippingAddress(user),
   }
 }

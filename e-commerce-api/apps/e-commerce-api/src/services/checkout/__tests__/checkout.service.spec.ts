@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { InvoiceMail } from '#services/invoice-mail/index'
+
 import { TOrderRepository, TUserRepository } from '#repositories'
 
 import { EmailProvider, PaymentGateway } from '#types'
@@ -23,6 +25,7 @@ describe('CheckoutService', () => {
   let paymentGatewayProviderMock: any
   let mailProviderMock: any
   let inventoryServiceMock: any
+  let invoiceMailMock: any
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -45,6 +48,7 @@ describe('CheckoutService', () => {
 
     paymentGatewayProviderMock = createMockPaymentGateway()
     mailProviderMock = createMockMailProvider()
+    invoiceMailMock = new InvoiceMail(mailProviderMock, loggerMock)
 
     inventoryServiceMock = createMockInventoryService()
 
@@ -53,7 +57,7 @@ describe('CheckoutService', () => {
       orderRepositoryMock as unknown as TOrderRepository,
       inventoryServiceMock,
       paymentGatewayProviderMock as unknown as PaymentGateway,
-      mailProviderMock as unknown as EmailProvider,
+      invoiceMailMock,
       loggerMock,
     )
   })

@@ -6,12 +6,7 @@ import type {
   TProductRepository,
 } from '#repositories'
 
-import {
-  BadRequestError,
-  CartPayLoad,
-  NotFoundError,
-  UnexpectedError,
-} from '#types'
+import { BadRequestError, CartPayLoad, NotFoundError } from '#types'
 
 import { Cart, CartItem } from '#entities'
 
