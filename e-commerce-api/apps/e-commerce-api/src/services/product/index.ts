@@ -9,12 +9,11 @@ import {
   Pagination,
   PaymentGateway,
   ProductQueryParams,
-  UnexpectedError,
 } from '#types'
 
 import { addProductSchema, updateProductSchema } from '#schemas/product'
 
-import { Category, Product } from '#entities'
+import { Product } from '#entities'
 
 import { IProductService } from './type'
 

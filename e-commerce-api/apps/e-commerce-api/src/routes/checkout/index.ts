@@ -1,6 +1,6 @@
+import fastifyRateLimit from '@fastify/rate-limit'
 import { FastifyPluginCallback } from 'fastify'
 
-import { validateRequest } from '#middlewares'
 import {
   CheckoutErrorResponseSchema,
   PaymentIntentResponseSchema,
@@ -11,11 +11,15 @@ import {
 
 import { HttpStatus } from '#types/http-status'
 
+import { validateRequest } from '#middlewares'
+
 export const checkoutRoutes: FastifyPluginCallback = (
   instance,
   _opts,
   done,
 ) => {
+  instance.register(fastifyRateLimit, { max: 3, timeWindow: '1 minute' })
+
   const container = instance.container.controllers.checkoutController
   instance.post(
     '/',
