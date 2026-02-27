@@ -27,6 +27,7 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    allowedHosts: ['todoapp-production-cede.up.railway.app'],
   },
   // Vitest configuration
   test: {
