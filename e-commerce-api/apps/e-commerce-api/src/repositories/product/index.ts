@@ -1,4 +1,4 @@
-import { Brackets, QueryRunner } from 'typeorm'
+import { Brackets } from 'typeorm'
 
 import { ProductMetric, ProductQueryParams } from '#types'
 
@@ -67,24 +67,6 @@ export class ProductRepository extends AbstractProductRepository {
 
   async softDeleteById(id: string | number): Promise<void> {
     await this.update(id, { status: 'deleted' } as Partial<Product>)
-  }
-
-  async decreaseStock(
-    queryRunner: QueryRunner,
-    productId: string,
-    quantity: number,
-  ): Promise<void> {
-    const product = await queryRunner.manager.findOne(Product, {
-      where: { id: productId },
-      lock: { mode: 'pessimistic_write' },
-    })
-
-    if (!product) throw new Error('Product not found')
-    if (product.stock < quantity) {
-      throw new Error('Insufficient stock')
-    }
-    product.stock -= quantity
-    await queryRunner.manager.save(product)
   }
 
   async getAdminMetrics(): Promise<ProductMetric | undefined> {

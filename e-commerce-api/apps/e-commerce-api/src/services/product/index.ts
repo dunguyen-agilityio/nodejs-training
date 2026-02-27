@@ -13,7 +13,7 @@ import {
 
 import { addProductSchema, updateProductSchema } from '#schemas/product'
 
-import { Category, Product } from '#entities'
+import { Product } from '#entities'
 
 import { IProductService } from './type'
 
@@ -145,28 +145,14 @@ export class ProductService implements IProductService {
       )
     }
 
-    let category: Category | null = product.category
-
-    if (body.category) {
-      category = await this.categoryRepository.findOneBy({
-        name: body.category,
-      })
-
-      if (!category) {
-        throw new BadRequestError(
-          `Not found Category by name: ${body.category}`,
-        )
-      }
-    }
-
     const updated = await this.productRepository.save({
       ...product,
       ...body,
-      category,
+      category: { name: body.category },
     })
 
     this.logger.info({ productId: id }, 'Product updated successfully')
-    return { ...updated, category }
+    return updated
   }
 
   async deleteProduct(id: string): Promise<void> {

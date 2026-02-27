@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { InvoiceMail } from '#services/invoice-mail/index'
+
 import { TOrderRepository, TUserRepository } from '#repositories'
 
 import { EmailProvider, PaymentGateway } from '#types'
 
 import {
+  createMockInventoryService,
   createMockMailProvider,
   createMockPaymentGateway,
   createMockQueryRunner,
@@ -21,6 +24,8 @@ describe('CheckoutService', () => {
   let queryRunnerMock: any
   let paymentGatewayProviderMock: any
   let mailProviderMock: any
+  let inventoryServiceMock: any
+  let invoiceMailMock: any
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -43,12 +48,16 @@ describe('CheckoutService', () => {
 
     paymentGatewayProviderMock = createMockPaymentGateway()
     mailProviderMock = createMockMailProvider()
+    invoiceMailMock = new InvoiceMail(mailProviderMock, loggerMock)
+
+    inventoryServiceMock = createMockInventoryService()
 
     checkoutService = new CheckoutService(
       userRepositoryMock as unknown as TUserRepository,
       orderRepositoryMock as unknown as TOrderRepository,
+      inventoryServiceMock,
       paymentGatewayProviderMock as unknown as PaymentGateway,
-      mailProviderMock as unknown as EmailProvider,
+      invoiceMailMock,
       loggerMock,
     )
   })
@@ -97,9 +106,13 @@ describe('CheckoutService', () => {
       userRepositoryMock.getByStripeId.mockResolvedValue({ id: userId })
       orderRepositoryMock.hasPendingOrder.mockResolvedValue(false)
 
+      inventoryServiceMock.checkAvailability.mockRejectedValue(
+        new Error('Product P1 is out of stock'),
+      )
+
       await expect(
         checkoutService.processPayment(payload, userStripeId),
-      ).rejects.toThrow('Product P1 is out of stock') // Expect specific error message from validateCartItems
+      ).rejects.toThrow('Product P1 is out of stock')
 
       expect(queryRunnerMock.rollbackTransaction).toHaveBeenCalled()
     })
@@ -160,63 +173,6 @@ describe('CheckoutService', () => {
       ).rejects.toThrow('Cart is empty')
 
       expect(queryRunnerMock.rollbackTransaction).toHaveBeenCalled()
-    })
-  })
-  describe('releaseExpiredStockReservations', () => {
-    it('should release expired reservations and update product stock', async () => {
-      const expiredReservations = [
-        {
-          id: 1,
-          productId: 'p1',
-          quantity: 2,
-          status: 'reserved',
-        },
-      ]
-      const products = [{ id: 'p1', reservedStock: 5, stock: 10 }]
-
-      const mockQueryBuilder = {
-        setLock: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        andWhere: vi.fn().mockReturnThis(),
-        getMany: vi
-          .fn()
-          .mockResolvedValueOnce(expiredReservations)
-          .mockResolvedValueOnce(products),
-      }
-      queryRunnerMock.manager.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder,
-      )
-
-      await checkoutService.releaseExpiredStockReservations()
-
-      expect(queryRunnerMock.startTransaction).toHaveBeenCalled()
-      expect(queryRunnerMock.commitTransaction).toHaveBeenCalled()
-
-      // Verify product reserved stock update
-      expect(products[0]?.reservedStock).toBe(3) // 5 - 2
-
-      // Verify reservation status update
-      expect(expiredReservations[0]?.status).toBe('released')
-
-      expect(queryRunnerMock.manager.save).toHaveBeenCalledTimes(2)
-    })
-
-    it('should do nothing if no expired reservations found', async () => {
-      const mockQueryBuilder = {
-        setLock: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        andWhere: vi.fn().mockReturnThis(),
-        getMany: vi.fn().mockResolvedValue([]),
-      }
-      queryRunnerMock.manager.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder,
-      )
-
-      await checkoutService.releaseExpiredStockReservations()
-
-      expect(queryRunnerMock.startTransaction).toHaveBeenCalled()
-      expect(queryRunnerMock.commitTransaction).toHaveBeenCalled()
-      expect(queryRunnerMock.manager.save).not.toHaveBeenCalled()
     })
   })
 })

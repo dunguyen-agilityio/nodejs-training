@@ -8,24 +8,37 @@ import fastifyRateLimit from '@fastify/rate-limit'
 import { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts'
 import Fastify from 'fastify'
 
-import { env } from '#configs/env'
 import { AppDataSource } from '#data-source'
-import { authenticate, authorizeAdmin } from '#middlewares'
-import { errorHandler } from '#middlewares/error-handler'
-import { requestLogger, responseLogger } from '#middlewares/request-logger'
+
+import env from '#env'
+
+import { buildContainer } from '#utils/container'
+
 import cronPlugin from '#plugins/cron.plugin'
 import sendgridPlugin from '#plugins/sendgrid.plugin'
 import stripePlugin from '#plugins/stripe.plugin'
 import swaggerPlugin from '#plugins/swagger.plugin'
-import { authRoutes, cartRoutes, categoryRoutes } from '#routes'
-import { adminOrderRoutes } from '#routes/admin-order'
-import { checkoutRoutes } from '#routes/checkout'
-import { metricRoutes } from '#routes/metric'
-import { orderRoutes } from '#routes/order'
-import { productAdminRoutes, productRoutes } from '#routes/product'
-import { userRoutes } from '#routes/user'
 
-import { buildContainer } from '#utils/container'
+import {
+  authenticate,
+  authorizeAdmin,
+  errorHandler,
+  requestLogger,
+  responseLogger,
+} from '#middlewares'
+
+import {
+  adminOrderRoutes,
+  authRoutes,
+  cartRoutes,
+  categoryRoutes,
+  checkoutRoutes,
+  metricRoutes,
+  orderRoutes,
+  productAdminRoutes,
+  productRoutes,
+  userRoutes,
+} from '#routes'
 
 const envToLogger = {
   development: {

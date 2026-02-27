@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { validateRequest } from '#middlewares'
-
 import { HttpStatus } from '#types/http-status'
 
 import {
@@ -11,6 +9,8 @@ import {
   loginBodySchema,
   registerBodySchema,
 } from '#schemas/auth'
+
+import { validateRequest } from '#middlewares'
 
 export const authRoutes: FastifyPluginCallback = (instance, _, done) => {
   const controller = instance.container.controllers.authController

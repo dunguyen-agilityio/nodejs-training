@@ -3,6 +3,8 @@ import {
   ICartService,
   ICategoryService,
   ICheckoutService,
+  IInventoryService,
+  IInvoiceMail,
   IMetricService,
   IOrderService,
   IProductService,
@@ -17,6 +19,8 @@ export * from './cart'
 export * from './checkout'
 export * from './order'
 export * from './metric'
+export * from './inventory'
+export * from './invoice-mail'
 
 export type TServices = {
   authService: IAuthService
@@ -27,4 +31,6 @@ export type TServices = {
   productService: IProductService
   userService: IUserService
   adminService: IMetricService
+  inventoryService: IInventoryService
+  invoiceMail: IInvoiceMail
 }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-import { env } from '#env'
+import env from '#env'
 
 /**
  * Configuration for request logging

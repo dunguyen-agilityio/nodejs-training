@@ -5,7 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     coverage: {
-      enabled: false, // Enable manually with --coverage flag
+      enabled: false,
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
       reportsDirectory: './coverage',
@@ -24,19 +24,17 @@ export default defineConfig({
         'src/server.ts',
         'src/index.ts',
         'src/constants/**',
-        'src/routes/**', // Integration layer - tested via E2E
-        'src/schemas/**', // Type definitions
-        'src/plugins/**', // Configuration
-        'src/types/**', // Type definitions
-        'src/test-utils.ts', // Test utilities
-        'src/database/**', // Database config and seeds
-        'src/dtos/**', // Data Transfer Objects
-        'src/adapters/**', // External adapters
-        'src/middlewares/**', // Middlewares (integration)
+        'src/routes/**',
+        'src/schemas/**',
+        'src/plugins/**',
+        'src/types/**',
+        'src/test-utils.ts',
+        'src/database/**',
+        'src/dtos/**',
+        'src/adapters/**',
+        'src/middlewares/**',
       ],
       include: ['src/**/*.ts'],
-      // Thresholds commented out due to TypeORM ESM/CJS compatibility issues
-      // Will be re-enabled after resolving module resolution
       thresholds: {
         lines: 80,
         functions: 80,

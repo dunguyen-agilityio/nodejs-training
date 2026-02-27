@@ -35,6 +35,12 @@
     "^#schemas/(.*)$",
     "^#entities$",
     "^#entities/(.*)$",
+    "^#plugins/(.*)$",
+    "^#plugins",
+    "^#middlewares/(.*)$",
+    "^#middlewares",
+    "^#routes/(.*)$",
+    "^#routes",
     "^[./]"
   ],
   "overrides": [

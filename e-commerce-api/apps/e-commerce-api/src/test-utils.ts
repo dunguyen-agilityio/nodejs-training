@@ -90,7 +90,6 @@ export const createMockRepository = (overrides = {}) => ({
   findOrders: vi.fn(), // OrderRepository
   getProducts: vi.fn(), // ProductRepository
   getById: vi.fn(), // ProductRepository
-  decreaseStock: vi.fn(), // ProductRepository
   getAdminMetrics: vi.fn(), // ProductRepository
   createOrderFromCart: vi.fn(), // Likely needed in future given patterns
   createQueryBuilder: vi.fn(() => ({
@@ -154,5 +153,14 @@ export const createMockPaymentGateway = (overrides = {}) => ({
 
 export const createMockMailProvider = (overrides = {}) => ({
   send: vi.fn(),
+  ...overrides,
+})
+
+export const createMockInventoryService = (overrides = {}) => ({
+  checkAvailability: vi.fn(),
+  reserveStock: vi.fn(),
+  commitStock: vi.fn(),
+  releaseStock: vi.fn(),
+  releaseExpiredReservations: vi.fn(),
   ...overrides,
 })
