@@ -168,6 +168,14 @@ describe('CheckoutService', () => {
       userRepositoryMock.getByStripeId.mockResolvedValue({ id: userId })
       orderRepositoryMock.hasPendingOrder.mockResolvedValue(false)
 
+      paymentGatewayProviderMock.processPayment.mockResolvedValue({
+        confirmation_secret: {
+          client_secret: 'client_secret',
+        },
+        id: 'in-001',
+        lines: { data: [] },
+      })
+
       await expect(
         checkoutService.processPayment(payload, userStripeId),
       ).rejects.toThrow('Cart is empty')

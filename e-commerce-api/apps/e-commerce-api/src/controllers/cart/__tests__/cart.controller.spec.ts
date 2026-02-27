@@ -92,9 +92,7 @@ describe('CartController', () => {
         productId: 'p1',
         quantity: 1,
       })
-      expect(mockReply.send).toHaveBeenCalledWith(
-        new CartItemDto(mockCartItem).toJSON(),
-      )
+      expect(mockReply.send).toHaveBeenCalledWith(new CartItemDto(mockCartItem))
     })
   })
 

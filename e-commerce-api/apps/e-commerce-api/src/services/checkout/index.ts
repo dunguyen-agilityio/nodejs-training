@@ -74,7 +74,12 @@ export class CheckoutService implements ICheckoutService {
       )
 
       const { cart } = await this.locking(queryRunner, userId)
+      console.log('cart', cart)
       const { id: cartId } = cart
+
+      if (cart.items.length < 1) {
+        throw new Error('Cart is empty')
+      }
 
       const items = cart.items.map((item) => ({
         description: item.product.name,
@@ -137,7 +142,7 @@ export class CheckoutService implements ICheckoutService {
     }
   }
 
-  async locking(queryRunner: QueryRunner, userId: string) {
+  private async locking(queryRunner: QueryRunner, userId: string) {
     const cart = await queryRunner.manager
       .createQueryBuilder(Cart, 'cart')
       .setLock('pessimistic_write')

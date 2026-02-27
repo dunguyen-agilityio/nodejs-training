@@ -148,6 +148,7 @@ export const createMockPaymentGateway = (overrides = {}) => ({
   findOrCreateCustomer: vi.fn(),
   getPaymentIntent: vi.fn(),
   getCharge: vi.fn(),
+  processPayment: vi.fn(),
   ...overrides,
 })
 
