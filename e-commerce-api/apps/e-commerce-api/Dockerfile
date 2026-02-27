@@ -1,0 +1,47 @@
+# 1. Base Stage: Setup pnpm
+ARG NODE_VERSION=24.13.0
+FROM node:${NODE_VERSION}-alpine as base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+RUN apk add --no-cache libc6-compat
+WORKDIR /usr/src/app
+
+# 2. Prune Stage: Isolate the 'api' workspace
+FROM base AS pruner
+RUN pnpm add -g turbo
+COPY . .
+# Prunes the monorepo for the 'e-commerce-api' package
+RUN turbo prune e-commerce-api --docker
+
+# 3. Builder Stage: Install and Build
+FROM base AS builder
+# Copy pruned package.json/lockfiles for optimized dependency caching
+COPY --from=pruner /usr/src/app/out/json/ .
+RUN pnpm install --frozen-lockfile
+
+# Copy full source and build
+COPY --from=pruner /usr/src/app/out/full/ .
+RUN pnpm turbo run build --filter=e-commerce-api
+
+# 4. Runner Stage: Final Production Image
+FROM base AS runner
+WORKDIR /usr/src/app
+ENV NODE_ENV=production
+
+# Security: Don't run as root
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 fastify
+USER fastify
+
+# Copy only what is needed to run the app
+COPY --from=builder /usr/src/app/apps/e-commerce-api/build ./build
+COPY --from=builder /usr/src/app/apps/e-commerce-api/package.json ./package.json
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
+
+EXPOSE 8080
+# Ensure your Fastify server listens on 0.0.0.0
+CMD ["node", "build/server.js"]
+

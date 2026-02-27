@@ -1,0 +1,29 @@
+services:
+  # Fastify TypeScript API
+  api:
+    build:
+      context: .
+      dockerfile: apps/e-commerce-api/Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: always
+
+  # Next.js App Router Web App
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Server-side URL (Internal Docker network)
+      - API_URL=http://api:3000 
+      # Client-side URL (Browser access)
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - api
+    restart: always
