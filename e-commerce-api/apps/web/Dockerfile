@@ -18,7 +18,8 @@ RUN turbo prune web --docker
 FROM base AS builder
 # Copy pruned package.json/lockfiles for optimized dependency caching
 COPY --from=pruner /usr/src/app/out/json/ .
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/pnpm/store \
+ pnpm install --frozen-lockfile
 
 # Copy full source and build
 COPY --from=pruner /usr/src/app/out/full/ .

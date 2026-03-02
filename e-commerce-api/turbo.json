@@ -15,7 +15,6 @@
     "CLERK_SECRET_KEY",
     "CLERK_WEBHOOK_SIGNING_SECRET",
     "CLERK_TOKEN_TEMPLATE",
-    "CLERK_ORGANIZATION_ID",
     "STRIPE_API_KEY",
     "STRIPE_WEBHOOK_SIGNING_SECRET",
     "SENDGRID_API_KEY",
@@ -47,6 +46,8 @@
       "cache": false,
       "persistent": true
     },
+    "start":{"cache": false,
+      "persistent": true},
     "test": {
       "dependsOn": ["^test"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

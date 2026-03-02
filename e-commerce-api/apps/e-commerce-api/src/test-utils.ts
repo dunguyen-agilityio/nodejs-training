@@ -43,7 +43,9 @@ export const createMockReply = (): FastifyReply => {
   return reply
 }
 
-export const createMockQueryRunner = (overrides = {}) => ({
+export const createMockQueryRunner = (
+  overrides: Record<string, any> = {},
+): Record<string, any> => ({
   connect: vi.fn(),
   startTransaction: vi.fn(),
   commitTransaction: vi.fn(),
@@ -71,7 +73,9 @@ export const createMockQueryRunner = (overrides = {}) => ({
   ...overrides,
 })
 
-export const createMockRepository = (overrides = {}) => ({
+export const createMockRepository = (
+  overrides: Record<string, any> = {},
+): Record<string, any> => ({
   findOne: vi.fn(),
   findOneBy: vi.fn(),
   find: vi.fn(),
@@ -132,7 +136,9 @@ export const loggerMock = {
   child: vi.fn().mockReturnThis(),
 } as unknown as FastifyBaseLogger
 
-export const createMockPaymentGateway = (overrides = {}) => ({
+export const createMockPaymentGateway = (
+  overrides: Record<string, any> = {},
+): Record<string, any> => ({
   createInvoice: vi.fn(),
   getInvoice: vi.fn(),
   getPaymentDetails: vi.fn(),
@@ -152,12 +158,16 @@ export const createMockPaymentGateway = (overrides = {}) => ({
   ...overrides,
 })
 
-export const createMockMailProvider = (overrides = {}) => ({
+export const createMockMailProvider = (
+  overrides: Record<string, any> = {},
+): { send: (...args: any[]) => any } & Record<string, any> => ({
   send: vi.fn(),
   ...overrides,
 })
 
-export const createMockInventoryService = (overrides = {}) => ({
+export const createMockInventoryService = (
+  overrides: Record<string, any> = {},
+): Record<string, any> => ({
   checkAvailability: vi.fn(),
   reserveStock: vi.fn(),
   commitStock: vi.fn(),

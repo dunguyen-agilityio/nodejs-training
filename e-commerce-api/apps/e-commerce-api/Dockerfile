@@ -19,7 +19,10 @@ RUN turbo prune e-commerce-api --docker
 FROM base AS builder
 # Copy pruned package.json/lockfiles for optimized dependency caching
 COPY --from=pruner /usr/src/app/out/json/ .
-RUN pnpm install --frozen-lockfile
+# installs only production dependencies using the cached packages from the previous step. 
+# The --offline flag ensures we use only cached packages.
+RUN --mount=type=cache,target=/pnpm/store \
+ pnpm install --frozen-lockfile --prod --offline
 
 # Copy full source and build
 COPY --from=pruner /usr/src/app/out/full/ .
@@ -33,15 +36,26 @@ ENV NODE_ENV=production
 # Security: Don't run as root
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 fastify
+
+# Copy minimal root workspace configuration needed for pnpm/turbo
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/package.json ./package.json
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/turbo.json ./turbo.json
+
+# Copy pruned workspace package files and build output
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/apps/e-commerce-api/package.json ./apps/e-commerce-api/package.json
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/apps/e-commerce-api/build ./apps/e-commerce-api/build
+
+# Copy all node_modules (required for turbo to run scripts)
+COPY --from=builder --chown=fastify:nodejs /usr/src/app/node_modules ./node_modules
+
+# Ensure the fastify user owns the current directory
+RUN chown fastify:nodejs /usr/src/app
+
 USER fastify
-
-# Copy only what is needed to run the app
-COPY --from=builder /usr/src/app/apps/e-commerce-api/build ./build
-COPY --from=builder /usr/src/app/apps/e-commerce-api/package.json ./package.json
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-
-
 EXPOSE 8080
-# Ensure your Fastify server listens on 0.0.0.0
-CMD ["node", "build/server.js"]
+
+# Run the compiled server directly
+CMD ["node", "--conditions=production", "apps/e-commerce-api/build/server.js"]
 

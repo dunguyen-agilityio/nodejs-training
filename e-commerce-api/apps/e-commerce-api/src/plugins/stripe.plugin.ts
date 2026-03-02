@@ -6,7 +6,7 @@ import env from '#env'
 
 export default fp(async (fastify) => {
   const stripe = new Stripe(env.stripe.secretKey, {
-    apiVersion: '2025-12-15.clover',
+    apiVersion: '2026-02-25.clover',
   })
   fastify.decorate('stripe', stripe)
 })

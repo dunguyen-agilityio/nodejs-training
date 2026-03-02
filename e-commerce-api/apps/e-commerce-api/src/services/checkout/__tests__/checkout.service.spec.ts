@@ -4,7 +4,7 @@ import { InvoiceMail } from '#services/invoice-mail/index'
 
 import { TOrderRepository, TUserRepository } from '#repositories'
 
-import { EmailProvider, PaymentGateway } from '#types'
+import { PaymentGateway } from '#types'
 
 import {
   createMockInventoryService,
