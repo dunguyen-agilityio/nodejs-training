@@ -5,7 +5,5 @@ packages:
 onlyBuiltDependencies:
   - '@clerk/shared'
   - '@heroui/shared-utils'
-  - better-sqlite3
   - esbuild
   - sharp
-  - sqlite3
