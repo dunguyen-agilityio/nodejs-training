@@ -19,8 +19,7 @@ RUN turbo prune e-commerce-api --docker
 FROM base AS builder
 # Copy pruned package.json/lockfiles for optimized dependency caching
 COPY --from=pruner /usr/src/app/out/json/ .
-RUN --mount=type=cache,target=/pnpm/store \
- pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy full source and build
 COPY --from=pruner /usr/src/app/out/full/ .
