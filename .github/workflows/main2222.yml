@@ -52,9 +52,43 @@ jobs:
   #       run: |
   #         doppler run -- pnpm turbo run build --filter=e-commerce-api --filter=web
 
+  build-api:
+    name: Build e-commerce-api with Doppler
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.30.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: e-commerce-api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Build with Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          doppler run -- pnpm turbo run build --filter=e-commerce-api
+
   docker-build-api:
     name: Docker Build API
-    # needs: build-and-test
+    needs: build-api
     runs-on: ubuntu-latest
     environment: Development
     steps:
@@ -160,7 +194,7 @@ jobs:
 
   deploy-api-railway:
     name: Deploy API to Railway
-    needs: docker-build-api
+    needs: build-api
     runs-on: ubuntu-latest
     environment: Development
     steps:
@@ -170,9 +204,13 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
           cd apps/e-commerce-api
-          railway up --service e-commerce-api --detach
+          doppler run -- railway up --service e-commerce-api --detach
