@@ -207,7 +207,7 @@ jobs:
         run: npm i -g @railway/cli
 
       - name: Deploy to Railway with Doppler Secrets
-        run: doppler run -- railway up --service e-commerce-api -y
+        run: doppler run -- railway up --service e-commerce-api
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          # RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
