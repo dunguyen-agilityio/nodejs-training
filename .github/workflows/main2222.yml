@@ -201,21 +201,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
-
-      - name: Debug Railway Token
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway whoami
-
       - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          cd apps/e-commerce-api
-          doppler run -- railway up --service e-commerce-api --detach
+        uses: ayungavis/railway-preview-deploy@v1.0.2
+        with:
+          railway_api_token: ${{ secrets.RAILWAY_API_TOKEN }}
+          project_id: ${{ secrets.RAILWAY_PROJECT_ID }}
+          environment_name: production
+          preview_environment_name: ${{ github.ref_name }}
+          branch_name: ${{ github.ref_name }}
+          cleanup: "false"
