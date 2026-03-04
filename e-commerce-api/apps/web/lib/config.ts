@@ -1,6 +1,11 @@
+const isServer = typeof window === 'undefined'
+
 export const config = {
   api: {
-    endpoint: process.env.NEXT_PUBLIC_API_ENDPOINT || '',
+    endpoint:
+      (isServer
+        ? process.env.API_URL || process.env.NEXT_PUBLIC_API_ENDPOINT
+        : process.env.NEXT_PUBLIC_API_ENDPOINT) || '',
   },
 
   clerk: {
@@ -19,6 +24,6 @@ export const config = {
 } as const
 
 // Validation check for debugging
-if (typeof window !== 'undefined' && !config.api.endpoint) {
-  console.error('Missing NEXT_PUBLIC_API_ENDPOINT')
+if (isServer && !config.api.endpoint) {
+  console.error('Missing API_URL or NEXT_PUBLIC_API_ENDPOINT')
 }

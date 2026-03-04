@@ -61,12 +61,14 @@ export function CartProvider({
     }
   }, [isSignedIn, isLoaded])
 
-  const handleApiError = (error: any) => {
+  const handleApiError = (error: unknown) => {
     if (error instanceof UnauthorizedError) {
       signOut()
     } else {
       console.error(error)
-      toast.error(error.message || 'An error occurred')
+      const message =
+        error instanceof Error ? error.message : 'An error occurred'
+      toast.error(message)
     }
   }
 

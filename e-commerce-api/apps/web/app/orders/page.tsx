@@ -15,7 +15,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const params = await searchParams
   const page = Number(params.page) || 1
   const response = await getUserOrders(page, 10)
-  const orders = response.data
+  const orders = response.data || []
   const pagination = response.meta.pagination
 
   if (orders.length === 0 && page === 1) {

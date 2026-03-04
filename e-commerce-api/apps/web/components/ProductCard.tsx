@@ -8,7 +8,7 @@ import { Product } from '@/lib/types'
 
 import { TWithCart, withCart } from '@/context/withCart'
 
-export interface ProductCardProps extends Product {}
+export type ProductCardProps = Product
 
 export default function ProductCard({
   addToCart,

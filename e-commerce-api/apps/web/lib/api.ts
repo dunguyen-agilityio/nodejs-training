@@ -3,20 +3,33 @@ import { UnauthorizedError } from './errors'
 const defaultHeaders = {}
 
 async function handleResponse<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get('content-type')
+  const isJson = contentType && contentType.includes('application/json')
+
   if (!response.ok) {
-    const error = (await response.json()) as {
-      message: string
-      status: number
-    }
-    if (response.status === 401) {
-      throw new UnauthorizedError(error.message)
+    let message = 'Something went wrong'
+    if (isJson) {
+      const error = (await response.json()) as { message: string }
+      message = error.message || message
+    } else {
+      message = `Error ${response.status}: ${response.statusText}`
     }
 
-    throw new Error(error.message || 'Something went wrong')
+    if (response.status === 401) {
+      throw new UnauthorizedError(message)
+    }
+
+    throw new Error(message)
   }
+
   if (response.status === 204) {
     return true as T
   }
+
+  if (!isJson) {
+    throw new Error(`Expected JSON but received ${contentType}`)
+  }
+
   return response.json()
 }
 

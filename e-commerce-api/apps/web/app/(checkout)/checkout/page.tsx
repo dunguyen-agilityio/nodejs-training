@@ -23,12 +23,9 @@ export default async function CheckoutPage({
     throw new Error('Order is not pending')
   }
 
-  const total = order.items.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0,
-  )
+  const items = order.items || []
 
-  if (order.items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4 text-foreground">
@@ -43,6 +40,11 @@ export default async function CheckoutPage({
       </div>
     )
   }
+
+  const total = items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0,
+  )
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-12">
@@ -59,7 +61,7 @@ export default async function CheckoutPage({
             Order Summary
           </h2>
           <div className="space-y-4 mb-4">
-            {order.items.map((item) => (
+            {items.map((item) => (
               <div
                 key={item.productId}
                 className="flex justify-between items-center text-sm"

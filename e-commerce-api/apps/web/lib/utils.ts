@@ -7,22 +7,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  delay: number | ((...args: any[]) => number) = 800,
+  delay:
+    | number
+    | ((prevArgs: Parameters<T>, args: Parameters<T>) => number) = 800,
 ) {
   let timeout: NodeJS.Timeout
-  let prevArgs: any[] | null = null
+  let prevArgs: Parameters<T> | null = null
 
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     const time =
       typeof delay === 'function' ? delay(prevArgs ?? args, args) : delay
 
-    const context = this
-
     if (time > 0) clearTimeout(timeout)
 
-    timeout = setTimeout(() => func.apply(context, args), time)
+    timeout = setTimeout(() => func.apply(this, args), time)
     prevArgs = args
   } as T
 }

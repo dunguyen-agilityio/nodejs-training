@@ -16,7 +16,7 @@ export default async function AdminOrdersPage({
   const params = await searchParams
   const page = Number(params.page) || 1
   const response = await getAllOrders(page, 20, params.status, params.date)
-  const orders = response.data
+  const orders = response.data || []
   const pagination = response.meta.pagination
 
   return (
@@ -79,7 +79,7 @@ export default async function AdminOrdersPage({
                       <div className="flex flex-col">
                         <span>{order.shippingAddress.name}</span>
                         <span className="text-xs text-muted-foreground">
-                          {order.items.length} items
+                          {(order.items || []).length} items
                         </span>
                       </div>
                     </td>

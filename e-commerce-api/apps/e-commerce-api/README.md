@@ -158,7 +158,6 @@ CLIENT_BASE_URL=http://localhost:3000
 
 # Database
 DB_HOST=localhost
-DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_secure_password_here
 DB_NAME=e_commerce

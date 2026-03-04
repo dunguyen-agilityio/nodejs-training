@@ -2,7 +2,7 @@ import { API_ROUTES, get } from './api'
 import { createAuthorizationHeader } from './auth'
 import { fetchCategories } from './category'
 import { config } from './config'
-import { ApiPagination, ApiResponse, Cart, CartItem, Product } from './types'
+import { ApiPagination, ApiResponse, Cart, Product } from './types'
 
 export interface GetProductsParams {
   search?: string

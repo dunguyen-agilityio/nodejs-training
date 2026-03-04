@@ -17,10 +17,11 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json(data)
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message: string; status?: number }
     return NextResponse.json(
-      { message: error.message },
-      { status: error.status || 500 },
+      { message: err.message },
+      { status: err.status || 500 },
     )
   }
 }

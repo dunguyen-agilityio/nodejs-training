@@ -16,8 +16,8 @@
     "check-types": "tsc --noEmit",
     "migration:generate": "pnpm typeorm-cmj migration:generate ./src/database/migrations/InitialDatabase -d ./src/database/data-source.ts",
     "revert-migration": "pnpm typeorm-cmj migration:revert -d ./src/database/data-source.ts",
-    "typeorm": "node --import tsx/esm ../../node_modules/.pnpm/typeorm@0.3.28_pg-query-stream@4.13.0_pg@8.19.0__pg@8.19.0_ts-node@10.9.2_@types+node@22.19.13_typescript@5.9.3_/node_modules/typeorm/cli.js",
-    "typeorm-cmj": "node --import tsx/esm ../../node_modules/.pnpm/typeorm@0.3.28_pg-query-stream@4.13.0_pg@8.19.0__pg@8.19.0_ts-node@10.9.2_@types+node@22.19.13_typescript@5.9.3_/node_modules/typeorm/cli.js",
+    "typeorm": "tsx ../../node_modules/typeorm/cli-ts-node-esm.js",
+    "typeorm-cmj": "tsx ../../node_modules/typeorm/cli-ts-node-commonjs.js",
     "migration:run": "pnpm typeorm-cmj migration:run -d ./src/database/data-source.ts",
     "seed-data": "pnpm typeorm-cmj migration:run -d ./src/database/seed-data-source.ts",
     "revert-data": "pnpm typeorm-cmj migration:revert -d ./src/database/seed-data-source.ts"

@@ -1,40 +1,20 @@
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: '${POSTGRES_DB:-postgres}'
-      POSTGRES_USER: '${POSTGRES_USER:-postgres}'
-      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-postgres}'
-    ports:
-      - "5433:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-
   # Fastify TypeScript API
   api:
     build:
       context: .
       dockerfile: apps/e-commerce-api/Dockerfile
     ports:
-      - "8081:8080"
+      - '8081:8080'
     environment:
       - NODE_ENV=production
       - PORT=8080
       # Database Connection
-      - POSTGRES_HOST=${POSTGRES_HOST:-db}
-      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-      - POSTGRES_USERNAME=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_NAME=${POSTGRES_DB:-postgres}
-    depends_on:
-      db:
-        condition: service_healthy
+      - POSTGRES_HOST=${POSTGRES_HOST:-host.docker.internal}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5433}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password@123}
+      - POSTGRES_DB=${POSTGRES_DB:-e-commerce-db}
     restart: always
 
   # Next.js App Router Web App
@@ -43,16 +23,13 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       # Server-side URL (Internal Docker network)
-      - API_URL=http://api:8080 
+      - API_URL=http://api:8080
       # Client-side URL (Browser access)
       - NEXT_PUBLIC_API_URL=http://localhost:3001
     depends_on:
       - api
     restart: always
-
-volumes:
-  pg_data:

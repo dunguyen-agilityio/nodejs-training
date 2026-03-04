@@ -20,7 +20,6 @@ import {
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { success } from 'zod'
 
 import { API_ROUTES, post, put } from '@/lib/api'
 import { getClientEndpoint } from '@/lib/client'

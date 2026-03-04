@@ -1,7 +1,13 @@
 import { EmailData, MailTemplate } from '#types'
 
-export const renderTemplate = (template: string, data: any) => {
-  return template.replace(/{{(.*?)}}/g, (_, key) => data[key.trim()] ?? '')
+export const renderTemplate = (
+  template: string,
+  data: Record<string, unknown>,
+) => {
+  return template.replace(
+    /{{(.*?)}}/g,
+    (_, key) => (data[key.trim()] as string) ?? '',
+  )
 }
 
 export const getFrom = (email: EmailData) =>
