@@ -1,13 +1,12 @@
 export const env = {
   // Database
   database: {
-    type: (process.env.DATABASE_TYPE || 'sqlite') as string,
-    url: process.env.DATABASE_URL,
-    host: process.env.DATABASE_HOST,
-    port: process.env.DATABASE_PORT,
-    username: process.env.DATABASE_USERNAME,
-    password: process.env.DATABASE_PASSWORD,
-    name: process.env.DATABASE_NAME,
+    type: 'postgres',
+    host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
+    username: process.env.POSTGRES_USERNAME,
+    password: process.env.POSTGRES_PASSWORD,
+    name: process.env.POSTGRES_NAME,
   },
 
   // Email Service

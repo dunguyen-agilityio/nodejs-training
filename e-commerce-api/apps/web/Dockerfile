@@ -19,7 +19,7 @@ FROM base AS builder
 # Copy pruned package.json/lockfiles for optimized dependency caching
 COPY --from=pruner /usr/src/app/out/json/ .
 RUN --mount=type=cache,target=/pnpm/store \
- pnpm install --frozen-lockfile
+ pnpm install --no-frozen-lockfile
 
 # Copy full source and build
 COPY --from=pruner /usr/src/app/out/full/ .
@@ -49,4 +49,5 @@ COPY --from=builder --chown=nextjs:nodejs /usr/src/app/apps/web/public ./apps/we
 EXPOSE 3000
 
 # The entry point is the generated server.js inside the standalone folder
+WORKDIR /usr/src/app
 CMD ["node", "apps/web/server.js"]

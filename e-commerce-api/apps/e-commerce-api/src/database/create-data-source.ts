@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-
+import * as Entities from '#entities'
 import { DataSource, DataSourceOptions } from 'typeorm'
 
 import { env } from '#configs/env'
@@ -8,8 +8,7 @@ export const createPostgresDataSource = (
   options?: Omit<DataSourceOptions, 'type' | 'database' | 'poolSize'>,
 ) =>
   new DataSource({
-    type: env.database.type,
-    url: env.database.url,
+    type: 'postgres',
     host: env.database.host,
     port: env.database.port,
     username: env.database.username,
@@ -17,7 +16,7 @@ export const createPostgresDataSource = (
     database: env.database.name,
     synchronize: false,
     logging: false,
-    entities: ['src/database/entities/*{.js,.ts}'],
+    entities: Object.values(Entities),
     migrations: ['src/database/migrations/*{.js,.ts}'],
     subscribers: [],
     ...options,

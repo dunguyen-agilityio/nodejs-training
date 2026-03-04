@@ -11,3 +11,5 @@ coverage/
 
 # Auto Format Editor configs
 .vscode/
+
+docker-with-turborepo/
