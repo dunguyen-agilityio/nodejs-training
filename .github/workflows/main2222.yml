@@ -198,16 +198,16 @@ jobs:
     runs-on: ubuntu-latest
     environment: Development
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to Railway
-        uses: ayungavis/railway-preview-deploy@v1.0.2
-        with:
-          railway_api_token: ${{ secrets.RAILWAY_API_TOKEN }}
-          project_id: ${{ secrets.RAILWAY_PROJECT_ID }}
-          environment_name: production
-          preview_environment_name: ${{ github.ref_name }}
-          api_service_name: e-commerce-api
-          branch_name: ${{ github.ref_name }}
-          cleanup: "false"
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy to Railway with Doppler Secrets
+        run: doppler run -- railway up --service e-commerce-api -y
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
