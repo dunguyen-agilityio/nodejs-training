@@ -207,6 +207,11 @@ jobs:
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
 
+      - name: Debug Railway Token
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway whoami
+
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
