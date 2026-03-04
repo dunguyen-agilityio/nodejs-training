@@ -208,5 +208,6 @@ jobs:
           project_id: ${{ secrets.RAILWAY_PROJECT_ID }}
           environment_name: production
           preview_environment_name: ${{ github.ref_name }}
+          api_service_name: e-commerce-api
           branch_name: ${{ github.ref_name }}
           cleanup: "false"
