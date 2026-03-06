@@ -2,7 +2,7 @@ name: Preview API (Pull Request)
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/apply-devops]
     paths:
       - 'apps/e-commerce-api/**'
       - 'packages/**'
