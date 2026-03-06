@@ -11,6 +11,8 @@ import { PaginationControls } from '@/components/pagination-controls'
 import { SearchInput } from '@/components/search-input'
 import { SortSelect } from '@/components/sort-select'
 
+export const dynamic = 'force-dynamic'
+
 interface AdminProductsPageProps {
   searchParams: Promise<{
     search?: string

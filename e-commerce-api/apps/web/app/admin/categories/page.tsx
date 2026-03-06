@@ -3,6 +3,8 @@ import Link from 'next/link'
 
 import { fetchCategories } from '@/lib/category'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminCategoriesPage() {
   const categories = await fetchCategories()
 
@@ -29,9 +31,9 @@ export default async function AdminCategoriesPage() {
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   Name
                 </th>
-                {/* <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   Created At
-                </th> */}
+                </th>
               </tr>
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
@@ -56,9 +58,11 @@ export default async function AdminCategoriesPage() {
                     <td className="p-4 align-middle font-medium">
                       {category.name}
                     </td>
-                    {/* <td className="p-4 align-middle text-muted-foreground">
-                      {new Date(category.createdAt!).toLocaleDateString()}
-                    </td> */}
+                    <td className="p-4 align-middle text-muted-foreground">
+                      {category.createdAt
+                        ? new Date(category.createdAt).toLocaleDateString()
+                        : '-'}
+                    </td>
                   </tr>
                 ))
               )}

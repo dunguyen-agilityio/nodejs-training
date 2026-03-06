@@ -10,9 +10,7 @@ import { toast } from 'sonner'
 import { API_ROUTES, post, put } from '@/lib/api'
 import { getClientEndpoint } from '@/lib/client'
 import { type ProductFormInput, productSchema } from '@/lib/schema'
-import { Product } from '@/lib/types'
-
-type Category = { id: number; name: string }
+import { Category, Product } from '@/lib/types'
 
 interface ProductFormProps {
   initialData?: Product
