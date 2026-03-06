@@ -1,0 +1,52 @@
+# 1. Base Stage: Setup pnpm
+ARG NODE_VERSION=24.13.0
+FROM node:${NODE_VERSION}-alpine as base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+RUN apk add --no-cache libc6-compat
+WORKDIR /usr/src/app
+
+# Pruner Stage
+FROM base AS pruner
+RUN pnpm add -g turbo
+COPY . .
+RUN turbo prune e-commerce-api --docker
+
+# 3. Builder Stage: Install and Build
+FROM base AS builder
+COPY --from=pruner /usr/src/app/out/json/ .
+RUN pnpm install --no-frozen-lockfile
+
+COPY --from=pruner /usr/src/app/out/full/ .
+RUN pnpm turbo run build --filter=e-commerce-api
+
+# 4. Runner Stage: Final Production Image
+FROM base AS runner
+WORKDIR /usr/src/app
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 fastify
+
+# Copy ONLY what's needed for production
+COPY --from=builder /usr/src/app/apps/e-commerce-api/package.json ./apps/e-commerce-api/package.json
+COPY --from=builder /usr/src/app/apps/e-commerce-api/build ./apps/e-commerce-api/build
+COPY --from=builder /usr/src/app/apps/e-commerce-api/entrypoint.sh ./apps/e-commerce-api/entrypoint.sh
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/package.json ./package.json
+
+# Clean up dev dependencies to minimize image size
+# Note: In a monorepo, pnpm prune --prod --no-optional can be tricky, 
+# but copying the pruned node_modules or using a fresh install is often better.
+# For simplicity and correctness with workspace dependencies, we copy the builder modules.
+
+RUN chmod +x /usr/src/app/apps/e-commerce-api/entrypoint.sh && \
+    chown -R fastify:nodejs /usr/src/app
+
+USER fastify
+EXPOSE 8080
+
+WORKDIR /usr/src/app/apps/e-commerce-api
+ENTRYPOINT ["sh", "entrypoint.sh"]

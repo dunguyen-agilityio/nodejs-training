@@ -1,0 +1,44 @@
+name: Preview API (Pull Request)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/e-commerce-api/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter e-commerce-api lint
+
+      - name: Check types
+        run: pnpm --filter e-commerce-api check-types
+
+      - name: Build
+        run: pnpm --filter e-commerce-api build
+
+      - name: Build Docker Image (Dry Run)
+        run: |
+          docker build -t e-commerce-api:preview -f apps/e-commerce-api/Dockerfile.prod .
