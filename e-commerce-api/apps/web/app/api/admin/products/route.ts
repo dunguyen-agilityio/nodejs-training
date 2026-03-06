@@ -6,7 +6,6 @@ import { config } from '@/lib/config'
 
 export async function POST(req: NextRequest) {
   const headers = await createAuthorizationHeader()
-
   const body = await req.json()
 
   try {

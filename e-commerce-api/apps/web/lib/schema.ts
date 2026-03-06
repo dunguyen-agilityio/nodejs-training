@@ -35,3 +35,10 @@ export const productSchema = z.object({
 export type ProductFormInput = z.input<typeof productSchema>
 // Output type (after coercion) - validated data has numbers
 export type ProductFormData = z.output<typeof productSchema>
+
+export const categorySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+})
+
+export type CategoryFormInput = z.input<typeof categorySchema>
+export type CategoryFormData = z.output<typeof categorySchema>

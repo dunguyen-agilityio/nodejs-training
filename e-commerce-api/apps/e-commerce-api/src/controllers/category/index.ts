@@ -24,6 +24,6 @@ export class CategoryController
   ): Promise<void> => {
     const categoryData = request.body as { name: string }
     const category = await this.service.create(categoryData)
-    this.sendCreated(reply, category)
+    this.sendCreatedItem(reply, category)
   }
 }

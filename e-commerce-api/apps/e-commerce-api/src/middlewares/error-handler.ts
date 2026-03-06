@@ -131,6 +131,9 @@ function isDatabaseError(error: unknown): boolean {
     'foreign key',
     'unique constraint',
     'duplicate',
+    'null value',
+    'not-null',
+    'violates',
   ]
 
   return databaseIndicators.some((indicator) =>
