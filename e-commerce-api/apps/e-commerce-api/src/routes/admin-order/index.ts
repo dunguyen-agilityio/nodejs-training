@@ -18,7 +18,7 @@ export const adminOrderRoutes: FastifyPluginCallback = (instance, _, done) => {
     {
       preHandler: [instance.authenticate, instance.authorizeAdmin],
       schema: {
-        description: 'Admin: get all orders (paginated)',
+        description: 'Admin: get all orders',
         tags: ['admin', 'orders'],
         security: [{ bearerAuth: [] }],
         querystring: getOrdersSchema,
