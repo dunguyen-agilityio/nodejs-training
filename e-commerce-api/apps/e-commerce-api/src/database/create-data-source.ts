@@ -16,7 +16,7 @@ export const createPostgresDataSource = (
     username: env.database.username,
     password: env.database.password,
     database: env.database.name,
-    synchronize: false,
+    synchronize: true,
     logging: false,
     entities: Object.values(Entities),
     migrations: ['src/database/migrations/*{.js,.ts}'],
