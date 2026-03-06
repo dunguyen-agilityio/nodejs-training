@@ -31,6 +31,7 @@ import {
   adminOrderRoutes,
   authRoutes,
   cartRoutes,
+  categoryAdminRoutes,
   categoryRoutes,
   checkoutRoutes,
   metricRoutes,
@@ -115,6 +116,7 @@ const start = async () => {
         instance.register(productRoutes, { prefix: '/products' })
         instance.register(productAdminRoutes, { prefix: '/admin/products' })
         instance.register(categoryRoutes, { prefix: '/categories' })
+        instance.register(categoryAdminRoutes, { prefix: '/admin/categories' })
         instance.register(cartRoutes, { prefix: '/cart' })
         instance.register(orderRoutes, { prefix: '/orders' })
         instance.register(adminOrderRoutes, { prefix: '/admin/orders' })

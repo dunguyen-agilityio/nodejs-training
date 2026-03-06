@@ -17,4 +17,13 @@ export class CategoryController
     const categories = await this.service.getAll()
     this.sendSuccess(reply, categories)
   }
+
+  create = async (
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> => {
+    const categoryData = request.body as { name: string }
+    const category = await this.service.create(categoryData)
+    this.sendCreated(reply, category)
+  }
 }

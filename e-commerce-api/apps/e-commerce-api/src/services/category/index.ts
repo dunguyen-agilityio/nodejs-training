@@ -21,4 +21,14 @@ export class CategoryService implements ICategoryService {
     )
     return categories
   }
+
+  async create(categoryData: Partial<Category>): Promise<Category> {
+    this.logger.info({ data: categoryData }, 'Creating new category')
+    const category = await this.categoryRepository.save(categoryData)
+    this.logger.info(
+      { categoryId: category.id },
+      'Category created successfully',
+    )
+    return category
+  }
 }
