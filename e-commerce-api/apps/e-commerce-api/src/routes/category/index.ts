@@ -43,7 +43,7 @@ export const categoryAdminRoutes: FastifyPluginCallback = (
     '/',
     {
       schema: {
-        description: 'Create a new category (Admin only)',
+        description: 'Create a new category - (Admin only)',
         tags: ['categories', 'admin'],
         security: [{ bearerAuth: [] }],
         body: {

@@ -84,7 +84,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: e-commerce-api
-          file: e-commerce-api/apps/e-commerce-api/Dockerfile
+          file: e-commerce-api/apps/e-commerce-api/Dockerfile.prod
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:latest

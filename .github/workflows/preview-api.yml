@@ -4,10 +4,15 @@ on:
   pull_request:
     branches: [main, feat/apply-devops]
     paths:
-      - 'apps/e-commerce-api/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
+      - "e-commerce-api/apps/e-commerce-api/**"
+      - "e-commerce-api/packages/**"
+      - "e-commerce-api/package.json"
+      - "e-commerce-api/pnpm-lock.yaml"
+      - ".github/workflows/preview-api.yml"
+
+defaults:
+  run:
+    working-directory: e-commerce-api
 
 jobs:
   build-and-test:
@@ -24,8 +29,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24.13.0'
-          cache: 'pnpm'
+          node-version: "24.13.0"
+          cache: "pnpm"
+          cache-dependency-path: e-commerce-api/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
