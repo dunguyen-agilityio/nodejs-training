@@ -8,7 +8,7 @@ export const fetchCategories = async () => {
   const response = await get<ApiResponse<Category[]>>(
     `${config.api.endpoint}${API_ROUTES.CATEGORY.GET}`,
     {},
-    { next: { revalidate: 1 * 60 * 60 * 1000 } },
+    { next: { revalidate: 3600, tags: ['categories'] } },
   )
   return response.data
 }

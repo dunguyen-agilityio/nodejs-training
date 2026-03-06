@@ -17,8 +17,6 @@ interface ProductFormProps {
   categories: Category[]
 }
 
-faker.seed(10000)
-
 export function ProductForm({ initialData, categories }: ProductFormProps) {
   const router = useRouter()
   const isEditing = !!initialData
@@ -50,6 +48,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
   })
 
   const generateMockData = () => {
+    faker.seed(10000)
     const randomCategory =
       categories.length > 0
         ? categories[Math.floor(Math.random() * categories.length)]?.name ||
