@@ -16,9 +16,10 @@
     "check-types": "tsc --noEmit",
     "migration:generate": "pnpm typeorm-cmj migration:generate ./src/database/migrations/InitialDatabase -d ./src/database/data-source.ts",
     "revert-migration": "pnpm typeorm-cmj migration:revert -d ./src/database/data-source.ts",
-    "typeorm": "tsx ../../node_modules/typeorm/cli-ts-node-esm.js",
-    "typeorm-cmj": "tsx ../../node_modules/typeorm/cli-ts-node-commonjs.js",
+    "typeorm": "typeorm-ts-node-esm",
+    "typeorm-cmj": "typeorm-ts-node-commonjs",
     "migration:run": "pnpm typeorm-cmj migration:run -d ./src/database/data-source.ts",
+    "migration:run:prod": "typeorm migration:run -d ./build/database/data-source.js",
     "seed-data": "pnpm typeorm-cmj migration:run -d ./src/database/seed-data-source.ts",
     "revert-data": "pnpm typeorm-cmj migration:revert -d ./src/database/seed-data-source.ts"
   },
