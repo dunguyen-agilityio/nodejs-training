@@ -9,9 +9,12 @@ export async function POST(req: NextRequest) {
   try {
     const headers = await createAuthorizationHeader()
     const body = await req.json()
-    const url = `${config.api.endpoint}${API_ROUTES.CATEGORY.CREATE}`
 
-    const data = await post(url, body, headers)
+    const data = await post(
+      `${config.api.endpoint}${API_ROUTES.CATEGORY.CREATE}`,
+      body,
+      headers,
+    )
 
     revalidateTag('categories', 'default')
 

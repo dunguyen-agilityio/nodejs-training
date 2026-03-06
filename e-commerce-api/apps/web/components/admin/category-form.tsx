@@ -4,15 +4,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { toast } from 'sonner'
 
+import { API_ROUTES, post } from '@/lib/api'
+import { getClientEndpoint } from '@/lib/client'
+import {
+  CategoryFormData,
+  CategoryFormInput,
+  categorySchema,
+} from '@/lib/schema'
 import { Category } from '@/lib/types'
-
-const categorySchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-})
-
-type CategoryFormValues = z.infer<typeof categorySchema>
 
 interface CategoryFormProps {
   initialData?: Category
@@ -27,32 +28,29 @@ export function CategoryForm({ initialData }: CategoryFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CategoryFormValues>({
+  } = useForm<CategoryFormInput>({
     resolver: zodResolver(categorySchema),
     defaultValues: initialData || {
       name: '',
     },
   })
 
-  const onSubmit = async (data: CategoryFormValues) => {
+  const onSubmit = async (data: CategoryFormData) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/admin/categories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
+      const newCategory = await post(
+        getClientEndpoint(API_ROUTES.CATEGORY.CREATE),
+        data,
+      )
 
-      if (!response.ok) {
-        const result = await response.json()
-        throw new Error(result.message || 'Something went wrong')
+      if (!newCategory) {
+        throw new Error('Something went wrong')
       }
 
       router.push('/admin/categories')
       router.refresh()
+      toast.success('Category created successfully.')
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)

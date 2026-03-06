@@ -8,8 +8,8 @@ export class Category extends Base {
   @Column({ unique: true, type: 'varchar' })
   name: string
 
-  @Column({ type: 'varchar' })
-  description: string
+  @Column({ type: 'varchar', nullable: true })
+  description: string | null
 
   @OneToMany(() => Product, (product) => product.category)
   products?: Product[]
