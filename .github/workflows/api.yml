@@ -1,0 +1,114 @@
+name: CI/CD — API
+
+on:
+  push:
+    branches:
+      - main
+      - feat/apply-devops
+    paths:
+      - "e-commerce-api/apps/e-commerce-api/**"
+      - "e-commerce-api/packages/**"
+      - "e-commerce-api/package.json"
+      - "e-commerce-api/pnpm-lock.yaml"
+      - "e-commerce-api/turbo.json"
+      - ".github/workflows/api.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "e-commerce-api/apps/e-commerce-api/**"
+      - "e-commerce-api/packages/**"
+      - "e-commerce-api/package.json"
+      - "e-commerce-api/pnpm-lock.yaml"
+      - "e-commerce-api/turbo.json"
+      - ".github/workflows/api.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: e-commerce-api
+
+jobs:
+  build-api:
+    name: Build e-commerce-api
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: e-commerce-api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Build with Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          doppler run -- pnpm turbo run build --filter=e-commerce-api
+
+  docker-build-api:
+    name: Docker Build & Push API
+    needs: build-api
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push e-commerce-api Image
+        uses: docker/build-push-action@v5
+        with:
+          context: e-commerce-api
+          file: e-commerce-api/apps/e-commerce-api/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-api-railway:
+    name: Deploy API to Railway
+    needs: docker-build-api
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy to Railway with Doppler Secrets
+        run: doppler run -- railway up --service e-commerce-api
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
