@@ -11,14 +11,23 @@ on:
       - "e-commerce-api/pnpm-lock.yaml"
       - ".github/workflows/preview-api.yml"
 
+concurrency:
+  group: preview-api-pr-${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
 defaults:
   run:
     working-directory: e-commerce-api
 
 jobs:
-  build-and-test:
+  build-and-validate:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +45,7 @@ jobs:
           cache-dependency-path: e-commerce-api/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
         run: pnpm --filter e-commerce-api lint
@@ -47,15 +56,26 @@ jobs:
       - name: Build
         run: pnpm --filter e-commerce-api build
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker Image (Dry Run)
-        run: |
-          docker build -t e-commerce-api:preview -f apps/e-commerce-api/Dockerfile.prod .
+        uses: docker/build-push-action@v5
+        with:
+          context: e-commerce-api
+          file: e-commerce-api/apps/e-commerce-api/Dockerfile.prod
+          push: false
+          tags: e-commerce-api:preview
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-railway-preview:
     if: github.event.action != 'closed'
-    needs: build-and-test
+    needs: build-and-validate
     runs-on: ubuntu-latest
     environment: Development
+    timeout-minutes: 15
+
     steps:
       - uses: actions/checkout@v4
 
@@ -63,54 +83,96 @@ jobs:
         uses: dopplerhq/cli-action@v3
 
       - name: Install Railway CLI
-        run: npm i -g @railway/cli
+        run: npm install -g @railway/cli@3
 
       - name: Link to Railway Project
         # Establishing link first makes subsequent commands more reliable
         run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Create or Update Railway PR Environment
         run: |
-          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev || echo "Environment already exists"
+          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Sync Doppler Secrets to Railway PR Environment
         run: |
-          doppler secrets download --format json --no-file | doppler run -- railway variables set --environment pr-${{ github.event.number }} --service e-commerce-api --variables -
+          doppler secrets download --format json --no-file | \
+            doppler run -- railway variables set \
+              --environment pr-${{ github.event.number }} \
+              --service e-commerce-api \
+              --variables -
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Deploy API Preview (Railway)
-        run: doppler run -- railway up --service e-commerce-api --environment pr-${{ github.event.number }}
+        id: deploy
+        run: |
+          OUTPUT=$(doppler run -- railway up \
+            --service e-commerce-api \
+            --environment pr-${{ github.event.number }} 2>&1)
+          echo "$OUTPUT"
+          URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.railway\.app[^ ]*' | tail -1)
+          echo "preview_url=${URL:-}" >> "$GITHUB_OUTPUT"
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Comment Preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.preview_url }}';
+            const body = url
+              ? `### API Preview Deployed\n\nPreview URL: ${url}\n\n_Environment: \`pr-${{ github.event.number }}\`_`
+              : `### API Preview Deployed\n\nDeployment complete. Check the [Railway dashboard](https://railway.app) for the URL.\n\n_Environment: \`pr-${{ github.event.number }}\`_`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('API Preview Deployed')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
   cleanup-railway-preview:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     environment: Development
+    timeout-minutes: 10
+
     steps:
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
 
       - name: Install Railway CLI
-        run: npm i -g @railway/cli
+        run: npm install -g @railway/cli@3
 
       - name: Link to Railway Project
         run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Delete Railway PR Environment
         run: doppler run -- railway environment delete pr-${{ github.event.number }} --confirm || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
