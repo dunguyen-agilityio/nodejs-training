@@ -124,8 +124,12 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@3
 
+      - name: Link to Railway Project
+        run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
       - name: Deploy to Railway with Doppler Secrets
         run: doppler run -- railway up --service e-commerce-api
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
