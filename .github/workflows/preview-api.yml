@@ -2,6 +2,7 @@ name: Preview API (Pull Request)
 
 on:
   pull_request:
+    types: [opened, synchronize, closed]
     branches: [main, feat/apply-devops]
     paths:
       - "e-commerce-api/apps/e-commerce-api/**"
@@ -16,6 +17,7 @@ defaults:
 
 jobs:
   build-and-test:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
 
     steps:
@@ -48,3 +50,53 @@ jobs:
       - name: Build Docker Image (Dry Run)
         run: |
           docker build -t e-commerce-api:preview -f apps/e-commerce-api/Dockerfile.prod .
+
+  deploy-railway-preview:
+    if: github.event.action != 'closed'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Create or Update Railway PR Environment
+        # Use doppler run to inject RAILWAY_TOKEN from Doppler
+        run: |
+          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev --project ${{ secrets.RAILWAY_PROJECT_ID }} || echo "Environment already exists"
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Sync Doppler Secrets to Railway PR Environment
+        # This step uses Doppler twice: once to download secrets and once to authenticate the railway command
+        run: |
+          doppler secrets download --no-guarantee --format json | doppler run -- railway variables --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment pr-${{ github.event.number }} --service e-commerce-api set --variables -
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Deploy API Preview (Railway)
+        run: doppler run -- railway up --project ${{ secrets.RAILWAY_PROJECT_ID }} --service e-commerce-api --environment pr-${{ github.event.number }}
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+  cleanup-railway-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Delete Railway PR Environment
+        # Use doppler run to authenticate the deletion
+        run: doppler run -- railway environment delete pr-${{ github.event.number }} --project ${{ secrets.RAILWAY_PROJECT_ID }} --confirm || true
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
