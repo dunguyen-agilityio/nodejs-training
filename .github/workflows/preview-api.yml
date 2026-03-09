@@ -65,22 +65,26 @@ jobs:
       - name: Install Railway CLI
         run: npm i -g @railway/cli
 
+      - name: Link to Railway Project
+        # Establishing link first makes subsequent commands more reliable
+        run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
       - name: Create or Update Railway PR Environment
-        # Use doppler run to inject RAILWAY_TOKEN from Doppler
         run: |
-          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev --project ${{ secrets.RAILWAY_PROJECT_ID }} || echo "Environment already exists"
+          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev || echo "Environment already exists"
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
       - name: Sync Doppler Secrets to Railway PR Environment
-        # This step uses Doppler twice: once to download secrets and once to authenticate the railway command
         run: |
-          doppler secrets download --no-guarantee --format json | doppler run -- railway variables --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment pr-${{ github.event.number }} --service e-commerce-api set --variables -
+          doppler secrets download --format json --no-file | doppler run -- railway variables set --environment pr-${{ github.event.number }} --service e-commerce-api --variables -
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
       - name: Deploy API Preview (Railway)
-        run: doppler run -- railway up --project ${{ secrets.RAILWAY_PROJECT_ID }} --service e-commerce-api --environment pr-${{ github.event.number }}
+        run: doppler run -- railway up --service e-commerce-api --environment pr-${{ github.event.number }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
@@ -95,8 +99,12 @@ jobs:
       - name: Install Railway CLI
         run: npm i -g @railway/cli
 
+      - name: Link to Railway Project
+        run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
       - name: Delete Railway PR Environment
-        # Use doppler run to authenticate the deletion
-        run: doppler run -- railway environment delete pr-${{ github.event.number }} --project ${{ secrets.RAILWAY_PROJECT_ID }} --confirm || true
+        run: doppler run -- railway environment delete pr-${{ github.event.number }} --confirm || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
