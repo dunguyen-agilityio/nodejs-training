@@ -19,9 +19,9 @@
     "typeorm": "typeorm-ts-node-esm",
     "typeorm-cmj": "typeorm-ts-node-commonjs",
     "migration:run": "pnpm typeorm-cmj migration:run -d ./src/database/data-source.ts",
-    "migration:run:prod": "NODE_OPTIONS='--conditions=production' typeorm migration:run -d ./build/database/data-source.js",
+    "migration:run:prod": "NODE_OPTIONS='--conditions=production' tsx ./node_modules/typeorm/cli.js migration:run -d ./src/database/data-source.ts",
     "seed-data": "pnpm typeorm-cmj migration:run -d ./src/database/seed-data-source.ts",
-    "seed-data:prod": "NODE_OPTIONS='--conditions=production' typeorm migration:run -d build/database/seed-data-source.js",
+    "seed-data:prod": "NODE_OPTIONS='--conditions=production' tsx ./node_modules/typeorm/cli.js migration:run -d ./src/database/seed-data-source.ts",
     "revert-data": "pnpm typeorm-cmj migration:revert -d ./src/database/seed-data-source.ts"
   },
   "keywords": [],
