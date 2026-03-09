@@ -17,10 +17,11 @@ export const createPostgresDataSource = (
     password: env.database.password,
     database: env.database.name,
     synchronize: false,
-    logging: false,
+    logging: env.nodeEnv === 'production' ? ['error', 'warn', 'migration'] : 'all',
+    poolSize: env.nodeEnv === 'production' ? 10 : 5,
     entities: Object.values(Entities),
     migrations: [
-      process.env.NODE_ENV === 'production'
+      env.nodeEnv === 'production'
         ? 'build/database/migrations/*.js'
         : 'src/database/migrations/*{.js,.ts}',
     ],

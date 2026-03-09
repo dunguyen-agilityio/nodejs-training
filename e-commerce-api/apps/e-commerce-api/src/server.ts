@@ -59,26 +59,32 @@ const fastify = Fastify({
   logger: envToLogger[env.nodeEnv] ?? true,
 }).withTypeProvider<JsonSchemaToTsProvider>()
 
+// Register plugins sequentially — Fastify plugin order is deterministic
 fastify.register(cors, {
   origin: env.client.baseUrl,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 })
-
-await Promise.all([
-  fastify.register(clerkPlugin),
-  fastify.register(stripePlugin),
-  fastify.register(sendgridPlugin),
-  fastify.register(swaggerPlugin),
-  fastify.register(fastifyHelmet),
-  fastify.register(fastifyRateLimit, {
-    max: 100,
-    timeWindow: '1 minute',
-  }),
-])
+fastify.register(clerkPlugin)
+fastify.register(stripePlugin)
+fastify.register(sendgridPlugin)
+fastify.register(swaggerPlugin)
+fastify.register(fastifyHelmet)
+fastify.register(fastifyRateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+})
 
 fastify.decorateRequest('clerk', { getter: () => ({ clerkClient, getAuth }) })
 fastify.decorate('clerk', { getter: () => ({ clerkClient, getAuth }) })
+
+// Set error handler before listen so all errors are covered
+fastify.setErrorHandler(errorHandler)
+
+// Health check — unauthenticated, excluded from rate limiting and logging
+fastify.get('/health', async (_request, reply) => {
+  reply.send({ status: 'ok', timestamp: new Date().toISOString() })
+})
 
 const start = async () => {
   try {
@@ -128,36 +134,22 @@ const start = async () => {
       { prefix: '/api/v1' },
     )
 
-    // Run the server!
-    fastify.listen({ port: 8080, host: '0.0.0.0' }, function (err, address) {
-      if (err) {
-        fastify.log.error(err)
-        process.exit(1)
-      }
-      fastify.log.info(`Server is now listening on ${address}`)
-    })
+    await fastify.listen({ port: 8080, host: '0.0.0.0' })
 
-    // Register standardized error handler
-    fastify.setErrorHandler(errorHandler)
-
-    // Gracefull shutdown
-    process.on('SIGTERM', () => {
-      fastify.log.info('SIGTERM signal received: closing HTTP server')
-
-      fastify.close(async () => {
-        fastify.log.info('HTTP server closed')
-        // close database
-        await dataSource.destroy()
-        fastify.log.info('Database connection closed')
-        process.exit(0)
-        // close third paty
-      })
-    })
-  } catch (error) {
-    fastify.log.error(error, 'Database connection failed')
-    fastify.close(() => {
+    const shutdown = async (signal: string) => {
+      fastify.log.info(`${signal} received: closing HTTP server`)
+      await fastify.close()
+      fastify.log.info('HTTP server closed')
+      await dataSource.destroy()
+      fastify.log.info('Database connection closed')
       process.exit(0)
-    })
+    }
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
+    process.on('SIGINT', () => shutdown('SIGINT'))
+  } catch (error) {
+    fastify.log.error(error, 'Failed to start server')
+    process.exit(1)
   }
 }
 

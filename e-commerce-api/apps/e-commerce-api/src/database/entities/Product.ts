@@ -25,7 +25,13 @@ export class Product extends CreatedAndUpdated {
   @Column({ type: 'varchar' })
   description: string
 
-  @Column({ type: 'decimal' })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   price: number
 
   @Column({ type: 'int' })
