@@ -85,15 +85,9 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Link to Railway Project
-        # Establishing link first makes subsequent commands more reliable
-        run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-
       - name: Create or Update Railway PR Environment
         run: |
-          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev || true
+          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev --project ${{ secrets.RAILWAY_PROJECT_ID }} || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
@@ -103,6 +97,7 @@ jobs:
             doppler run -- railway variables set \
               --environment pr-${{ github.event.number }} \
               --service e-commerce-api \
+              --project ${{ secrets.RAILWAY_PROJECT_ID }} \
               --variables -
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
@@ -112,7 +107,8 @@ jobs:
         run: |
           OUTPUT=$(doppler run -- railway up \
             --service e-commerce-api \
-            --environment pr-${{ github.event.number }} 2>&1)
+            --environment pr-${{ github.event.number }} \
+            --project ${{ secrets.RAILWAY_PROJECT_ID }} 2>&1)
           echo "$OUTPUT"
           URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.railway\.app[^ ]*' | tail -1)
           echo "preview_url=${URL:-}" >> "$GITHUB_OUTPUT"
@@ -167,12 +163,7 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Link to Railway Project
-        run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-
       - name: Delete Railway PR Environment
-        run: doppler run -- railway environment delete pr-${{ github.event.number }} --confirm || true
+        run: doppler run -- railway environment delete pr-${{ github.event.number }} --project ${{ secrets.RAILWAY_PROJECT_ID }} --confirm || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
