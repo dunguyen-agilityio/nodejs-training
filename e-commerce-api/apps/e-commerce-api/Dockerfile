@@ -1,6 +1,6 @@
 # 1. Base Stage: Setup pnpm
 ARG NODE_VERSION=24.13.0
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:${NODE_VERSION}-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
