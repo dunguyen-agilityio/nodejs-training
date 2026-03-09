@@ -70,23 +70,27 @@ jobs:
         run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Create or Update Railway PR Environment
         run: |
           doppler run -- railway environment new pr-${{ github.event.number }} --copy dev || echo "Environment already exists"
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Sync Doppler Secrets to Railway PR Environment
         run: |
           doppler secrets download --format json --no-file | doppler run -- railway variables set --environment pr-${{ github.event.number }} --service e-commerce-api --variables -
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Deploy API Preview (Railway)
         run: doppler run -- railway up --service e-commerce-api --environment pr-${{ github.event.number }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
   cleanup-railway-preview:
     if: github.event.action == 'closed'
@@ -103,8 +107,10 @@ jobs:
         run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Delete Railway PR Environment
         run: doppler run -- railway environment delete pr-${{ github.event.number }} --confirm || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
