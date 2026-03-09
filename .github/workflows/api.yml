@@ -122,7 +122,7 @@ jobs:
         uses: dopplerhq/cli-action@v3
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli@3
+        run: npm install -g @railway/cli@latest
 
       - name: Link to Railway Project
         run: doppler run -- railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
