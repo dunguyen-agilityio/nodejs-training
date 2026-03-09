@@ -23,6 +23,13 @@ on:
       - ".github/workflows/api.yml"
   workflow_dispatch:
 
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: e-commerce-api
@@ -31,12 +38,11 @@ jobs:
   build-api:
     name: Build e-commerce-api
     runs-on: ubuntu-latest
-    environment: Development
+    timeout-minutes: 15
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -53,6 +59,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint
+        run: pnpm --filter e-commerce-api lint
+
+      - name: Check types
+        run: pnpm --filter e-commerce-api check-types
+
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
 
@@ -67,6 +79,8 @@ jobs:
     needs: build-api
     runs-on: ubuntu-latest
     environment: Development
+    timeout-minutes: 20
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -85,7 +99,7 @@ jobs:
         with:
           context: e-commerce-api
           file: e-commerce-api/apps/e-commerce-api/Dockerfile.prod
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:${{ github.sha }}
@@ -98,6 +112,8 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
     runs-on: ubuntu-latest
     environment: Development
+    timeout-minutes: 15
+
     steps:
       - uses: actions/checkout@v4
 
@@ -105,7 +121,7 @@ jobs:
         uses: dopplerhq/cli-action@v3
 
       - name: Install Railway CLI
-        run: npm i -g @railway/cli
+        run: npm install -g @railway/cli@3
 
       - name: Deploy to Railway with Doppler Secrets
         run: doppler run -- railway up --service e-commerce-api
