@@ -65,7 +65,7 @@ jobs:
       - name: Check types
         run: pnpm --filter web check-types
 
-  # docker-build-web and deploy-web both depend on build-web and run in parallel
+  # docker-build-web runs after build-web; deploy-web runs after docker-build-web succeeds
   docker-build-web:
     name: Docker Build & Push Web
     needs: build-web
@@ -100,7 +100,7 @@ jobs:
 
   deploy-web:
     name: Deploy Web to Vercel
-    needs: build-web
+    needs: docker-build-web
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
     runs-on: ubuntu-latest
     environment: Development

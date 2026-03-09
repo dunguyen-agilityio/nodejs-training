@@ -38,6 +38,7 @@ jobs:
   build-api:
     name: Build e-commerce-api
     runs-on: ubuntu-latest
+    environment: Development
     timeout-minutes: 15
 
     steps:
