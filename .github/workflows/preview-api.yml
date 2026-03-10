@@ -2,7 +2,6 @@ name: Preview API (Pull Request)
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
     branches: [main, feat/apply-devops]
     paths:
       - "e-commerce-api/apps/e-commerce-api/**"
@@ -17,262 +16,40 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 defaults:
   run:
     working-directory: e-commerce-api
 
 jobs:
-  # build-and-validate:
-  #   if: github.event.action != 'closed'
-  #   runs-on: ubuntu-latest
-  #   environment: Development
-  #   timeout-minutes: 15
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - name: Install pnpm
-  #       uses: pnpm/action-setup@v4
-  #       with:
-  #         version: 10.30.3
-
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "24.13.0"
-  #         cache: "pnpm"
-  #         cache-dependency-path: e-commerce-api/pnpm-lock.yaml
-
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
-
-  #     - name: Lint
-  #       run: pnpm --filter e-commerce-api lint
-
-  #     - name: Check types
-  #       run: pnpm --filter e-commerce-api check-types
-
-  #     - name: Build
-  #       run: pnpm --filter e-commerce-api build
-
-  #     - name: Log in to Docker Hub
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
-
-  #     - name: Extract Docker metadata
-  #       id: meta
-  #       uses: docker/metadata-action@v5
-  #       with:
-  #         images: ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api
-  #         tags: |
-  #           type=raw,value=pr-${{ github.event.pull_request.number }}
-  #           type=sha,prefix=sha-
-
-  #     - name: Build and Push PR Image
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: e-commerce-api
-  #         file: e-commerce-api/apps/e-commerce-api/Dockerfile
-  #         push: true
-  #         tags: ${{ steps.meta.outputs.tags }}
-  #         labels: ${{ steps.meta.outputs.labels }}
-  #         cache-from: type=gha
-  #         cache-to: type=gha,mode=max
-
-  deploy-railway-preview:
-    if: github.event.action != 'closed'
-    # needs: build-and-validate
+  validate:
+    name: Lint, Type Check & Build
     runs-on: ubuntu-latest
-    environment: Development
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: .
 
     steps:
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
-
-      - name: Create PR Environment
-        run: |
-          OUTPUT=$(doppler run -- railway environment new \
-            --duplicate $RAILWAY_ENVIRONMENT \
-            pr-${{ github.event.pull_request.number }} 2>&1) && echo "$OUTPUT" || {
-            echo "$OUTPUT"
-            echo "$OUTPUT" | grep -qi "already exist" || exit 1
-          }
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
-
-      - name: Deploy to PR Environment
-        id: deploy
-        run: |
-          doppler run -- env RAILWAY_ENVIRONMENT="pr-${{ github.event.pull_request.number }}" \
-            railway redeploy \
-              --service e-commerce-api \
-              --yes
-          DOMAIN=$(doppler run -- env RAILWAY_ENVIRONMENT="pr-${{ github.event.pull_request.number }}" \
-            railway domain \
-              --service e-commerce-api 2>/dev/null || echo "")
-          echo "preview_url=${DOMAIN}" >> "$GITHUB_OUTPUT"
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-
-      - name: Comment PR with Preview URL
-        if: success()
-        uses: actions/github-script@v7
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          script: |
-            const marker = '<!-- railway-preview-api -->';
-            const shortSha = context.sha.substring(0, 7);
-            const domain = '${{ steps.deploy.outputs.preview_url }}';
-            const prNumber = context.issue.number;
+          version: 10.30.3
 
-            let body;
-            if (domain) {
-              body = `${marker}
-            ## 🚀 API Preview Deployed Successfully!
-
-            | Info | Value |
-            |------|-------|
-            | 📍 **Preview URL** | https://${domain} |
-            | 📦 **Environment** | \`pr-${prNumber}\` |
-            | 🔀 **Branch** | \`${{ github.head_ref }}\` |
-            | 💾 **Commit** | [\`${shortSha}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
-            | 👤 **Deployed by** | @${context.actor} |`;
-            } else {
-              body = `${marker}
-            ## 🚀 API Preview Deployed Successfully!
-
-            ✅ Deployment complete — check the [Railway Dashboard](https://railway.app) for the URL.
-
-            | Info | Value |
-            |------|-------|
-            | 📦 **Environment** | \`pr-${prNumber}\` |
-            | 🔀 **Branch** | \`${{ github.head_ref }}\` |
-            | 💾 **Commit** | [\`${shortSha}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
-            | 👤 **Deployed by** | @${context.actor} |`;
-            }
-
-            const { data: comments } = await github.rest.issues.listComments({
-              issue_number: prNumber,
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                comment_id: existing.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body
-              });
-            } else {
-              await github.rest.issues.createComment({
-                issue_number: prNumber,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body
-              });
-            }
-
-      - name: Comment on Deployment Failure
-        if: failure()
-        uses: actions/github-script@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          script: |
-            const marker = '<!-- railway-preview-api -->';
-            const body = `${marker}
-            ## ⚠️ API Preview Deployment Failed
+          node-version: "24.13.0"
+          cache: "pnpm"
+          cache-dependency-path: e-commerce-api/pnpm-lock.yaml
 
-            Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-            | Info | Value |
-            |------|-------|
-            | 🔀 **Branch** | \`${{ github.head_ref }}\` |
-            | 💾 **Commit** | [\`${context.sha.substring(0, 7)}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |`;
+      - name: Lint
+        run: pnpm --filter e-commerce-api lint
 
-            const { data: comments } = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                comment_id: existing.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body
-              });
-            } else {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body
-              });
-            }
+      - name: Check types
+        run: pnpm --filter e-commerce-api check-types
 
-  cleanup-railway-preview:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    environment: Development
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: .
-
-    steps:
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
-
-      - name: Delete PR Environment
-        run: |
-          doppler run -- railway environment delete \
-            pr-${{ github.event.pull_request.number }} \
-            --yes || true
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-
-      - name: Comment PR Cleanup
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const marker = '<!-- railway-preview-api -->';
-            const prNumber = context.issue.number;
-            const body = `${marker}
-            ## 🗑️ Preview Environment Deleted
-
-            The preview environment \`pr-${prNumber}\` has been cleaned up.`;
-
-            const { data: comments } = await github.rest.issues.listComments({
-              issue_number: prNumber,
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                comment_id: existing.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body
-              });
-            }
+      - name: Build
+        run: pnpm --filter e-commerce-api build
