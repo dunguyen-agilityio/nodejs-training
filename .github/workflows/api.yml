@@ -94,44 +94,47 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
       - name: Build and Push e-commerce-api Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: e-commerce-api
           file: e-commerce-api/apps/e-commerce-api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-api-railway:
-    name: Deploy API to Railway
-    needs: docker-build-api
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
-    runs-on: ubuntu-latest
-    environment: Development
-    timeout-minutes: 15
+  # deploy-api-railway:
+  #   name: Deploy API to Railway
+  #   needs: docker-build-api
+  #   if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
+  #   runs-on: ubuntu-latest
+  #   environment: Development
+  #   timeout-minutes: 15
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+  #     - name: Install Doppler CLI
+  #       uses: dopplerhq/cli-action@v3
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
+  #     - name: Install Railway CLI
+  #       run: npm install -g @railway/cli@latest
 
-      - name: Deploy to Railway with Doppler Secrets
-        run: |
-          doppler run -- railway up \
-            --image $DOCKERHUB_USERNAME/e-commerce-api:${{ github.sha }} \
-            --service e-commerce-api \
-            --environment $RAILWAY_ENVIRONMENT \
-            --detach
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
+  #     - name: Deploy to Railway
+  #       run: |
+  #         doppler run -- railway redeploy \
+  #           --service e-commerce-api \
+  #           --yes
+  #       env:
+  #         DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}

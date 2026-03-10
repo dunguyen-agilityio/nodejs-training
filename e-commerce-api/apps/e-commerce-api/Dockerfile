@@ -6,7 +6,6 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 RUN apk add --no-cache libc6-compat
-RUN npm install -g tsx
 WORKDIR /usr/src/app
 
 # 2. Pruner Stage
@@ -43,4 +42,5 @@ RUN chown -R fastify:nodejs /usr/src/app
 USER fastify
 EXPOSE 8080
 
-CMD ["node", "--import", "tsx", "apps/e-commerce-api/build/server.js"]
+WORKDIR /usr/src/app/apps/e-commerce-api
+CMD ["node", "--conditions=production", "--import", "tsx", "build/server.js"]
