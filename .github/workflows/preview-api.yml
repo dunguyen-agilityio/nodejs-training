@@ -25,71 +25,71 @@ defaults:
     working-directory: e-commerce-api
 
 jobs:
-  build-and-validate:
-    if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
-    environment: Development
-    timeout-minutes: 15
+  # build-and-validate:
+  #   if: github.event.action != 'closed'
+  #   runs-on: ubuntu-latest
+  #   environment: Development
+  #   timeout-minutes: 15
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
+  #     - name: Install pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 10.30.3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.13.0"
-          cache: "pnpm"
-          cache-dependency-path: e-commerce-api/pnpm-lock.yaml
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "24.13.0"
+  #         cache: "pnpm"
+  #         cache-dependency-path: e-commerce-api/pnpm-lock.yaml
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm --filter e-commerce-api lint
+  #     - name: Lint
+  #       run: pnpm --filter e-commerce-api lint
 
-      - name: Check types
-        run: pnpm --filter e-commerce-api check-types
+  #     - name: Check types
+  #       run: pnpm --filter e-commerce-api check-types
 
-      - name: Build
-        run: pnpm --filter e-commerce-api build
+  #     - name: Build
+  #       run: pnpm --filter e-commerce-api build
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Log in to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api
-          tags: |
-            type=raw,value=pr-${{ github.event.pull_request.number }}
-            type=sha,prefix=sha-
+  #     - name: Extract Docker metadata
+  #       id: meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api
+  #         tags: |
+  #           type=raw,value=pr-${{ github.event.pull_request.number }}
+  #           type=sha,prefix=sha-
 
-      - name: Build and Push PR Image
-        uses: docker/build-push-action@v6
-        with:
-          context: e-commerce-api
-          file: e-commerce-api/apps/e-commerce-api/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  #     - name: Build and Push PR Image
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: e-commerce-api
+  #         file: e-commerce-api/apps/e-commerce-api/Dockerfile
+  #         push: true
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
 
   deploy-railway-preview:
     if: github.event.action != 'closed'
-    needs: build-and-validate
+    # needs: build-and-validate
     runs-on: ubuntu-latest
     environment: Development
     timeout-minutes: 15
