@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  type Relation,
+} from 'typeorm'
 
 import {
   BaseWithCreatedAndUpdated,
@@ -11,13 +18,13 @@ import { User } from './User'
 export class Cart extends BaseWithCreatedAndUpdated {
   @OneToOne(() => User, (user) => user.cart)
   @JoinColumn({ name: 'user_id' })
-  user: User
+  user: Relation<User>
 
   @Column({ type: 'varchar', default: 'active' })
   status: 'active' | 'abandoned' | 'converted'
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
-  items: CartItem[]
+  items: Relation<CartItem[]>
 
   constructor(cart: BaseWithCreatedAndUpdatedProps<Cart>) {
     super()

@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  type Relation,
+} from 'typeorm'
 
 import {
   BaseWithCreatedAndUpdated,
@@ -19,7 +26,7 @@ export type OrderStatus =
 export class Order extends BaseWithCreatedAndUpdated {
   @ManyToOne(() => User, (user) => user.orders)
   @JoinColumn({ name: 'user_id' })
-  user?: User
+  user?: Relation<User>
 
   @Column({ type: 'varchar' })
   status: OrderStatus
@@ -31,7 +38,7 @@ export class Order extends BaseWithCreatedAndUpdated {
   invoiceId: string
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
-  items?: OrderItem[]
+  items?: Relation<OrderItem[]>
 
   @Column({ name: 'payment_secret', type: 'varchar', nullable: true })
   paymentSecret: string

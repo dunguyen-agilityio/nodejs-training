@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToOne, type Relation } from 'typeorm'
 
 import { Base, type BaseProps } from './Base'
 import { Order } from './Order'
@@ -8,11 +8,11 @@ import { Product } from './Product'
 export class OrderItem extends Base {
   @ManyToOne(() => Order, (order) => order.items)
   @JoinColumn({ name: 'order_id' })
-  order: Order
+  order: Relation<Order>
 
   @ManyToOne(() => Product, (product) => product.orderItems)
   @JoinColumn({ name: 'product_id' })
-  product: Product
+  product: Relation<Product>
 
   @Column({ type: 'int' })
   quantity: number

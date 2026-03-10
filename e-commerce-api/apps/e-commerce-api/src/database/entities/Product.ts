@@ -5,6 +5,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
+  type Relation,
 } from 'typeorm'
 
 import { CreatedAndUpdated } from './Base'
@@ -44,10 +45,10 @@ export class Product extends CreatedAndUpdated {
   images: string[]
 
   @OneToMany(() => CartItem, (cartItem: CartItem) => cartItem.product)
-  cartItems?: CartItem[]
+  cartItems?: Relation<CartItem[]>
 
   @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.product)
-  orderItems?: OrderItem[]
+  orderItems?: Relation<OrderItem[]>
 
   @JoinColumn({ referencedColumnName: 'name', name: 'category' })
   @ManyToOne(() => Category, (category) => category.products)

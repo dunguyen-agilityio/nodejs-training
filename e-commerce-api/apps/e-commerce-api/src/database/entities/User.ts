@@ -5,6 +5,7 @@ import {
   OneToMany,
   OneToOne,
   PrimaryColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm'
 
@@ -51,10 +52,10 @@ export class User {
   stripeId?: string
 
   @OneToOne(() => Cart, (cart) => cart.user)
-  cart?: Cart
+  cart?: Relation<Cart>
 
   @OneToMany(() => Order, (order) => order.user)
-  orders?: Order[]
+  orders?: Relation<Order[]>
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
