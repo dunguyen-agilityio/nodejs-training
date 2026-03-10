@@ -93,6 +93,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: Development
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
 
     steps:
       - name: Install Doppler CLI
@@ -111,22 +114,21 @@ jobs:
           }
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
 
       - name: Deploy to PR Environment
         id: deploy
         run: |
-          doppler run -- railway redeploy \
-            --service e-commerce-api \
-            --yes
-          DOMAIN=$(doppler run -- railway domain \
-            --service e-commerce-api 2>/dev/null || echo "")
+          doppler run -- env RAILWAY_ENVIRONMENT="pr-${{ github.event.pull_request.number }}" \
+            railway redeploy \
+              --service e-commerce-api \
+              --yes
+          DOMAIN=$(doppler run -- env RAILWAY_ENVIRONMENT="pr-${{ github.event.pull_request.number }}" \
+            railway domain \
+              --service e-commerce-api 2>/dev/null || echo "")
           echo "preview_url=${DOMAIN}" >> "$GITHUB_OUTPUT"
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_ENVIRONMENT: pr-${{ github.event.pull_request.number }}
 
       - name: Comment PR with Preview URL
         if: success()
@@ -229,6 +231,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: Development
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
 
     steps:
       - name: Install Doppler CLI
@@ -244,7 +249,6 @@ jobs:
             --yes || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
       - name: Comment PR Cleanup
         if: always()
