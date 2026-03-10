@@ -5,16 +5,19 @@ echo "Starting e-commerce-api entrypoint..."
 # Ensure production condition is set for Node.js subpath imports
 export NODE_OPTIONS="--conditions=production"
 
-# Run database migrations
-echo "Running database migrations..."
-pnpm run migration:run:prod
+echo "Running migrations..."
+node --conditions=production --import tsx \
+  /usr/src/app/node_modules/typeorm/cli.js \
+  migration:run -d ./src/database/data-source.ts
 
 # Run seed data if requested
 if [ "$SEED_DATA" = "true" ]; then
     echo "Seeding database..."
-    pnpm run seed-data:prod
+    node --conditions=production --import tsx \
+      /usr/src/app/node_modules/typeorm/cli.js \
+      migration:run -d ./src/database/seed-data-source.ts
 fi
 
-# Start the application
+# Start the application (migrations run inside the app when RUN_MIGRATIONS=true)
 echo "Starting application..."
-pnpm run start
+exec node --conditions=production --import tsx build/server.js

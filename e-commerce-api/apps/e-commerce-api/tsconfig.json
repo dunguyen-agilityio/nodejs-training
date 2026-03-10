@@ -60,6 +60,7 @@
       "#adapters": ["./src/adapters/index.ts"],
       "#middlewares": ["./src/middlewares/index.ts"],
       "#middlewares/*": ["./src/middlewares/*.ts"],
+      "#schemas": ["./src/schemas/index.ts"],
       "#schemas/*": ["./src/schemas/*.ts"],
       "#types": ["./src/types/index.ts"],
       "#types/*": ["./src/types/*.ts"],

@@ -1,26 +1,12 @@
 **/node_modules
-.git
-.gitignore
-
-# Next.js build output
-apps/web/.next
-apps/web/out
-
-# TypeScript compiled output
-apps/e-commerce-api/build
-
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode
-.idea
-
-# Test coverage
-coverage
+**/.turbo
+**/build
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+**/coverage
+**/__tests__
+**/*.spec.ts
+**/*.test.ts

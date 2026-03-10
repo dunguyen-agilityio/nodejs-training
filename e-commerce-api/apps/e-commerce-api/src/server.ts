@@ -90,6 +90,12 @@ const start = async () => {
   try {
     const dataSource = await AppDataSource.initialize()
 
+    if (env.runMigrations) {
+      fastify.log.info('Running database migrations...')
+      await dataSource.runMigrations()
+      fastify.log.info('Database migrations completed')
+    }
+
     buildContainer(fastify, dataSource)
 
     fastify.decorate('authenticate', { getter: () => authenticate })

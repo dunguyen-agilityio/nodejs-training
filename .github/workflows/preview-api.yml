@@ -2,7 +2,7 @@ name: Preview API (Pull Request)
 
 on:
   pull_request:
-    types: [opened, synchronize, closed]
+    types: [opened, synchronize, reopened, closed]
     branches: [main, feat/apply-devops]
     paths:
       - "e-commerce-api/apps/e-commerce-api/**"
@@ -18,6 +18,7 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 defaults:
   run:
@@ -27,6 +28,7 @@ jobs:
   build-and-validate:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+    environment: Development
     timeout-minutes: 15
 
     steps:
@@ -56,16 +58,22 @@ jobs:
       - name: Build
         run: pnpm --filter e-commerce-api build
 
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image (Dry Run)
+      - name: Build and Push PR Image
         uses: docker/build-push-action@v5
         with:
           context: e-commerce-api
           file: e-commerce-api/apps/e-commerce-api/Dockerfile.prod
-          push: false
-          tags: e-commerce-api:preview
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/e-commerce-api:pr-${{ github.event.pull_request.number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -85,68 +93,89 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Create or Update Railway PR Environment
+      - name: Create PR Environment
         run: |
-          doppler run -- railway environment new pr-${{ github.event.number }} --copy dev --project ${{ secrets.RAILWAY_PROJECT_ID }} || true
+          OUTPUT=$(doppler run -- railway environment new \
+            --duplicate $RAILWAY_ENVIRONMENT \
+            pr-${{ github.event.pull_request.number }} 2>&1) && echo "$OUTPUT" || {
+            echo "$OUTPUT"
+            echo "$OUTPUT" | grep -qi "already exist" || exit 1
+          }
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
 
-      - name: Sync Doppler Secrets to Railway PR Environment
-        run: |
-          doppler secrets download --format json --no-file | \
-            doppler run -- railway variables set \
-              --environment pr-${{ github.event.number }} \
-              --service e-commerce-api \
-              --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-              --variables -
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-
-      - name: Deploy API Preview (Railway)
+      - name: Deploy PR Image to Railway
         id: deploy
         run: |
-          OUTPUT=$(doppler run -- railway up \
+          doppler run -- railway up \
+            --image $DOCKERHUB_USERNAME/e-commerce-api:pr-${{ github.event.pull_request.number }} \
             --service e-commerce-api \
-            --environment pr-${{ github.event.number }} \
-            --project ${{ secrets.RAILWAY_PROJECT_ID }} 2>&1)
-          echo "$OUTPUT"
-          URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.railway\.app[^ ]*' | tail -1)
-          echo "preview_url=${URL:-}" >> "$GITHUB_OUTPUT"
+            --environment pr-${{ github.event.pull_request.number }} \
+            --detach
+          DOMAIN=$(doppler run -- railway domain \
+            --service e-commerce-api \
+            --environment pr-${{ github.event.pull_request.number }} 2>/dev/null || echo "")
+          echo "preview_url=${DOMAIN}" >> "$GITHUB_OUTPUT"
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
-      - name: Comment Preview URL on PR
+      - name: Comment PR with Preview URL
+        if: success()
         uses: actions/github-script@v7
         with:
           script: |
-            const url = '${{ steps.deploy.outputs.preview_url }}';
-            const body = url
-              ? `### API Preview Deployed\n\nPreview URL: ${url}\n\n_Environment: \`pr-${{ github.event.number }}\`_`
-              : `### API Preview Deployed\n\nDeployment complete. Check the [Railway dashboard](https://railway.app) for the URL.\n\n_Environment: \`pr-${{ github.event.number }}\`_`;
+            const marker = '<!-- railway-preview-api -->';
+            const shortSha = context.sha.substring(0, 7);
+            const domain = '${{ steps.deploy.outputs.preview_url }}';
+            const prNumber = context.issue.number;
+
+            let body;
+            if (domain) {
+              body = `${marker}
+            ## 🚀 API Preview Deployed Successfully!
+
+            | Info | Value |
+            |------|-------|
+            | 📍 **Preview URL** | https://${domain} |
+            | 📦 **Environment** | \`pr-${prNumber}\` |
+            | 🔀 **Branch** | \`${{ github.head_ref }}\` |
+            | 💾 **Commit** | [\`${shortSha}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
+            | 👤 **Deployed by** | @${context.actor} |`;
+            } else {
+              body = `${marker}
+            ## 🚀 API Preview Deployed Successfully!
+
+            ✅ Deployment complete — check the [Railway Dashboard](https://railway.app) for the URL.
+
+            | Info | Value |
+            |------|-------|
+            | 📦 **Environment** | \`pr-${prNumber}\` |
+            | 🔀 **Branch** | \`${{ github.head_ref }}\` |
+            | 💾 **Commit** | [\`${shortSha}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
+            | 👤 **Deployed by** | @${context.actor} |`;
+            }
 
             const { data: comments } = await github.rest.issues.listComments({
+              issue_number: prNumber,
               owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
+              repo: context.repo.repo
             });
-
-            const existing = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('API Preview Deployed')
-            );
-
+            const existing = comments.find(c => c.body.includes(marker));
             if (existing) {
               await github.rest.issues.updateComment({
+                comment_id: existing.id,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
+                body
               });
             } else {
               await github.rest.issues.createComment({
+                issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
+                body
               });
             }
 
@@ -163,7 +192,44 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Delete Railway PR Environment
-        run: doppler run -- railway environment delete pr-${{ github.event.number }} --project ${{ secrets.RAILWAY_PROJECT_ID }} --confirm || true
+      - name: Delete PR Environment
+        run: |
+          doppler run -- railway environment delete \
+            pr-${{ github.event.pull_request.number }} \
+            --yes || true
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+      - name: Comment on Deployment Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- railway-preview-api -->';
+            const body = `${marker}
+            ## ⚠️ API Preview Deployment Failed
+
+            Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+
+            **Commit:** [\`${context.sha.substring(0, 7)}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                comment_id: existing.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+            }

@@ -42,6 +42,9 @@ export const env = {
 
   // Environment
   nodeEnv: process.env.NODE_ENV as 'development' | 'production' | 'test',
+
+  // Feature flags
+  runMigrations: process.env.RUN_MIGRATIONS === 'true',
 } as const
 
 export default env
