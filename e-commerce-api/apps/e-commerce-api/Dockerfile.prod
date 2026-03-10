@@ -33,6 +33,8 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy ONLY what's needed for production
 COPY --from=builder /usr/src/app/apps/e-commerce-api/build ./apps/e-commerce-api/build
+COPY --from=builder /usr/src/app/apps/e-commerce-api/node_modules ./apps/e-commerce-api/node_modules
+COPY --from=builder /usr/src/app/apps/e-commerce-api/package.json ./apps/e-commerce-api/package.json
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
 

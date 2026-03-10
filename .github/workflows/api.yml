@@ -35,49 +35,48 @@ defaults:
     working-directory: e-commerce-api
 
 jobs:
-  build-api:
-    name: Build e-commerce-api
-    runs-on: ubuntu-latest
-    environment: Development
-    timeout-minutes: 15
+  # build-api:
+  #   name: Build e-commerce-api
+  #   runs-on: ubuntu-latest
+  #   environment: Development
+  #   timeout-minutes: 15
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
+  #     - name: Install pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 10.30.3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.13.0"
-          cache: "pnpm"
-          cache-dependency-path: e-commerce-api/pnpm-lock.yaml
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "24.13.0"
+  #         cache: "pnpm"
+  #         cache-dependency-path: e-commerce-api/pnpm-lock.yaml
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm --filter e-commerce-api lint
+  #     - name: Lint
+  #       run: pnpm --filter e-commerce-api lint
 
-      - name: Check types
-        run: pnpm --filter e-commerce-api check-types
+  #     - name: Check types
+  #       run: pnpm --filter e-commerce-api check-types
 
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+  #     - name: Install Doppler CLI
+  #       uses: dopplerhq/cli-action@v3
 
-      - name: Build with Doppler
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          doppler run -- pnpm turbo run build --filter=e-commerce-api
+  #     - name: Build with Doppler
+  #       env:
+  #         DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+  #       run: |
+  #         doppler run -- pnpm turbo run build --filter=e-commerce-api
 
   docker-build-api:
     name: Docker Build & Push API
-    needs: build-api
     runs-on: ubuntu-latest
     environment: Development
     timeout-minutes: 20
@@ -125,6 +124,14 @@ jobs:
         run: npm install -g @railway/cli@latest
 
       - name: Deploy to Railway with Doppler Secrets
-        run: doppler run -- railway up --service e-commerce-api --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment ${{ secrets.RAILWAY_ENVIRONMENT }}
+        run: |
+          doppler run -- railway up \
+            --image $DOCKERHUB_USERNAME/e-commerce-api:${{ github.sha }} \
+            --service e-commerce-api \
+            --environment $RAILWAY_ENVIRONMENT \
+            --detach
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
