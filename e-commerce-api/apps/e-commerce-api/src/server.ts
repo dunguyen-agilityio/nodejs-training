@@ -59,22 +59,6 @@ const fastify = Fastify({
   logger: envToLogger[env.nodeEnv] ?? true,
 }).withTypeProvider<JsonSchemaToTsProvider>()
 
-// Register plugins sequentially — Fastify plugin order is deterministic
-fastify.register(cors, {
-  origin: env.client.baseUrl,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-})
-fastify.register(clerkPlugin)
-fastify.register(stripePlugin)
-fastify.register(sendgridPlugin)
-fastify.register(swaggerPlugin)
-fastify.register(fastifyHelmet)
-fastify.register(fastifyRateLimit, {
-  max: 100,
-  timeWindow: '1 minute',
-})
-
 fastify.decorateRequest('clerk', { getter: () => ({ clerkClient, getAuth }) })
 fastify.decorate('clerk', { getter: () => ({ clerkClient, getAuth }) })
 
@@ -88,6 +72,23 @@ fastify.get('/health', async (_request, reply) => {
 
 const start = async () => {
   try {
+    // Register plugins sequentially and await each so their decorations
+    // (fastify.stripe, fastify.sendgrid, etc.) are available before buildContainer
+    await fastify.register(cors, {
+      origin: env.client.baseUrl,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+    await fastify.register(clerkPlugin)
+    await fastify.register(stripePlugin)
+    await fastify.register(sendgridPlugin)
+    await fastify.register(swaggerPlugin)
+    await fastify.register(fastifyHelmet)
+    await fastify.register(fastifyRateLimit, {
+      max: 100,
+      timeWindow: '1 minute',
+    })
+
     const dataSource = await AppDataSource.initialize()
 
     if (env.runMigrations) {
