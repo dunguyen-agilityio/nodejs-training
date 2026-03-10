@@ -74,7 +74,6 @@ export class CheckoutService implements ICheckoutService {
       )
 
       const { cart } = await this.locking(queryRunner, userId)
-      console.log('cart', cart)
       const { id: cartId } = cart
 
       if (cart.items.length < 1) {

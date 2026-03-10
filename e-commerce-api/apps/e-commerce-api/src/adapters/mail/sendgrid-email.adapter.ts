@@ -74,7 +74,7 @@ export class SendGridEmailAdapter implements EmailProvider {
         `${template.templateName} - Email sent successfully`,
       )
     } catch (error) {
-      this.logger.error(error, `${template.templateName} - Error - send`)
+      this.logger.error(error, `Error to send ${template.templateName}`)
     }
   }
 }
