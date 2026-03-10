@@ -26,24 +26,20 @@ RUN pnpm turbo run build --filter=e-commerce-api
 FROM base AS runner
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
+ENV PATH="/usr/src/app/node_modules/.bin:$PATH"
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 fastify
 
 # Copy ONLY what's needed for production
-COPY --from=builder /usr/src/app/apps/e-commerce-api/package.json ./apps/e-commerce-api/package.json
 COPY --from=builder /usr/src/app/apps/e-commerce-api/build ./apps/e-commerce-api/build
-COPY --from=builder /usr/src/app/apps/e-commerce-api/src ./apps/e-commerce-api/src
-COPY --from=builder /usr/src/app/apps/e-commerce-api/tsconfig.json ./apps/e-commerce-api/tsconfig.json
-COPY --from=builder /usr/src/app/apps/e-commerce-api/entrypoint.sh ./apps/e-commerce-api/entrypoint.sh
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
 
-RUN chmod +x /usr/src/app/apps/e-commerce-api/entrypoint.sh && \
-    chown -R fastify:nodejs /usr/src/app
+RUN chown -R fastify:nodejs /usr/src/app
 
 USER fastify
 EXPOSE 8080
 
-WORKDIR /usr/src/app/apps/e-commerce-api
-ENTRYPOINT ["sh", "entrypoint.sh"]
+WORKDIR /usr/src/app
+CMD ["node", "--import", "tsx", "apps/e-commerce-api/build/server.js"]

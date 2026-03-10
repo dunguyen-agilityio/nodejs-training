@@ -20,11 +20,7 @@ export const createPostgresDataSource = (
     logging: env.nodeEnv === 'production' ? ['error', 'warn', 'migration'] : 'all',
     poolSize: env.nodeEnv === 'production' ? 10 : 5,
     entities: Object.values(Entities),
-    migrations: [
-      env.nodeEnv === 'production'
-        ? 'build/database/migrations/*.js'
-        : 'src/database/migrations/*{.js,.ts}',
-    ],
+    migrations: ['src/database/migrations/*{.js,.ts}'],
     subscribers: [],
     ...options,
   } as DataSourceOptions)
