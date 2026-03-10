@@ -48,7 +48,7 @@ services:
       # Preserve container's node_modules (don't overwrite with host)
       - /usr/src/app/node_modules
       - /usr/src/app/apps/e-commerce-api/node_modules
-    restart: 'no'
+    restart: "no"
 
   web:
     build:
@@ -75,4 +75,4 @@ services:
       - /usr/src/app/apps/web/node_modules
       # Preserve Next.js build cache
       - /usr/src/app/apps/web/.next
-    restart: 'no'
+    restart: "no"
