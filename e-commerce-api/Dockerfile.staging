@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 # 2. Pruner Stage
 FROM base AS pruner
 RUN pnpm add -g turbo
-COPY . .
+COPY e-commerce-api/ .
 RUN turbo prune e-commerce-api --docker
 
 # 3. Builder Stage: Install and Build
