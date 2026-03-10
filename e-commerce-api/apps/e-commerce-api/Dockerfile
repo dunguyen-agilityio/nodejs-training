@@ -32,6 +32,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 fastify
 
 COPY --from=builder /usr/src/app/apps/e-commerce-api/build ./apps/e-commerce-api/build
+COPY --from=builder /usr/src/app/apps/e-commerce-api/src/adapters/mail/templates ./apps/e-commerce-api/build/adapters/mail/templates
 COPY --from=builder /usr/src/app/apps/e-commerce-api/node_modules ./apps/e-commerce-api/node_modules
 COPY --from=builder /usr/src/app/apps/e-commerce-api/package.json ./apps/e-commerce-api/package.json
 COPY --from=builder /usr/src/app/node_modules ./node_modules

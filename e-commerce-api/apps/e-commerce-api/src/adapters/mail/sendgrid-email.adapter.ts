@@ -2,6 +2,7 @@ import { FastifyBaseLogger } from 'fastify'
 
 import { MailService } from '@sendgrid/mail'
 import fs from 'node:fs'
+import path from 'node:path'
 import url from 'node:url'
 
 import { TemplateData, getFrom, getTo, renderTemplate } from '#utils/mail'
@@ -20,7 +21,7 @@ export class SendGridEmailAdapter implements EmailProvider {
   }: TemplateData) => {
     const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
     const template = fs.readFileSync(
-      `${__dirname}/templates/${templateName}.html`,
+      path.join(__dirname, 'templates', `${templateName}.html`),
       'utf-8',
     )
 
