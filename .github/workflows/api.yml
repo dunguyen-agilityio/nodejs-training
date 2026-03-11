@@ -78,6 +78,7 @@ jobs:
   docker-build-api:
     name: Docker Build & Push API
     runs-on: ubuntu-latest
+    needs: build-api
     environment: Development
     timeout-minutes: 20
 
@@ -114,27 +115,27 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-api-railway:
-    name: Deploy API to Railway
-    needs: docker-build-api
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
-    runs-on: ubuntu-latest
-    environment: Development
-    timeout-minutes: 15
+  # deploy-api-railway:
+  #   name: Deploy API to Railway
+  #   needs: docker-build-api
+  #   if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/apply-devops')
+  #   runs-on: ubuntu-latest
+  #   environment: Development
+  #   timeout-minutes: 15
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+  #     - name: Install Doppler CLI
+  #       uses: dopplerhq/cli-action@v3
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
+  #     - name: Install Railway CLI
+  #       run: npm install -g @railway/cli@latest
 
-      - name: Deploy to Railway
-        run: |
-          doppler run -- railway redeploy \
-            --service e-commerce-api \
-            --yes
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+  #     - name: Deploy to Railway
+  #       run: |
+  #         doppler run -- railway redeploy \
+  #           --service e-commerce-api \
+  #           --yes
+  #       env:
+  #         DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
