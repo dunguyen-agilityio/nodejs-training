@@ -7,6 +7,8 @@
   "main": "src/server.ts",
   "scripts": {
     "dev": "tsx --watch --conditions=development src/server.ts",
+    "dev:staging": "DOTENV_CONFIG_PATH=.env.staging.local tsx --watch --conditions=development src/server.ts",
+    "dev:production": "DOTENV_CONFIG_PATH=.env.production.local tsx --watch --conditions=development src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node --import tsx build/server.js",
     "lint": "eslint src/ --max-warnings 0",
