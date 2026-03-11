@@ -67,7 +67,7 @@ fastify.setErrorHandler(errorHandler)
 
 // Health check — unauthenticated, excluded from rate limiting and logging
 fastify.get('/health', async (_request, reply) => {
-  reply.send({ status: 'ok', timestamp: new Date().toISOString() })
+  reply.send({ status: 'ok demo', timestamp: new Date().toISOString() })
 })
 
 const start = async () => {
