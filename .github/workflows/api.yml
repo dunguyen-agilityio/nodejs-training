@@ -140,7 +140,6 @@ jobs:
         run: |
           doppler run -- railway redeploy \
             --service e-commerce-api \
-            --environment production
             --yes
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
