@@ -11,8 +11,7 @@ WORKDIR /app
 # 2. Pruner Stage
 FROM base AS pruner
 RUN pnpm add -g turbo
-# Change this: Copy the WHOLE repo context, not just the subfolder
-COPY . . 
+COPY e-commerce-api/ .
 RUN turbo prune e-commerce-api --docker
 
 # 3. Builder Stage: Install and Build
@@ -25,7 +24,7 @@ RUN pnpm turbo run build --filter=e-commerce-api
 
 # 4. Runner Stage: Final Image
 FROM base AS runner
-WORKDIR /usr/src/app
+WORKDIR /app
 ENV NODE_ENV=production
 ENV PATH="/app/node_modules/.bin:$PATH"
 
