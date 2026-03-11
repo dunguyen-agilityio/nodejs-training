@@ -38,7 +38,7 @@ COPY --from=builder /app/apps/e-commerce-api/package.json ./apps/e-commerce-api/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-RUN chown -R fastify:nodejs /usr/src/app
+RUN chown -R fastify:nodejs /app
 
 USER fastify
 EXPOSE 8080
